@@ -7,80 +7,44 @@ def renumber(start_res_num, start_atom_num, in_pdb_path, out_pdb_path):
     outfile =  open(in_pdb_path, 'w')
     lines = infile.readlines()
     
-    res_num = int(start_res_num)
-    atom_num = start_atom_num
-    atom_count = 0
+    RN = int(start_res_num) #residue number
+    AN = int(start_atom_num) #atom number
     
-    l_1 = 'false'
+    FRN = -1; #number of first residue
     
     for line in lines:
-        lines = line.strip()
-        if len(line) < 61:
-            line = line + '                \n'
-        else:
-            line = line + '\n'
-        line_list = list(line)
-    
-    if (line_list[0] == 'A' and line_list[1] == 'T' and line_list[2] == 'O' and line_list[3] == 'M') or (line_list[0] == 'H' and line_list[1] == 'E' and line_list[2] == 'T' and line_list[3] == 'A' and line_list[4] == 'T' and line_list[5] == 'M' and line_list[17] == 'M' and line_list[18] == 'S' and line_list[19] == 'E'):
-        if l_1 == 'false':
-            hold_res_num = int(pdb_lines[i][23:26])
-        l_1 = 'true'
-        current_res_num = int(pdb_lines[i][23:26])
-        if current_res_num == hold_res_num:
-            res_size = len(str(int(res_num)))
-            for j in range(5):
-                line_list[25 - j] = ' '
-            for j in range(res_size):
-                line_list[25 - j] = str(res_num)[res_size - j - 1]
-        else: 
-            res_num = res_num + 1
-            hold_res_num = current_res_num
-            res_size = len(str(res_num))
-            for j in range(5):
-                line_list[25 - j] = ' '
-            for j in range(res_size):
-                line_list[25 - j] = str(res_num)[res_size - j - 1]
-    
-        atom_size = len(str(int(atom_num) + atom_count))
-        for j in range(5):
-            line_list[10 - j] = ' '
-        for j in range(atom_size):
-            line_list[10 - j] = str(int(atom_num) + atom_count)[atom_size - j - 1]
+        line = line.strip()
+        line = (line + ' '*16 + '\n') if (len(line) < 61) else (line + '\n') 
         
-        if line_list[17] == 'M' and line_list[18] == 'S' and line_list[19] == 'E':
-        line_list[18] = 'E'
-        line_list[19] = 'T'
+        if(line[0:4] == 'ATOM' or (line[0:6] == 'HETATM' and line[17:20] == 'MSE')):
+            
+            FRN = int(line[23:26]) if (FRN<0) else FRN  #if first run, set to non-zero first value
+            CRN = int(line[23:26])                      #current residue number
+            
+            if CRN != FRN:  #checks if next residue has been reached
+                RN += 1
+                CRN = FRN
+            
+            num_digits = len(str(RN))
+            line = line[:20] + ' '*5 + line[25:]
+            line = line[:(25-num_digits)] + RN + line[25:]
+
+            num_digits = len(str(AN))
+            line = line[:5] + ' '*5 + line[10:]
+            line = line[:(10-num_digits)] + (AN) + line[10:]
+            AN += 1
+            
+            if(line[17:20] == 'MSE'):
+                line = line[:18] + 'ET' + line[20:]
+                line = 'ATOM  ' + line[6:]
         
-        line_list[0] = 'A'
-        line_list[1] = 'T'
-        line_list[2] = 'O'
-        line_list[3] = 'M'
-        line_list[4] = ' '
-        line_list[5] = ' '
-
-       # line_list[21] = 'A'
+            line = line[:56] + '1.00  0.00' + line[65:]
         
-        line_list[56] = '1'
-        line_list[57] = '.'
-        line_list[58] = '0'
-        line_list[59] = '0'
-        line_list[60] = ' '
-        line_list[61] = ' '        
-        line_list[62] = '0'
-        line_list[63] = '.'
-        line_list[64] = '0'
-        line_list[65] = '0'
-        joined_list = string.join(line_list, '')
-        renumber_file.write(joined_list)
-        atom_count = atom_count + 1
-    renumber_file.write('TER\n')
-    renumber_file.write('END')
-
-    pdb_file.close()
-    renumber_file.close()
-
-def renumber(in_pdb, out_pdb):
-    #         Renumber(start_res_num, start_atom_num, pdb_path, renumber_path)
+            outfile.write(line)
+        
+    outfile.write('TER\nEND')
+    infile.close()
+    outfile.close()
 
 def main(argv):
     
