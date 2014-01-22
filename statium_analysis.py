@@ -1,4 +1,5 @@
 import os
+import math
 from util import filelines2list
 from util import list2file
 from util import isAA
@@ -23,6 +24,7 @@ def analysis_pipeline(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out
 #
 #    v1.0.0's input: bfl1_2vm6    seq_1.txt    bgl1_2vm6_coyote    1
     run_analysis(in_cfg_path, in_res_path, in_pdb_path, lib_pdbs_path, out_dir, 1, 6.0, 4.0, verbose)
+
 
 def prepare_directory(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir):
 
@@ -49,11 +51,33 @@ def run_analysis(in_cfg_path, in_res_path, in_pdb_path, lib_pdbs_path, out_dir, 
     residues = [(int(line.strip()) - 1) for line in res_lines]
     
     pdb_info = get_pdb_info(in_pdb_path)
-    if(verbose):
-        print("Finished extracting information from the input PDB file: " + in_pdb_path)
-        print(pdb_info)
-#    distance_matrix = distance_matrix_sidechain(pdb_info)
+    if(verbose): print("Finished extracting information from the input PDB file: " + in_pdb_path)
+
+    distance_matrix = compute_distance_matrix(pdb_info)
+    if(verbose): print("Finished computing inter-atomic distances for residues in input PDB file")
     
+
+def compute_distance_matrix(pdb_info):
+    
+    N = len(pdb_info)
+    distance_matrix = [ [ [[], []] for i in range(N) ] for j in range(N)]
+    
+    for i in range(N):
+        for j in range(i + 1, N):
+            for k in range(len(pdb_info[i][2][0])):
+                for l in range(len(pdb_info[j][2][0])):
+                    distance_matrix[i][j][0].append([pdb_info[i][2][0][k], pdb_info[j][2][0][l]])
+                    distance_matrix[i][j][1].append(distance(pdb_info[i][2][1][k], pdb_info[j][2][1][l]))
+        
+    return distance_matrix
+
+#just apply distance formula
+def distance(C1, C2):
+    return math.sqrt(((C1[0] - C2[0])**2) + ((C1[1] - C2[1])**2) + ((C1[2] - C2[2])**2))
+
+
+#Creates a list with information for each residue:
+#e.g for each residue: [[1, ''], '16', [['CA', 'CB', 'OG1', 'CG2'], [[21.142, -19.229, 4.185], [21.957, -18.596, 5.322], [23.023, 17.818, 4.773], [22.547, -19.67, 6.206]]]]
 def get_pdb_info(in_pdb_path):
 
     pdb_info = [] #list of lists: contains info on each AA
