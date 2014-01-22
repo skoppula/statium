@@ -1,5 +1,13 @@
 import os
+from util import filelines2list
 from util import list2file
+from util import isAA
+from util import AA2char
+from util import char2AA
+from util import AAchar2int
+from util import AAint2char
+from util import get_sidechain_atoms
+
 
 def analysis_pipeline(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir, verbose):
     
@@ -13,7 +21,7 @@ def analysis_pipeline(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out
 #        os.system(sp)
 #
 #    v1.0.0's input: bfl1_2vm6    seq_1.txt    bgl1_2vm6_coyote    1
-#   run_analysis(in_cfg_path, in_res_path, in_pdb_path, lib_pdbs_path, 1)
+    run_analysis(in_cfg_path, in_res_path, in_pdb_path, lib_pdbs_path, out_dir, 1, 6.0, 4.0)
 
 def prepare_directory(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir, verbose):
 
@@ -31,10 +39,79 @@ def prepare_directory(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out
     
     return lib_pdbs_path
 
-'''
-def run_analysis(in_cfg_path, in_res_path, in_pdb_path, list_lib_pdbs_path, 1):
-    
 
+def run_analysis(in_cfg_path, in_res_path, in_pdb_path, lib_pdbs_path, out_dir, num, pair_dist_cutoff, sidechain_match_cutoff):
+    
+    lib_pdb_paths = filelines2list(lib_pdbs_path)
+    
+    res_lines = filelines2list(in_res_path)
+    residues = [(int(line.strip()) - 1) for line in res_lines]
+    
+    pdb_info = get_pdb_info(in_pdb_path)
+#    distance_matrix = distance_matrix_sidechain(pdb_info)
+    
+def get_pdb_info(in_pdb_path):
+
+    pdb_info = [] #list of lists: contains info on each AA
+    res_list = []
+ 
+    lines = filelines2list(in_pdb_path)
+    
+    for i, line in enumerate(lines):
+        if line[0:4] == 'ATOM' and line[13:15] == 'CA':
+            try:
+                position = int(line[22:28].strip())
+                chainID = line[21:22].strip()
+                
+                if position not in res_list:
+                    res_list.append(position)
+            except:
+                continue
+            
+            AA = line[17:20]
+            if isAA(AA):
+                
+                pdb_info.append([])
+                pdb_info[-1].append([position, chainID])        #Put in position
+                pdb_info[-1].append(AAchar2int(AA2char(AA)))    #Put in AA identity
+                
+                pdb_info[-1].append([[], []])                   #Put in alpha carbon, and coordinates of alpha carbon
+                pdb_info[-1][-1][0].append('CA')
+                pdb_info[-1][-1][1].append([float(line[30:38]), float(line[39:46]), float(line[47:54])])
+                
+                atoms_list = get_sidechain_atoms(AA2char(AA))
+                found_list = []
+                
+                for line2 in lines[i, len(lines)]:
+                    if line2[0:4] == 'ATOM':
+                        try:
+                            position2 = int(line2[22:28].strip())
+                            chainID2 = line2[21:22].strip()
+                        except: continue
+                        
+                        if position2 > position:
+                            break
+                        elif position2 == position and chainID2 == chainID:
+                            atom_type = line2[13:16].strip()
+                        
+                            #Put in other atoms, and coordinates of atoms
+                            if atom_type in atoms_list and not atom_type in found_list:
+                                found_list.append(atom_type)                            
+                                pdb_info[-1][-1][0].append(atom_type)
+                                pdb_info[-1][-1][1].append([float(line2[30:38]), float(line2[39:46]), float(line2[47:54])])
+
+    for t in pdb_info:
+        if len(t) != 3:
+            print 'INCORRECT FORMAT: ' + in_pdb_path + ': ' + t
+        
+    for point in pdb_info[i][2][1]:
+        for k in range(3):
+            try: float(point[k])
+            except: print 'Bad coordinate at ' + str(point[k]) + ' in ' + in_pdb_path
+    
+    return pdb_info
+        
+'''
 def statium_sidechain(preset_dir, pdb_paths, out_dir, num):
   
     ip = False
