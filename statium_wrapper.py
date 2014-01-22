@@ -3,7 +3,7 @@ from docopt import docopt
 from statium_reformat import renumber
 from statium_reformat import create_res
 from statium_reformat import create_cfg
-from statium_analysis import find_counts
+from statium_analysis import prepare_directory
 
 def main(argv):
     
@@ -60,11 +60,11 @@ def main(argv):
         if(verbose): print("Running STATIUM with: " + options['IN_CFG'] + " " + options['IN_RES'] + " " + options['IN_PDB'])
         
         if(options['OUT_DIR'] == None):   
-            find_counts(options['IN_CFG'], options['IN_RES'], options['IN_PDB'], options['IN_PDB_LIB_DIR'], options['IN_CFG'][:-4], verbose)
+            prepare_directory(options['IN_CFG'], options['IN_RES'], options['IN_PDB'], options['IN_PDB_LIB_DIR'], options['IN_CFG'][:-4], verbose)
             if(verbose): print("Done. STATIUM probabilities in output directory: " + options['IN_CFG'][:-4]);
             
         else:
-            find_counts(options['IN_CFG'], options['IN_RES'], options['IN_PDB'], options['IN_PDB_LIB_DIR'], options['OUT_DIR'], verbose)
+            prepare_directory(options['IN_CFG'], options['IN_RES'], options['IN_PDB'], options['IN_PDB_LIB_DIR'], options['OUT_DIR'], verbose)
             if(verbose): print("Done. STATIUM probabilities in output directory: " + options['OUT_DIR']);
 
     elif(options['calc_seq_energy']):
