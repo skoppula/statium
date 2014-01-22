@@ -13,6 +13,7 @@ def analysis_pipeline(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out
     
     if(verbose): print("Preparing directory folders...")
     lib_pdbs_path = prepare_directory(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir)
+    if(verbose): print("Written list of library PDB paths to: " + lib_pdbs_path)
     
 #    Joe uses a chmod'd shell script to do run statium_sidechain (AKA run_analysis):
 #        sp = os.path.join(out_dir, 'seq_' + str(1) + '.sh')
@@ -21,9 +22,9 @@ def analysis_pipeline(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out
 #        os.system(sp)
 #
 #    v1.0.0's input: bfl1_2vm6    seq_1.txt    bgl1_2vm6_coyote    1
-    run_analysis(in_cfg_path, in_res_path, in_pdb_path, lib_pdbs_path, out_dir, 1, 6.0, 4.0)
+    run_analysis(in_cfg_path, in_res_path, in_pdb_path, lib_pdbs_path, out_dir, 1, 6.0, 4.0, verbose)
 
-def prepare_directory(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir, verbose):
+def prepare_directory(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir):
 
     lib_pdbs = []
     pdbs = os.listdir(in_pdb_lib_dir);
@@ -33,14 +34,14 @@ def prepare_directory(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out
     
     if(not os.path.exists(out_dir)):
         os.mkdir(out_dir)
-    
+      
     lib_pdbs_path = os.path.join(out_dir, 'pdbs.txt')
     list2file(lib_pdbs, lib_pdbs_path)
     
     return lib_pdbs_path
 
 
-def run_analysis(in_cfg_path, in_res_path, in_pdb_path, lib_pdbs_path, out_dir, num, pair_dist_cutoff, sidechain_match_cutoff):
+def run_analysis(in_cfg_path, in_res_path, in_pdb_path, lib_pdbs_path, out_dir, num, pair_dist_cutoff, sidechain_match_cutoff, verbose):
     
     lib_pdb_paths = filelines2list(lib_pdbs_path)
     
@@ -48,6 +49,9 @@ def run_analysis(in_cfg_path, in_res_path, in_pdb_path, lib_pdbs_path, out_dir, 
     residues = [(int(line.strip()) - 1) for line in res_lines]
     
     pdb_info = get_pdb_info(in_pdb_path)
+    if(verbose):
+        print("Finished extracting information from the input PDB file: " + in_pdb_path)
+        print(pdb_info)
 #    distance_matrix = distance_matrix_sidechain(pdb_info)
     
 def get_pdb_info(in_pdb_path):
@@ -82,7 +86,7 @@ def get_pdb_info(in_pdb_path):
                 atoms_list = get_sidechain_atoms(AA2char(AA))
                 found_list = []
                 
-                for line2 in lines[i, len(lines)]:
+                for line2 in lines[i: len(lines)]:
                     if line2[0:4] == 'ATOM':
                         try:
                             position2 = int(line2[22:28].strip())
@@ -104,10 +108,10 @@ def get_pdb_info(in_pdb_path):
         if len(t) != 3:
             print 'INCORRECT FORMAT: ' + in_pdb_path + ': ' + t
         
-    for point in pdb_info[i][2][1]:
-        for k in range(3):
-            try: float(point[k])
-            except: print 'Bad coordinate at ' + str(point[k]) + ' in ' + in_pdb_path
+        for point in t[2][1]:
+            for k in range(3):
+                try: float(point[k])
+                except: print 'Bad coordinate at ' + str(point[k]) + ' in ' + in_pdb_path
     
     return pdb_info
         
