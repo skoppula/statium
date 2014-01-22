@@ -1,16 +1,3 @@
-#creates a simple cfg file from a *.res file to run statium analysis
-def create_cfg(in_res_path, out_cfg_path):
-    
-    infile = open(in_res_path, 'r')
-    outfile = open(out_cfg_path, 'w')
-    
-    lines = infile.readlines()
-    outfile.write(lines[0][:-1] + "=0")
-    
-    infile.close()
-    outfile.close()
-        
-
 #Function to create *.res file: each line containing residue position to be considered in STATIUM analysis
 def create_res(in_pdb_path_orig, in_pdb_path_renumbered, out_res_path):
     

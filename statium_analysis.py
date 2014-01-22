@@ -9,11 +9,10 @@ from util import AAchar2int
 from util import AAint2char
 from util import get_sidechain_atoms
 
-
-def analysis_pipeline(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir, verbose):
+def analysis_pipeline(in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir, verbose):
     
     if(verbose): print("Preparing directory folders...")
-    lib_pdbs_path = prepare_directory(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir)
+    lib_pdbs_path = prepare_directory(in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir)
     if(verbose): print("Written list of library PDB paths to: " + lib_pdbs_path)
     
 #    Joe uses a chmod'd shell script to do run statium_sidechain (AKA run_analysis):
@@ -23,7 +22,7 @@ def analysis_pipeline(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out
 #        os.system(sp)
 #
 #    v1.0.0's input: bfl1_2vm6    seq_1.txt    bgl1_2vm6_coyote    1
-    run_analysis(in_cfg_path, in_res_path, in_pdb_path, lib_pdbs_path, out_dir, 1, 6.0, 4.0, verbose)
+    run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, out_dir, 1, 6.0, 4.0, verbose)
 
 
 def prepare_directory(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir):
@@ -43,7 +42,7 @@ def prepare_directory(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out
     return lib_pdbs_path
 
 
-def run_analysis(in_cfg_path, in_res_path, in_pdb_path, lib_pdbs_path, out_dir, num, pair_dist_cutoff, sidechain_match_cutoff, verbose):
+def run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, out_dir, num, pair_dist_cutoff, sidechain_match_cutoff, verbose):
     
     lib_pdb_paths = filelines2list(lib_pdbs_path)
     
