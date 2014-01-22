@@ -17288,7 +17288,7 @@ def statium_sidechain_coyote_compile(preset):
         if c.find('count') > -1:
         if not c.split('.')[0] in tl: tl.append(c.split('.')[0])
         
-    for t in tl:
+    for t in tl:convert_counts_sidechain
         print t
         counts = []
         for i in range(20): counts.append(0)
@@ -18222,7 +18222,7 @@ def statium_sidechain(preset_dir, pdb_paths, out_dir, num):
     counts_file = open(os.path.join(out_dir, str(use_index[pos][0] + 1) + '_' + str(use_index[pos][1] + 1) + '_counts.txt_' + str(num)), 'w')
     for i in range(20): counts_file.write(AAChar_fasta(i) + '\t' + str(dcounts[pos][i]) + '\n')
     counts_file.close()
-    
+    statium_sidechain_coyote_compile
 def structure_comp(residue_path, pdb_path1, pdb_path2):
   
     pair_def_cutoff = 6.0

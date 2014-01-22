@@ -1,10 +1,10 @@
 import os
-from util import write_list_to_file
+from util import list2file
 
-def analysis_wrapper(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir, verbose):
+def analysis_pipeline(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir, verbose):
     
     if(verbose): print("Preparing directory folders...")
-    list_lib_pdbs_path = prepare_directory(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir)
+    lib_pdbs_path = prepare_directory(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir)
     
 #    Joe uses a chmod'd shell script to do run statium_sidechain (AKA run_analysis):
 #        sp = os.path.join(out_dir, 'seq_' + str(1) + '.sh')
@@ -13,7 +13,7 @@ def analysis_wrapper(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out_
 #        os.system(sp)
 #
 #    v1.0.0's input: bfl1_2vm6    seq_1.txt    bgl1_2vm6_coyote    1
-    run_analysis(in_cfg_path, in_res_path, in_pdb_path, list_lib_pdbs_path, 1)
+#   run_analysis(in_cfg_path, in_res_path, in_pdb_path, lib_pdbs_path, 1)
 
 def prepare_directory(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir, verbose):
 
@@ -26,10 +26,10 @@ def prepare_directory(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out
     if(not os.path.exists(out_dir)):
         os.mkdir(out_dir)
     
-    list_lib_pdbs_path = os.path.join(out_dir, 'pdbs.txt')
-    write_list_to_file(lib_pdbs, list_lib_pdbs_path)
+    lib_pdbs_path = os.path.join(out_dir, 'pdbs.txt')
+    list2file(lib_pdbs, lib_pdbs_path)
     
-    return list_lib_pdbs_path
+    return lib_pdbs_path
 
 '''
 def run_analysis(in_cfg_path, in_res_path, in_pdb_path, list_lib_pdbs_path, 1):
