@@ -59,22 +59,19 @@ def run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, in_ip_lib_dir, out_dir
             if ((i in residues and j not in residues) or (j in residues and i not in residues)) and (check_cutoff(distance_matrix[i][j], pair_dist_cutoff)):
                 use_indices.append([i, j])
     
-    d = [[0 for j in range(20)] for i in range(len(use_indices))]
-    
     template_distances = []
     for pair in use_indices:
         (pos1, pos2) = (pair[0], pair[1])
         (pos1_list, pos2_list) = (pdb_info[pos1][2][0], ['CA', 'CB']) 
         
-        if ('CA' in pdb_info[pos2][2][0] and 'CB' in pdb_info[pos2][2][0]):
+        if 'CA' in pdb_info[pos2][2][0] and 'CB' in pdb_info[pos2][2][0]:
             template_distances.append([])
         else:
             template_distances.append(select_sidechain_distances(pos1_list, pos2_list, distance_matrix[pos1][pos2]))
     
-        
     ip_res = [0 for i in range(20)]
+    d = [[0 for j in range(20)] for i in range(len(use_indices))]       
     lib_pdb_paths = filelines2list(lib_pdbs_path)
-    
     
     for (i, pdb_path) in enumerate(lib_pdb_paths):    
         if(verbose): print("Processing library .pdb: " + pdb_path + "\t (" + str(i) + " out of " + str(len(lib_pdb_paths)) + ")")
@@ -82,6 +79,33 @@ def run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, in_ip_lib_dir, out_dir
         lib_pdb_info = get_pdb_info(pdb_path)        
         lib_use_indices = get_IPs(lib_ip_path)
         lib_distance_matrix = distance_matrix_sidechain_use(lib_pdb_info, lib_use_indices)
+    
+        for i in range(len(lib_use_indices)):
+            (lib_pos1, lib_pos2) = (lib_use_indices[i][0], lib_use_indices[i][1])
+            
+            if lib_pos2 - lib_pos1 <= 4: continue
+            
+            (lib_AA1, lib_AA2) = (lib_pdb_info[lib_pos1][1], lib_pdb_info[lib_pos2][1])
+            if lib_AA1 < 0 or lib_AA2 < 0 or lib_AA1 > 19 or lib_AA2 > 19: continue
+            
+            ip_res[lib_AA1] += 1
+            ip_res[lib_AA2] += 1
+            
+            for j in range(len(use_indices)):
+                
+                (pos1, pos2) = (use_indices[j][0], use_indices[j][1])
+                AA1 = pdb_info[pos1][1]
+                
+                if 'CA' in lib_pdb_info[lib_pos2][2][0] and 'CB' in lib_pdb_info[lib_pos2][2][0]:
+                    if lib_AA1 == AA1:
+                           lib_dist_for = select_sidechain_distances(lib_pdbinfo_vec[lib_pos1][2][0], ['CA', 'CB'], lib_distance_matrix[lib_pos1][lib_pos2], True)
+                    if matching_sidechain_pair(template_distances[j], lib_dist_for, sidechain_cutoff_dist(AAChar_fasta(AA1))):
+                    dcounts[j][lib_AA2] += 1
+                if stub_intact(lib_pdbinfo_vec[lib_pos1][2][0]):
+                    if lib_AA2 == AA1:
+                           lib_dist_rev = select_sidechain_distances(['CA', 'CB'], lib_pdbinfo_vec[lib_pos2][2][0], lib_distance_matrix[lib_pos1][lib_pos2], False)
+                    if matching_sidechain_pair(template_distances[j], lib_dist_rev, sidechain_cutoff_dist(AAChar_fasta(AA1))):
+                    dcounts[j][lib_AA1] += 1
 
 def distance_matrix_sidechain_use(pdb_info, use_index):
     
