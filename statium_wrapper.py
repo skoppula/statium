@@ -2,7 +2,6 @@ import sys
 from docopt import docopt
 from statium_reformat import renumber
 from statium_reformat import create_res
-from statium_reformat import create_cfg
 from statium_analysis import analysis_pipeline
 
 def main(argv):
@@ -10,7 +9,7 @@ def main(argv):
     helpdoc =   """
                 usage: statium_wrapper.py renumber (IN_PDB) [OUT_PDB] [-v | --verbose]
                        statium_wrapper.py create_res (IN_PDB_ORIG IN_PDB_RENUMBERED) [OUT_RES] [-v | --verbose]
-                       statium_wrapper.py run_statium (IN_CFG IN_RES IN_PDB IN_PDB_LIB_DIR) [OUT_DIR] [-v | --verbose]
+                       statium_wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR) [OUT_DIR] [-v | --verbose]
                        statium_wrapper.py calc_seq_energy (DIR SEQ) [-v | --verbose]
                        statium_wrapper.py [-h | --help]
                 """
@@ -43,7 +42,7 @@ def main(argv):
     
     elif(options['run_statium']):
         
-        if(verbose): print("Running STATIUM with: " + options['IN_CFG'] + " " + options['IN_RES'] + " " + options['IN_PDB'] + " " + options['IN_PDB_LIB_DIR'])
+        if(verbose): print("Running STATIUM with: " + options['IN_RES'] + " " + options['IN_PDB'] + " " + options['IN_PDB_LIB_DIR'])
         
         if(options['OUT_DIR'] == None):   
             analysis_pipeline(options['IN_RES'], options['IN_PDB'], options['IN_PDB_LIB_DIR'], options['IN_RES'][:-4], verbose)

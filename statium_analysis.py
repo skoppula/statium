@@ -25,7 +25,7 @@ def analysis_pipeline(in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir, verbose
     run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, out_dir, 1, 6.0, 4.0, verbose)
 
 
-def prepare_directory(in_cfg_path, in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir):
+def prepare_directory(in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir):
 
     lib_pdbs = []
     pdbs = os.listdir(in_pdb_lib_dir);
@@ -55,6 +55,72 @@ def run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, out_dir, num, pair_dis
     distance_matrix = compute_distance_matrix(pdb_info)
     if(verbose): print("Finished computing inter-atomic distances for residues in input PDB file")
     
+    use_indices = [] #check which residue pairs to use (within interacting distance)
+    for i in range(len(pdb_info)):
+        for j in range(i+1, len(pdb_info)):
+            if ((i in residues and j not in residues) or (j in residues and i not in residues)) and (check_cutoff(distance_matrix[i][j], pair_dist_cutoff)):
+                use_indices.append([i, j])
+    
+    d = [[0 for j in range(20)] for i in range(len(use_indices))]
+    
+    template_distances = []
+    for pair in use_indices:
+        (pos1, pos2) = (pair[0], pair[1])
+        (pos1_list, pos2_list) = (pdb_info[pos1][2][0], ['CA', 'CB']) 
+        
+        if ('CA' in pdb_info[pos2][2][0] and 'CB' in pdb_info[pos2][2][0]):
+            template_distances.append([])
+        else:
+            template_distances.append(select_sidechain_distances(pos1_list, pos2_list, distance_matrix[pos1][pos2]))
+    
+        
+    ip_res = [0 for i in range(20)]
+
+    for path in lib_pdb_paths:
+        if(verbose): print("Processing library .pdb: " + path)
+        pdb_path = path[0]
+        lib_ip_path = os.path.join('/home/bartolo/web/PDB/ip_90_wGLY', os.path.split(paths[path][0])[1].split('.')[0] + '.ip')
+        lib_pdbinfo_vec = store_pdb_info(pdb_path)
+        
+        libN = len(lib_pdbinfo_vec)
+    
+        lib_use_index = upload_interacting_pairs(lib_ip_path)
+        lib_distance_matrix = distance_matrix_sidechain_use(lib_pdbinfo_vec, lib_use_index)
+
+    #lib_distance_matrix = distance_matrix_sidechain(lib_pdbinfo_vec)
+        #lib_use_index = []
+        #ip_file = open(lib_ip_path, 'w')
+        #for i in range(libN):
+     #   for j in range(i + 1, libN):
+            #if AAChar_fasta(lib_pdbinfo_vec[i][1]) == 'G' or AAChar_fasta(lib_pdbinfo_vec[j][1]) == 'G': continue
+      #      if atoms_within_cutoff(lib_distance_matrix[i][j], pair_def_cutoff):
+    #        lib_use_index.append([i, j])
+    #        ip_file.write(str(i) + '\t' + str(j) + '\n')
+    #ip_file.close()
+    #continue
+
+        
+#just choose any distance with similar interacting atom pairs as given
+#I don't think this actually returns meaningful results because it's using
+#atom indices to query residues, but shouldn't matter since it's 
+#only used in a filler/else/except clause
+def select_sidechain_distances(pos1_atoms, pos2_atoms, distance_matrix):
+  
+    pair_info = [[], []]
+    for atomi in pos1_atoms:
+        for atomj in pos2_atoms:
+            idx = distance_matrix[0].index([atomi, atomj])
+            pair_info[0].append([atomi, atomj])
+            pair_info[1].append(distance_matrix[1][idx])
+    
+    return pair_info
+    
+def check_cutoff(residue_pair, cutoff):
+    for k in range(len(residue_pair[1])):
+        if residue_pair[1][k] < cutoff: return True
+        
+    return False
+
 
 def compute_distance_matrix(pdb_info):
     
