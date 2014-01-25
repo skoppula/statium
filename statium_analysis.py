@@ -9,7 +9,7 @@ from util import AAchar2int
 from util import AAint2char
 from util import get_sidechain_atoms
 
-def analysis_pipeline(in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir, verbose):
+def analysis_pipeline(in_res_path, in_pdb_path, in_pdb_lib_dir, in_ip_lib_dir, out_dir, verbose):
     
     if(verbose): print("Preparing directory folders...")
     lib_pdbs_path = prepare_directory(in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir)
@@ -22,7 +22,7 @@ def analysis_pipeline(in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir, verbose
 #        os.system(sp)
 #
 #    v1.0.0's input: bfl1_2vm6    seq_1.txt    bgl1_2vm6_coyote    1
-    run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, out_dir, 1, 6.0, 4.0, verbose)
+    run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, in_ip_lib_dir, out_dir, 1, 6.0, 4.0, verbose)
 
 
 def prepare_directory(in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir):
@@ -42,9 +42,7 @@ def prepare_directory(in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir):
     return lib_pdbs_path
 
 
-def run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, out_dir, num, pair_dist_cutoff, sidechain_match_cutoff, verbose):
-    
-    lib_pdb_paths = filelines2list(lib_pdbs_path)
+def run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, in_ip_lib_dir, out_dir, num, pair_dist_cutoff, sidechain_match_cutoff, verbose):
     
     res_lines = filelines2list(in_res_path)
     residues = [(int(line.strip()) - 1) for line in res_lines]
@@ -75,31 +73,43 @@ def run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, out_dir, num, pair_dis
     
         
     ip_res = [0 for i in range(20)]
-
-    for path in lib_pdb_paths:
-        if(verbose): print("Processing library .pdb: " + path)
-        pdb_path = path[0]
-        lib_ip_path = os.path.join('/home/bartolo/web/PDB/ip_90_wGLY', os.path.split(paths[path][0])[1].split('.')[0] + '.ip')
-        lib_pdbinfo_vec = store_pdb_info(pdb_path)
-        
-        libN = len(lib_pdbinfo_vec)
+    lib_pdb_paths = filelines2list(lib_pdbs_path)
     
-        lib_use_index = upload_interacting_pairs(lib_ip_path)
-        lib_distance_matrix = distance_matrix_sidechain_use(lib_pdbinfo_vec, lib_use_index)
+    
+    for (i, pdb_path) in enumerate(lib_pdb_paths):    
+        if(verbose): print("Processing library .pdb: " + pdb_path + "\t (" + str(i) + " out of " + str(len(lib_pdb_paths)) + ")")
+        lib_ip_path = os.path.join(in_ip_lib_dir, os.path.split(pdb_path)[1].split('.')[0] + '.ip')
+        lib_pdb_info = get_pdb_info(pdb_path)        
+        lib_use_indices = get_IPs(lib_ip_path)
+        lib_distance_matrix = distance_matrix_sidechain_use(lib_pdb_info, lib_use_indices)
 
-    #lib_distance_matrix = distance_matrix_sidechain(lib_pdbinfo_vec)
-        #lib_use_index = []
-        #ip_file = open(lib_ip_path, 'w')
-        #for i in range(libN):
-     #   for j in range(i + 1, libN):
-            #if AAChar_fasta(lib_pdbinfo_vec[i][1]) == 'G' or AAChar_fasta(lib_pdbinfo_vec[j][1]) == 'G': continue
-      #      if atoms_within_cutoff(lib_distance_matrix[i][j], pair_def_cutoff):
-    #        lib_use_index.append([i, j])
-    #        ip_file.write(str(i) + '\t' + str(j) + '\n')
-    #ip_file.close()
-    #continue
-
+def distance_matrix_sidechain_use(pdb_info, use_index):
+    
+    N = len(pdb_info)
+    distance_matrix = [[[[], []] for i in range(N)] for j in range(N)]
+    
+    for pair in use_index:
+        (i, j) = (pair[0], pair[1])
         
+        for k in range(len(pdb_info[i][2][0])):
+            for l in range(len(pdb_info[j][2][0])):
+                (atom1, atom2) = (pdb_info[i][2][0][k], pdb_info[j][2][0][l])
+                dist = distance(pdb_info[i][2][1][k], pdb_info[j][2][1][l])
+                distance_matrix[i][j][0].append([atom1, atom2])
+                distance_matrix[i][j][1].append(dist)
+        
+    return distance_matrix
+    
+
+def get_IPs(ip_file):
+    lines = filelines2list(ip_file)
+    return map(extractIP, lines)
+
+def extractIP(line):
+    items = line.strip().split()
+    (pos1, pos2) = (int(items[0]), int(items[1]))
+    return [pos1, pos2]
+
 #just choose any distance with similar interacting atom pairs as given
 #I don't think this actually returns meaningful results because it's using
 #atom indices to query residues, but shouldn't matter since it's 

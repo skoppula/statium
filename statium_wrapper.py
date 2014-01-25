@@ -9,7 +9,7 @@ def main(argv):
     helpdoc =   """
                 usage: statium_wrapper.py renumber (IN_PDB) [OUT_PDB] [-v | --verbose]
                        statium_wrapper.py create_res (IN_PDB_ORIG IN_PDB_RENUMBERED) [OUT_RES] [-v | --verbose]
-                       statium_wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR) [OUT_DIR] [-v | --verbose]
+                       statium_wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [-v | --verbose]
                        statium_wrapper.py calc_seq_energy (DIR SEQ) [-v | --verbose]
                        statium_wrapper.py [-h | --help]
                 """
@@ -42,14 +42,14 @@ def main(argv):
     
     elif(options['run_statium']):
         
-        if(verbose): print("Running STATIUM with: " + options['IN_RES'] + " " + options['IN_PDB'] + " " + options['IN_PDB_LIB_DIR'])
+        if(verbose): print("Running STATIUM with: " + options['IN_RES'] + " " + options['IN_PDB'] + " " + options['IN_PDB_LIB_DIR'] + " " + options['IN_IP_LIB_DIR'])
         
         if(options['OUT_DIR'] == None):   
-            analysis_pipeline(options['IN_RES'], options['IN_PDB'], options['IN_PDB_LIB_DIR'], options['IN_RES'][:-4], verbose)
+            analysis_pipeline(options['IN_RES'], options['IN_PDB'], options['IN_PDB_LIB_DIR'], options['IN_IP_LIB_DIR'], options['IN_RES'][:-4], verbose)
             if(verbose): print("Done. STATIUM probabilities in output directory: " + options['IN_RES'][:-4]);
             
         else:
-            analysis_pipeline(options['IN_RES'], options['IN_PDB'], options['IN_PDB_LIB_DIR'], options['OUT_DIR'], verbose)
+            analysis_pipeline(options['IN_RES'], options['IN_PDB'], options['IN_PDB_LIB_DIR'], options['IN_IP_LIB_DIR'], options['OUT_DIR'], verbose)
             if(verbose): print("Done. STATIUM probabilities in output directory: " + options['OUT_DIR']);
 
     elif(options['calc_seq_energy']):
