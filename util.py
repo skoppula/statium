@@ -29,6 +29,13 @@ def filelines2list(infile):
         
     return t
 
+def AA_cutoff_dist(AA):
+    
+    if(AA == 'A' or AA == 'G'):
+        return 0.2
+    else:
+        return 0.4
+
 def AA2char(a):
     AA = bidict.bidict({'ALA':'A', 'CYS':'C', 'ASP':'D', 'GLU':'E', 'PHE':'F', 'GLY':'G', 'ILE':'I', 'LYS':'K', 'LEU':'L', 'MET':'M', 'ASN':'N', 'PRO':'P', 'GLN':'Q', 'ARG':'R', 'SER':'S', 'THR':'T', 'VAL':'V', 'TRP':'W', 'TYR':'Y', 'MSE':'X', 'HIS':'H'})
     return AA[a]

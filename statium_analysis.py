@@ -8,6 +8,7 @@ from util import char2AA
 from util import AAchar2int
 from util import AAint2char
 from util import get_sidechain_atoms
+from util import AA_cutoff_dist
 
 def analysis_pipeline(in_res_path, in_pdb_path, in_pdb_lib_dir, in_ip_lib_dir, out_dir, verbose):
     
@@ -59,18 +60,18 @@ def run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, in_ip_lib_dir, out_dir
             if ((i in residues and j not in residues) or (j in residues and i not in residues)) and (check_cutoff(distance_matrix[i][j], pair_dist_cutoff)):
                 use_indices.append([i, j])
     
-    template_distances = []
+    distances = [] #stores distance info for each use_indices
     for pair in use_indices:
         (pos1, pos2) = (pair[0], pair[1])
         (pos1_list, pos2_list) = (pdb_info[pos1][2][0], ['CA', 'CB']) 
         
-        if 'CA' in pdb_info[pos2][2][0] and 'CB' in pdb_info[pos2][2][0]:
-            template_distances.append([])
+        if stub_intact(pdb_info[pos2][2][0]):
+            distances.append([])
         else:
-            template_distances.append(select_sidechain_distances(pos1_list, pos2_list, distance_matrix[pos1][pos2]))
-    
+            distances.append(select_sidechain_distances(pos1_list, pos2_list, distance_matrix[pos1][pos2], "forward"))
+
     ip_res = [0 for i in range(20)]
-    d = [[0 for j in range(20)] for i in range(len(use_indices))]       
+    counts = [[0 for j in range(20)] for i in range(len(use_indices))]       
     lib_pdb_paths = filelines2list(lib_pdbs_path)
     
     for (i, pdb_path) in enumerate(lib_pdb_paths):    
@@ -80,8 +81,8 @@ def run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, in_ip_lib_dir, out_dir
         lib_use_indices = get_IPs(lib_ip_path)
         lib_distance_matrix = distance_matrix_sidechain_use(lib_pdb_info, lib_use_indices)
     
-        for i in range(len(lib_use_indices)):
-            (lib_pos1, lib_pos2) = (lib_use_indices[i][0], lib_use_indices[i][1])
+        for lib_pair in lib_use_indices:
+            (lib_pos1, lib_pos2) = (lib_pair[0], lib_pair[1])
             
             if lib_pos2 - lib_pos1 <= 4: continue
             
@@ -91,22 +92,54 @@ def run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, in_ip_lib_dir, out_dir
             ip_res[lib_AA1] += 1
             ip_res[lib_AA2] += 1
             
-            for j in range(len(use_indices)):
+            for (j, pair) in enumerate(use_indices):
                 
-                (pos1, pos2) = (use_indices[j][0], use_indices[j][1])
+                (pos1, pos2) = (pair[0], pair[1])
                 AA1 = pdb_info[pos1][1]
                 
-                if 'CA' in lib_pdb_info[lib_pos2][2][0] and 'CB' in lib_pdb_info[lib_pos2][2][0]:
+                if stub_intact(lib_pdb_info[lib_pos2][2][0]):
                     if lib_AA1 == AA1:
-                           lib_dist_for = select_sidechain_distances(lib_pdbinfo_vec[lib_pos1][2][0], ['CA', 'CB'], lib_distance_matrix[lib_pos1][lib_pos2], True)
-                    if matching_sidechain_pair(template_distances[j], lib_dist_for, sidechain_cutoff_dist(AAChar_fasta(AA1))):
-                    dcounts[j][lib_AA2] += 1
-                if stub_intact(lib_pdbinfo_vec[lib_pos1][2][0]):
+                        lib_dist_forward = select_sidechain_distances(lib_pdb_info[lib_pos1][2][0], ['CA', 'CB'], lib_distance_matrix[lib_pos1][lib_pos2], "forward")
+                    if matching_sidechain_pair(distances[j], lib_dist_forward, AA_cutoff_dist(AAchar2int(AA1))):
+                        counts[j][lib_AA2] += 1
+                        
+                if stub_intact(lib_pdb_info[lib_pos1][2][0]):
                     if lib_AA2 == AA1:
-                           lib_dist_rev = select_sidechain_distances(['CA', 'CB'], lib_pdbinfo_vec[lib_pos2][2][0], lib_distance_matrix[lib_pos1][lib_pos2], False)
-                    if matching_sidechain_pair(template_distances[j], lib_dist_rev, sidechain_cutoff_dist(AAChar_fasta(AA1))):
-                    dcounts[j][lib_AA1] += 1
+                        lib_dist_rev = select_sidechain_distances(['CA', 'CB'], lib_pdb_info[lib_pos2][2][0], lib_distance_matrix[lib_pos1][lib_pos2], "backward") 
+                    if matching_sidechain_pair(distances[j], lib_dist_rev, AA_cutoff_dist(AAchar2int(AA1))):
+                        counts[j][lib_AA1] += 1
 
+def matching_sidechain_pair(distances1, distances2, cutoff):
+  
+    sd = 0.0
+    count = 0.0
+
+    for i in range(len(distances1[0])):
+        pair_i = distances1[0][i]
+        di = distances1[1][i]
+        
+        for j in range(len(distances2[0])): 
+            pair_j = distances2[0][j]
+            dj = distances2[1][j]
+
+            if pair_j == pair_i:
+                sd += ((di - dj) ** 2)
+                count += 1.0
+
+    if math.sqrt(sd / count) < cutoff:
+        return True
+    else:
+        return False
+    
+
+#checks that 'CA' and 'CB' are in list of atoms
+def stub_intact(atoms):
+    if 'CA' in atoms and 'CB' in atoms:
+        return True
+    else:
+        return False
+
+#returns a small distance matrix for the residues with given indices using the input pdb_info structure
 def distance_matrix_sidechain_use(pdb_info, use_index):
     
     N = len(pdb_info)
@@ -124,7 +157,7 @@ def distance_matrix_sidechain_use(pdb_info, use_index):
         
     return distance_matrix
     
-
+#gets interacting pairs from .ip file
 def get_IPs(ip_file):
     lines = filelines2list(ip_file)
     return map(extractIP, lines)
@@ -135,16 +168,19 @@ def extractIP(line):
     return [pos1, pos2]
 
 #just choose any distance with similar interacting atom pairs as given
-#I don't think this actually returns meaningful results because it's using
+#I don't know if this actually returns meaningful results because it's using
 #atom indices to query residues, but shouldn't matter since it's 
 #only used in a filler/else/except clause
-def select_sidechain_distances(pos1_atoms, pos2_atoms, distance_matrix):
+def select_sidechain_distances(pos1_atoms, pos2_atoms, distance_matrix, direction):
   
     pair_info = [[], []]
     for atomi in pos1_atoms:
         for atomj in pos2_atoms:
             idx = distance_matrix[0].index([atomi, atomj])
-            pair_info[0].append([atomi, atomj])
+            if(direction == 'forward'):
+                pair_info[0].append([atomi, atomj])
+            else:
+                pair_info[0].append([atomj, atomi])
             pair_info[1].append(distance_matrix[1][idx])
     
     return pair_info
