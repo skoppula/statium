@@ -3,6 +3,7 @@ from docopt import docopt
 from statium_reformat import renumber
 from statium_reformat import create_res
 from statium_analysis import statium_pipeline
+from statium_analysis import calc_seq_energy
 
 def main(argv):
     
@@ -10,7 +11,7 @@ def main(argv):
                 usage: statium_wrapper.py renumber (IN_PDB) [OUT_PDB] [-v | --verbose]
                        statium_wrapper.py create_res (IN_PDB_ORIG IN_PDB_RENUMBERED) [OUT_RES] [-v | --verbose]
                        statium_wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [-v | --verbose]
-                       statium_wrapper.py calc_seq_energy (DIR SEQ) [-v | --verbose]
+                       statium_wrapper.py calc_seq_energy (IN_RES IN_DIR PROBS_DIR SEQ) [-v | --verbose]
                        statium_wrapper.py [-h | --help]
                 """
     
@@ -53,7 +54,10 @@ def main(argv):
             if(verbose): print("Done. STATIUM probabilities in output directory: " + options['OUT_DIR']);
 
     elif(options['calc_seq_energy']):
-        if(verbose): print("Calculating energy for sequence: " + options['SEQ'] + " with STATIUM output directory " + options['DIR'])
+        if(verbose): print("Calculating energy for sequence: " + options['SEQ'] + " with STATIUM output directory " + options['IN_DIR'] + " " + options['PROBS_DIR'])
+        energy = calc_seq_energy(options['IN_RES'], options['IN_DIR'], options['PROBS_DIR'], options['SEQ'])
+        if(verbose): print('Done. Calculated energy: ' + str(energy))
+        else: print(str(energy))
         
 if __name__ == "__main__":
     main(sys.argv[1:])

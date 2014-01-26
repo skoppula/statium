@@ -4,12 +4,11 @@ from util import filelines2list
 from util import list2file
 from util import isAA
 from util import AA2char
-from util import char2AA
 from util import AAchar2int
 from util import AAint2char
 from util import get_sidechain_atoms
 from util import AA_cutoff_dist
-from rewrite.util import filelines2deeplist
+from util import filelines2deeplist
 
 def statium_pipeline(in_res_path, in_pdb_path, in_pdb_lib_dir, in_ip_lib_dir, out_dir, verbose):
     
@@ -320,79 +319,38 @@ def get_pdb_info(in_pdb_path):
     
     return pdb_info
 
+def calc_seq_energy (in_res_path, in_dir, probs_dir, seq):
+    
+    #loading in probability into all_probs
+    probs_files = os.listdir(probs_dir)
+    all_probs = [[], []] #[[[PROBS FOR IP1], [PROBS FOR IP2], ...], [[IP1], [IP2],...]]
+    
+    for file in probs_files:
+        file_path = os.path.join(in_dir, file)
+        lines = filelines2deeplist(file_path)
 
+        probs = [int(x[1]) for x in lines]
+        all_probs[0].append(probs)
+        all_probs[1].append([int(file.split('_')[0]) - 1, int(file.split('_')[1]) - 1])
+    
+    #read back from .res file where Chain B starts
+    line = filelines2list(in_res_path)[0]
+    line = line[:-1] if line[-1] == '\n' else line
+    seq_ref = [int(line) - 1, 0]
+    
+    lines = filelines2list(in_res_path)
+    residue_positions = [int(line.strip()) - 1 for line in lines]
 
-'''
-def statiumcalc(epath, seq):
-  
-    mode = load_design_energy_sidechain(epath)
-    print statium_energy_calc_sidechain(mode, seq, 0.0)
-'''
-
-'''
-def load_design_energy_sidechain(preset_dir):
-  
-    pair_list = load_design_preset_sidechain(preset_dir)
-    file_dir = os.path.split(preset_dir)[0]
-    file_base = os.path.split(preset_dir)[1]
-    
-    template_pdb_path = os.path.join(file_dir, file_base + '.pdb')
-    residue_path = os.path.join(file_dir, file_base + '.res')
-    cfg_path = os.path.join(file_dir, file_base + '.cfg')
-    mask_path = os.path.join(file_dir, file_base + '.mask')
-    weights_path = os.path.join(file_dir, file_base + '.weights')
-    
-    line = readline(cfg_path, 1)
-    cfg_items = line.strip().split('=')
-    seq_ref = [int(cfg_items[0]) - 1, int(cfg_items[1])]
-    
-    res_vec = []
-    res_lines = readlines(residue_path)
-    for line in res_lines:
-        res_vec.append(int(line.strip()) - 1)
-    
-    pdbinfo_vec = store_pdb_info(template_pdb_path)
-    
-    mask_vec = []
-    if os.path.exists(mask_path):
-        data = lines2list(mask_path)
-        for i in range(len(data)): mask_vec.append([data[i][0], data[i][1]])
-
-    
-    weights = []
-    if os.path.exists(weights_path):
-        wd = lines2list(weights_path)
-    for i in range(len(wd)): weights.append(wd[i][0])
-    else:
-        for i in range(len(pair_list[0])): weights.append(1.0)
-        
-    
-    return [pair_list, res_vec, pdbinfo_vec, seq_ref, mask_vec, weights]
-'''
-
-'''
-def statium_energy_calc_sidechain(energy_vec, seq, localX):
-  
-    pair_list = energy_vec[0]
-    seq_ref = energy_vec[3]
-    res_vec = energy_vec[1]
-    pdbinfo_vec = energy_vec[2]
-    mask_vec = energy_vec[4]
-    weights_vec = energy_vec[5]
-  
     energy = 0.0
-    L = len(res_vec)
-    for j in range(len(pair_list[0])):
-        pos1 = pair_list[1][j][1]
-        pos0 = pair_list[1][j][0]
+    for (ip_probs, ip_pos) in (all_probs[0], all_probs[1]):
+        pos1 = ip_pos[1]
+        
         try:
             if seq[pos1 - seq_ref[0] + seq_ref[1]] == 'X': continue
-            if pos1 in res_vec: aa1 = AAChar_int(seq[pos1 - seq_ref[0] + seq_ref[1]])
+            if pos1 in residue_positions:
+                AA = AAchar2int(seq[pos1 - seq_ref[0] + seq_ref[1]])
         except: continue
     
-        if AAChar_fasta(aa1) == 'G': e = 0.0
-        else: e = pair_list[0][j][aa1]
-        energy += e
+        energy += (ip_probs[AA] if  AAint2char(AA) != 'G' else 0.0)
             
     return energy
-'''
