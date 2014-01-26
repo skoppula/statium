@@ -9,8 +9,9 @@ from util import AAchar2int
 from util import AAint2char
 from util import get_sidechain_atoms
 from util import AA_cutoff_dist
+from rewrite.util import filelines2deeplist
 
-def analysis_pipeline(in_res_path, in_pdb_path, in_pdb_lib_dir, in_ip_lib_dir, out_dir, verbose):
+def statium_pipeline(in_res_path, in_pdb_path, in_pdb_lib_dir, in_ip_lib_dir, out_dir, verbose):
     
     if(verbose): print("Preparing directory folders...")
     lib_pdbs_path = prepare_directory(in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir)
@@ -93,18 +94,18 @@ def run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, in_ip_lib_dir, out_dir
                 if stub_intact(lib_pdb_info[lib_pos2][2][0]):
                     if lib_AA1 == AA1:
                         lib_dist_forward = select_sidechain_distances(lib_pdb_info[lib_pos1][2][0], ['CA', 'CB'], lib_distance_matrix[lib_pos1][lib_pos2], "forward")
-                        if matching_sidechain_pair(distances[j], lib_dist_forward, AA_cutoff_dist(AAchar2int(AA1))):
+                        if matching_sidechain_pair(distances[j], lib_dist_forward, AA_cutoff_dist(AAint2char(AA1))):
                             counts[j][lib_AA2] += 1
                         
                 if stub_intact(lib_pdb_info[lib_pos1][2][0]):
                     if lib_AA2 == AA1:
                         lib_dist_rev = select_sidechain_distances(['CA', 'CB'], lib_pdb_info[lib_pos2][2][0], lib_distance_matrix[lib_pos1][lib_pos2], "backward") 
-                        if matching_sidechain_pair(distances[j], lib_dist_rev, AA_cutoff_dist(AAchar2int(AA1))):
+                        if matching_sidechain_pair(distances[j], lib_dist_rev, AA_cutoff_dist(AAint2char(AA1))):
                             counts[j][lib_AA1] += 1
     
     if(verbose): print("Finished processing library .pdb files. Writing counted results to files in directory: " + out_dir)
               
-    counts_file = open(os.path.join(out_dir, 'ip_res.txt'), 'w')
+    counts_file = open(os.path.join(out_dir, 'lib_ip_residue_counts.txt'), 'w')
     for i in range(20): counts_file.write(AAchar2int(i) + '\t' + str(ip_res[i]) + '\n')
     counts_file.close()
 
@@ -112,6 +113,47 @@ def run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, in_ip_lib_dir, out_dir
         counts_file = open(os.path.join(out_dir, str(pair[0] + 1) + '_' + str(pair[1] + 1) + '_counts.txt'), 'w')
         for j in range(20): counts_file.write(AAchar2int(j) + '\t' + str(counts[i][j]) + '\n')
     counts_file.close()
+    
+    if(verbose): print("Determining probabilities from counts...")
+    determine_probs(out_dir, verbose)
+
+def determine_probs(out_dir, verbose):
+    
+    #create the _probs output directory
+    if(out_dir[-1] == '/'):
+        probs_dir = out_dir[-1] + '_probs'
+    else:
+        probs_dir = out_dir + '_probs'
+        
+    if not os.path.exists(probs_dir):
+        os.mkdir(probs_dir)
+    
+    if(verbose): print("Reading in the total residue counts of the PDB library: lib_ip_residue_counts.txt")
+    output_files = os.listdir(out_dir)
+    lib_summary_path = filter(lambda x: 'lib_ip_residue' in x, output_files) #search files for lib_ip_residue_counts.txt
+    lib_sum_data = filelines2deeplist(lib_summary_path[0])
+    
+    lib_pdb_total = sum([int(x[1]) for x in lib_sum_data])
+    lib_AA_probs = [x[1] / lib_pdb_total for x in lib_sum_data]
+    
+    #Transform every count file into a _probs file    
+    for file in output_files:
+        if('count' in file):
+            path = os.path.join(out_dir, file)
+            counts = filelines2deeplist(path)
+            out_path = os.path.join(probs_dir, file.split('_')[0] + '_' + file.split('_')[1] + '_probs.txt')
+            
+            total = sum([int(x[1]) for x in counts])
+            if(total > 99):
+                out = open(out_path, 'w')
+                AA_probs = [x[1]/total if x != 0 else 1/total for x in counts]
+                
+                for i in range(20):
+                    e = -1.0 * math.log(AA_probs[i] / lib_AA_probs[i])
+                    out.write(AAint2char(i) + '\t' + str(e) + '\n')
+                
+                out.close()   
+
 
 def matching_sidechain_pair(distances1, distances2, cutoff):
   
@@ -277,10 +319,80 @@ def get_pdb_info(in_pdb_path):
                 except: print 'Bad coordinate at ' + str(point[k]) + ' in ' + in_pdb_path
     
     return pdb_info
-        
 
-#                 if sys.argv[i] == '-build_statium':
-#         preset = sys.argv[i + 1]
-#                 statium_sidechain_coyote(preset, 'REG', 5000, sys.argv[0])
-#                 statium_sidechain_coyote_compile(preset)
-#         convert_counts_sidechain(preset)
+
+
+'''
+def statiumcalc(epath, seq):
+  
+    mode = load_design_energy_sidechain(epath)
+    print statium_energy_calc_sidechain(mode, seq, 0.0)
+'''
+
+'''
+def load_design_energy_sidechain(preset_dir):
+  
+    pair_list = load_design_preset_sidechain(preset_dir)
+    file_dir = os.path.split(preset_dir)[0]
+    file_base = os.path.split(preset_dir)[1]
+    
+    template_pdb_path = os.path.join(file_dir, file_base + '.pdb')
+    residue_path = os.path.join(file_dir, file_base + '.res')
+    cfg_path = os.path.join(file_dir, file_base + '.cfg')
+    mask_path = os.path.join(file_dir, file_base + '.mask')
+    weights_path = os.path.join(file_dir, file_base + '.weights')
+    
+    line = readline(cfg_path, 1)
+    cfg_items = line.strip().split('=')
+    seq_ref = [int(cfg_items[0]) - 1, int(cfg_items[1])]
+    
+    res_vec = []
+    res_lines = readlines(residue_path)
+    for line in res_lines:
+        res_vec.append(int(line.strip()) - 1)
+    
+    pdbinfo_vec = store_pdb_info(template_pdb_path)
+    
+    mask_vec = []
+    if os.path.exists(mask_path):
+        data = lines2list(mask_path)
+        for i in range(len(data)): mask_vec.append([data[i][0], data[i][1]])
+
+    
+    weights = []
+    if os.path.exists(weights_path):
+        wd = lines2list(weights_path)
+    for i in range(len(wd)): weights.append(wd[i][0])
+    else:
+        for i in range(len(pair_list[0])): weights.append(1.0)
+        
+    
+    return [pair_list, res_vec, pdbinfo_vec, seq_ref, mask_vec, weights]
+'''
+
+'''
+def statium_energy_calc_sidechain(energy_vec, seq, localX):
+  
+    pair_list = energy_vec[0]
+    seq_ref = energy_vec[3]
+    res_vec = energy_vec[1]
+    pdbinfo_vec = energy_vec[2]
+    mask_vec = energy_vec[4]
+    weights_vec = energy_vec[5]
+  
+    energy = 0.0
+    L = len(res_vec)
+    for j in range(len(pair_list[0])):
+        pos1 = pair_list[1][j][1]
+        pos0 = pair_list[1][j][0]
+        try:
+            if seq[pos1 - seq_ref[0] + seq_ref[1]] == 'X': continue
+            if pos1 in res_vec: aa1 = AAChar_int(seq[pos1 - seq_ref[0] + seq_ref[1]])
+        except: continue
+    
+        if AAChar_fasta(aa1) == 'G': e = 0.0
+        else: e = pair_list[0][j][aa1]
+        energy += e
+            
+    return energy
+'''

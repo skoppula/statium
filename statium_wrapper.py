@@ -2,7 +2,7 @@ import sys
 from docopt import docopt
 from statium_reformat import renumber
 from statium_reformat import create_res
-from statium_analysis import analysis_pipeline
+from statium_analysis import statium_pipeline
 
 def main(argv):
     
@@ -45,11 +45,11 @@ def main(argv):
         if(verbose): print("Running STATIUM with: " + options['IN_RES'] + " " + options['IN_PDB'] + " " + options['IN_PDB_LIB_DIR'] + " " + options['IN_IP_LIB_DIR'])
         
         if(options['OUT_DIR'] == None):   
-            analysis_pipeline(options['IN_RES'], options['IN_PDB'], options['IN_PDB_LIB_DIR'], options['IN_IP_LIB_DIR'], options['IN_RES'][:-4], verbose)
+            statium_pipeline(options['IN_RES'], options['IN_PDB'], options['IN_PDB_LIB_DIR'], options['IN_IP_LIB_DIR'], options['IN_RES'][:-4], verbose)
             if(verbose): print("Done. STATIUM probabilities in output directory: " + options['IN_RES'][:-4]);
             
         else:
-            analysis_pipeline(options['IN_RES'], options['IN_PDB'], options['IN_PDB_LIB_DIR'], options['IN_IP_LIB_DIR'], options['OUT_DIR'], verbose)
+            statium_pipeline(options['IN_RES'], options['IN_PDB'], options['IN_PDB_LIB_DIR'], options['IN_IP_LIB_DIR'], options['OUT_DIR'], verbose)
             if(verbose): print("Done. STATIUM probabilities in output directory: " + options['OUT_DIR']);
 
     elif(options['calc_seq_energy']):
