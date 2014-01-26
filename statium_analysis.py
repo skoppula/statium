@@ -58,7 +58,7 @@ def run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, in_ip_lib_dir, out_dir
         (pos1, pos2) = (pair[0], pair[1])
         (pos1_list, pos2_list) = (pdb_info[pos1][2][0], ['CA', 'CB']) 
         
-        if stub_intact(pdb_info[pos2][2][0]):
+        if not stub_intact(pdb_info[pos2][2][0]):
             distances.append([])
         else:
             distances.append(select_sidechain_distances(pos1_list, pos2_list, distance_matrix[pos1][pos2], "forward"))
@@ -73,13 +73,15 @@ def run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, in_ip_lib_dir, out_dir
         lib_pdb_info = get_pdb_info(pdb_path)        
         lib_use_indices = get_IPs(lib_ip_path)
         lib_distance_matrix = distance_matrix_sidechain_use(lib_pdb_info, lib_use_indices)
-    
+
         for lib_pair in lib_use_indices:
+
             (lib_pos1, lib_pos2) = (lib_pair[0], lib_pair[1])
             
             if lib_pos2 - lib_pos1 <= 4: continue
             
-            (lib_AA1, lib_AA2) = (lib_pdb_info[lib_pos1][1], lib_pdb_info[lib_pos2][1])
+            (lib_AA1, lib_AA2) = (int(lib_pdb_info[lib_pos1][1]), int(lib_pdb_info[lib_pos2][1]))
+
             if lib_AA1 < 0 or lib_AA2 < 0 or lib_AA1 > 19 or lib_AA2 > 19: continue
             
             ip_res[lib_AA1] += 1
@@ -88,7 +90,7 @@ def run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, in_ip_lib_dir, out_dir
             for (j, pair) in enumerate(use_indices):
                 
                 (pos1, pos2) = (pair[0], pair[1])
-                AA1 = pdb_info[pos1][1]
+                AA1 = int(pdb_info[pos1][1])
                 
                 if stub_intact(lib_pdb_info[lib_pos2][2][0]):
                     if lib_AA1 == AA1:
@@ -105,12 +107,12 @@ def run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, in_ip_lib_dir, out_dir
     if(verbose): print("Finished processing library .pdb files. Writing counted results to files in directory: " + out_dir)
               
     counts_file = open(os.path.join(out_dir, 'lib_ip_residue_counts.txt'), 'w')
-    for i in range(20): counts_file.write(AAchar2int(i) + '\t' + str(ip_res[i]) + '\n')
+    for i in range(20): counts_file.write(AAint2char(i) + '\t' + str(ip_res[i]) + '\n')
     counts_file.close()
 
     for (i, pair) in enumerate(use_indices):
         counts_file = open(os.path.join(out_dir, str(pair[0] + 1) + '_' + str(pair[1] + 1) + '_counts.txt'), 'w')
-        for j in range(20): counts_file.write(AAchar2int(j) + '\t' + str(counts[i][j]) + '\n')
+        for j in range(20): counts_file.write(AAint2char(j) + '\t' + str(counts[i][j]) + '\n')
     counts_file.close()
     
     if(verbose): print("Determining probabilities from counts...")
@@ -130,29 +132,31 @@ def determine_probs(out_dir, verbose):
     if(verbose): print("Reading in the total residue counts of the PDB library: lib_ip_residue_counts.txt")
     output_files = os.listdir(out_dir)
     lib_summary_path = filter(lambda x: 'lib_ip_residue' in x, output_files) #search files for lib_ip_residue_counts.txt
-    lib_sum_data = filelines2deeplist(lib_summary_path[0])
+    lib_sum_data = filelines2deeplist(os.path.join(out_dir, lib_summary_path[0]))
     
-    lib_pdb_total = sum([int(x[1]) for x in lib_sum_data])
-    lib_AA_probs = [x[1] / lib_pdb_total for x in lib_sum_data]
+    lib_pdb_total = float(sum([int(x[1]) for x in lib_sum_data]))
+    lib_AA_probs = [float(x[1]) / lib_pdb_total for x in lib_sum_data]
     
     #Transform every count file into a _probs file    
     for file in output_files:
-        if('count' in file):
+        if('count' in file and len(file.split('_')) == 3):
             path = os.path.join(out_dir, file)
             counts = filelines2deeplist(path)
             out_path = os.path.join(probs_dir, file.split('_')[0] + '_' + file.split('_')[1] + '_probs.txt')
-            
-            total = sum([int(x[1]) for x in counts])
+
+            total = float(sum([int(x[1]) for x in counts]))
+
             if(total > 99):
                 out = open(out_path, 'w')
-                AA_probs = [x[1]/total if x != 0 else 1/total for x in counts]
+                AA_probs = [(float(x[1])/total if int(x[1]) != 0 else 1/total) for x in counts]
                 
                 for i in range(20):
                     e = -1.0 * math.log(AA_probs[i] / lib_AA_probs[i])
                     out.write(AAint2char(i) + '\t' + str(e) + '\n')
                 
                 out.close()   
-
+    
+    if(verbose): print("Finished calculating probabilities. Written to: " + out_dir)
 
 def matching_sidechain_pair(distances1, distances2, cutoff):
   
@@ -326,10 +330,10 @@ def calc_seq_energy (in_res_path, in_dir, probs_dir, seq):
     all_probs = [[], []] #[[[PROBS FOR IP1], [PROBS FOR IP2], ...], [[IP1], [IP2],...]]
     
     for file in probs_files:
-        file_path = os.path.join(in_dir, file)
+        file_path = os.path.join(probs_dir, file)
         lines = filelines2deeplist(file_path)
 
-        probs = [int(x[1]) for x in lines]
+        probs = [float(x[1]) for x in lines]
         all_probs[0].append(probs)
         all_probs[1].append([int(file.split('_')[0]) - 1, int(file.split('_')[1]) - 1])
     
@@ -342,7 +346,9 @@ def calc_seq_energy (in_res_path, in_dir, probs_dir, seq):
     residue_positions = [int(line.strip()) - 1 for line in lines]
 
     energy = 0.0
-    for (ip_probs, ip_pos) in (all_probs[0], all_probs[1]):
+    for i in range(len(all_probs[0])):
+        
+        (ip_probs, ip_pos) = (all_probs[0][i], all_probs[1][i])
         pos1 = ip_pos[1]
         
         try:
@@ -350,7 +356,7 @@ def calc_seq_energy (in_res_path, in_dir, probs_dir, seq):
             if pos1 in residue_positions:
                 AA = AAchar2int(seq[pos1 - seq_ref[0] + seq_ref[1]])
         except: continue
-    
+        
         energy += (ip_probs[AA] if  AAint2char(AA) != 'G' else 0.0)
             
     return energy
