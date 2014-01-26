@@ -1,4 +1,4 @@
-STATIUM
+statium!
 =======
 
 Implementation of the STATIUM algorithm [protein-protein binding affinity scoring]
