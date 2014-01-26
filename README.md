@@ -12,5 +12,5 @@ Implementation of the STATIUM algorithm [protein-protein binding affinity scorin
 An example of an analysis sequence: <br>
 &nbsp;python statium_wrapper.py renumber testing/4hfz_orig.pdb testing/4hfz.pdb -v<br>
 &nbsp;python statium_wrapper.py create_res testing/4hfz_orig.pdb testing/4hfz.pdb testing/4hfz.res -v<br>
-&nbsp;python statium_wrapper.py run_statium testing/4hfz.res testing/4hfz.pdb culled_90_reduced/ ip_90_wGLY/<br> testing/output -v
+&nbsp;python statium_wrapper.py run_statium testing/4hfz.res testing/4hfz.pdb culled_90_reduced/ ip_90_wGLY/ testing/output -v <br>
 &nbsp;python statium_wrapper.py calc_seq_energy testing/4hfz.res testing/output/ testing/output_probs/ ETFSDLWKLLP<br>
