@@ -1,0 +1,16 @@
+*.swp
+culled_90/
+
+pdbs.tar.gz
+
+.gitignore
+
+*.py[cod]
+
+_*
+ip_90_wGLY/*
+testing/output/*
+testing/output_probs/*
+*.res
+*.pdb
+!*_orig.pdb

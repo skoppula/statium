@@ -156,8 +156,9 @@ def determine_probs(out_dir, verbose):
                 
                 out.close()   
     
-    if(verbose): print("Finished calculating probabilities. Written to: " + out_dir)
+    if(verbose): print("Finished calculating probabilities. Written to: " + out_dir + '_probs')
 
+    
 def matching_sidechain_pair(distances1, distances2, cutoff):
   
     sd = 0.0
@@ -275,8 +276,10 @@ def get_pdb_info(in_pdb_path):
                 position = int(line[22:28].strip())
                 chainID = line[21:22].strip()
                 
-                if position not in res_list:
-                    res_list.append(position)
+                if position in res_list:
+                    continue
+                res_list.append(position)
+                
             except:
                 continue
             
