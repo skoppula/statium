@@ -326,7 +326,16 @@ def get_pdb_info(in_pdb_path):
     
     return pdb_info
 
-def calc_seq_energy (in_res_path, in_dir, probs_dir, seq):
+def calc_energy(in_res_path, probs_dir, is_file, seq_or_file, outfile):
+    if(is_file):
+        sequences = filelines2list(seq_or_file)
+        energies = [calc_seq_energy(in_res_path, probs_dir, sequence) for sequence in sequences]
+        list2file(energies, outfile)
+        
+    else:
+        return calc_seq_energy(in_res_path, probs_dir, seq_or_file)
+
+def calc_seq_energy (in_res_path, probs_dir, seq):
     
     #loading in probability into all_probs
     probs_files = os.listdir(probs_dir)

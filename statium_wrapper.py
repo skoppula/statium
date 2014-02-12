@@ -3,7 +3,7 @@ from docopt import docopt
 from statium_reformat import renumber
 from statium_reformat import create_res
 from statium_analysis import statium_pipeline
-from statium_analysis import calc_seq_energy
+from statium_analysis import calc_energy
 
 def main(argv):
     
@@ -11,7 +11,7 @@ def main(argv):
                 usage: statium_wrapper.py renumber (IN_PDB) [OUT_PDB] [-v | --verbose]
                        statium_wrapper.py create_res (IN_PDB_ORIG IN_PDB_RENUMBERED) [OUT_RES] [-v | --verbose]
                        statium_wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [-v | --verbose]
-                       statium_wrapper.py calc_seq_energy (IN_RES IN_DIR PROBS_DIR SEQ) [-v | --verbose]
+                       statium_wrapper.py calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [-f OUT_FILE] [-v | --verbose]
                        statium_wrapper.py [-h | --help]
                 """
     
@@ -53,11 +53,20 @@ def main(argv):
             statium_pipeline(options['IN_RES'], options['IN_PDB'], options['IN_PDB_LIB_DIR'], options['IN_IP_LIB_DIR'], options['OUT_DIR'], verbose)
             if(verbose): print("Done. STATIUM probabilities in output directory: " + options['OUT_DIR']);
 
-    elif(options['calc_seq_energy']):
-        if(verbose): print("Calculating energy for sequence: " + options['SEQ'] + " with STATIUM output directory " + options['IN_DIR'] + " " + options['PROBS_DIR'])
-        energy = calc_seq_energy(options['IN_RES'], options['IN_DIR'], options['PROBS_DIR'], options['SEQ'])
-        if(verbose): print('Done. Calculated energy: ' + str(energy))
-        else: print(str(energy))
+    elif(options['calc_energy']):
+        
+        #-f marker reads multiple sequences from file and calculate all their energies, output to a file 'outfile' 
+        if(options['-f']):
+            outfile = (options['SEQ_OR_FILE'][:-4]+'_energies.txt') if (options['OUT_FILE'] == None) else options['PROBS_DIR']
+            if(verbose): print("Calculating energy for directory: " + options['SEQ_OR_FILE'])
+            calc_energy(options['IN_RES'], options['PROBS_DIR'], True, options['SEQ_OR_FILE'], outfile)
+            if(verbose): print('Done. Calculated energies in: ' + outfile)
+        
+        #or just calculates the energy of one sequence
+        else:
+            if(verbose): print("Calculating energy for sequence: " + options['SEQ_OR_FILE'])
+            energy = calc_energy(options['IN_RES'], options['PROBS_DIR'], False, options['SEQ_OR_FILE'], None)
+            print("Sequence energy is: " + str(energy))
         
 if __name__ == "__main__":
     main(sys.argv[1:])

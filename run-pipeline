@@ -1,5 +1,13 @@
 python statium_wrapper.py renumber testing/4hfz_orig.pdb testing/4hfz.pdb -v
 python statium_wrapper.py create_res testing/4hfz_orig.pdb testing/4hfz.pdb testing/4hfz.res -v
-python statium_wrapper.py run_statium testing/4hfz.res testing/4hfz.pdb culled_90/ ip_90_wGLY/ testing/output -v
+python statium_wrapper.py run_statium testing/4hfz.res testing/4hfz.pdb data/culled_90/ data/ip_90_wGLY/ testing/output -v > testing/4hfz.out 2>&1
+
+python statium_wrapper.py renumber testing/1ycr_mdm2_orig.pdb testing/1ycr_mdm2.pdb -v
+python statium_wrapper.py create_res testing/1ycr_mdm2_orig.pdb testing/1ycr_mdm2.pdb testing/1ycr_mdm2.res -v
+python statium_wrapper.py run_statium testing/1ycr_mdm2.res testing/1ycr_mdm2.pdb data/culled_90/ data/ip_90_wGLY/ testing/1ycr_mdm2_output -v  > testing/1ycr_mdm2.out 2>&1
+
+python statium_wrapper.py renumber testing/3dab_mdmx_ba1_orig.pdb testing/3dab_mdmx_ba1.pdb -v
+python statium_wrapper.py create_res testing/3dab_mdmx_ba1_orig.pdb testing/3dab_mdmx_ba1.pdb testing/3dab_mdmx_ba1.res -v
+python statium_wrapper.py run_statium testing/3dab_mdmx_ba1.res testing/3dab_mdmx_ba1.pdb data/culled_90/ data/ip_90_wGLY/ testing/3dab_mdmx_ba1_output -v > testing/3dab_mdmx_ba1.out 2>&1
 
 #python statium_wrapper.py calc_seq_energy testing/4hfz.res testing/output/ testing/output_probs/ ETFSDLWKLLP

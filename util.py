@@ -25,6 +25,8 @@ def filelines2list(infile):
     lines = file.readlines()
     
     for line in lines:
+        if(line[0] == '#'):
+            continue;
         t.append(line.strip())
         
     return t
