@@ -9,8 +9,10 @@ pdbs.tar.gz
 
 _*
 ip_90_wGLY/*
+data/*
 testing/output/*
 testing/output_probs/*
 *.res
 *.pdb
 !*_orig.pdb
+*.txt

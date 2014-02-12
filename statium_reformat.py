@@ -1,3 +1,6 @@
+from util import filelines2list
+from util import AA2char
+
 #Function to create *.res file: each line containing residue position to be considered in STATIUM analysis
 def create_res(in_pdb_path_orig, in_pdb_path_renumbered, out_res_path):
     
@@ -85,3 +88,37 @@ def renumber(start_res_num, start_atom_num, in_pdb_path, out_pdb_path):
     outfile.write('TER\nEND')
     infile.close()
     outfile.close()
+
+#Get the original AA sequence of chain B, along with stats like the length and position of that chain
+def get_orig_seq(in_pdb_path_orig):
+    
+    infile =  open(in_pdb_path_orig, 'r')
+    lines = infile.readlines()
+    
+    bchain_started = False
+    start, end = 0, 0
+    num_residues = 0
+    residues = []
+    sequence = ''
+    
+    for line in lines:
+        line = line.strip()
+        line = (line + ' '*16 + '\n') if (len(line) < 61) else (line + '\n')
+     
+        if(line[0:4] == 'ATOM' or (line[0:6] == 'HETATM' and line[17:20] == 'MSE') or line[0:3] == 'TER'):
+            
+            if(line[21]=='B' and not bchain_started):
+                bchain_started = True
+                start = int(line[22:27])
+                residues.append(start)
+                sequence += AA2char(line[17:20])
+            
+            elif(line[0:3] == 'TER' and bchain_started):
+                end = int(line[22:27])
+                num_residues = end - start + 1
+                return (sequence, num_residues, start, end)
+
+            elif(line[21]=='B' and (int(line[22:27]) not in residues)):
+                residues.append(int(line[22:27]))
+                sequence += AA2char(line[17:20])
+                

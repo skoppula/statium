@@ -328,9 +328,18 @@ def get_pdb_info(in_pdb_path):
 
 def calc_energy(in_res_path, probs_dir, is_file, seq_or_file, outfile):
     if(is_file):
-        sequences = filelines2list(seq_or_file)
-        energies = [calc_seq_energy(in_res_path, probs_dir, sequence) for sequence in sequences]
-        list2file(energies, outfile)
+        
+        lines = filelines2list(seq_or_file)
+        out_lines = []
+        
+        for line in lines:
+            if(line.strip() == '' or line[0] == '#'):
+                out_lines.append(line)
+                
+            else: #if it's not an empty line or commented line, it must be a sequence
+                out_lines.append(line + ": " + str(calc_seq_energy(in_res_path, probs_dir, line)))
+        
+        list2file(out_lines, outfile)
         
     else:
         return calc_seq_energy(in_res_path, probs_dir, seq_or_file)
