@@ -16,3 +16,12 @@ python statium_wrapper.py calc_energy -f testing/4hfz.res testing/4hfz_output_pr
 python statium_wrapper.py get_orig_seq testing/4hfz_orig.pdb
 python statium_wrapper.py -v generate_random_seqs 11 10
 python statium_wrapper.py -fv generate_random_seqs 11 10 random_seqs.txt
+
+
+python statium_wrapper.py get_orig_seq testing/1ycr_mdm2_orig.pdb
+#OUTPUT: Native chain B peptide sequence is ETFSDLWKLLPEN of length 13 from position 17 to 29
+python statium_wrapper.py calc_energy -f testing/1ycr_mdm2.res testing/1ycr_mdm2_output_probs/ testing/1ycr_mdm2_sequences.txt testing/1ycr_mdm2_seq_energies.txt
+
+python statium_wrapper.py get_orig_seq testing/3dab_mdmx_ba1_orig.pdb
+#Native chain B peptide sequence is ETFSDLWKLLPE of length 12 from position 17 to 28
+python statium_wrapper.py calc_energy -f testing/3dab_mdmx_ba1.res testing/3dab_mdmx_ba1_output_probs/ testing/3dab_mdmx_ba1_sequences.txt testing/3dab_mdmx_ba1_seq_energies.txt
