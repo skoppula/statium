@@ -1,4 +1,5 @@
 import bidict
+import random
 
 def list2file(t, infile):
     file = open(infile, 'w')
@@ -35,6 +36,21 @@ def AA_cutoff_dist(AA):
         return 0.2
     else:
         return 0.4
+
+def get_random_AA():
+    library_AA_distro = dict({'A':1391008, 'C':379677, 'D':825255 , 'E':911171 , 'F':1415079 , 'G':947640 , 'H':522382 , 'I':1838459 , 'K':822707 , 'L':2756022 , 'M':491788 , 'N':708103 , 'P':808079 , 'Q':614885 , 'R':983182 , 'S':954331 , 'T':1090982 , 'V':2059360 , 'W':539073 , 'Y':1190549 , 'X':0})
+    maxFreq = max(library_AA_distro.values())
+    normalizer = 10 ** (len(str(maxFreq))-1)
+    total = sum([x/normalizer for x in library_AA_distro.values()])
+
+    num = random.uniform(0, total)
+    s = 0
+    for AA in library_AA_distro:
+        s += library_AA_distro[AA]/normalizer
+        if(num < s):
+            return AA
+
+    return 'X'
 
 def AA2char(a):
     AA = bidict.bidict({'ALA':'A', 'CYS':'C', 'ASP':'D', 'GLU':'E', 'PHE':'F', 'GLY':'G', 'ILE':'I', 'LYS':'K', 'LEU':'L', 'MET':'M', 'ASN':'N', 'PRO':'P', 'GLN':'Q', 'ARG':'R', 'SER':'S', 'THR':'T', 'VAL':'V', 'TRP':'W', 'TYR':'Y', 'MSE':'X', 'HIS':'H'})

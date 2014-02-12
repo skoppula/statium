@@ -1,5 +1,6 @@
 from util import filelines2list
 from util import AA2char
+from util import get_random_AA
 
 #Function to create *.res file: each line containing residue position to be considered in STATIUM analysis
 def create_res(in_pdb_path_orig, in_pdb_path_renumbered, out_res_path):
@@ -121,4 +122,13 @@ def get_orig_seq(in_pdb_path_orig):
             elif(line[21]=='B' and (int(line[22:27]) not in residues)):
                 residues.append(int(line[22:27]))
                 sequence += AA2char(line[17:20])
-                
+
+def generate_random_seqs(seq_length, num_seqs):
+    sequences = []
+    for i in range(num_seqs):
+        sequence = ''
+        for j in range(seq_length):
+            sequence += get_random_AA()
+        sequences.append(sequence)
+    
+    return sequences

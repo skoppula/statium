@@ -14,3 +14,5 @@ python statium_wrapper.py calc_energy testing/4hfz.res testing/4hfz_output_probs
 python statium_wrapper.py calc_energy -f testing/4hfz.res testing/4hfz_output_probs/ testing/4hfz_sequences.txt testing/4hfz_seq_energies.txt
 
 python statium_wrapper.py get_orig_seq testing/4hfz_orig.pdb
+python statium_wrapper.py -v generate_random_seqs 11 10
+python statium_wrapper.py -fv generate_random_seqs 11 10 random_seqs.txt

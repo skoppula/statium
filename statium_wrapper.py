@@ -5,7 +5,8 @@ from statium_reformat import create_res
 from statium_analysis import statium_pipeline
 from statium_analysis import calc_energy
 from statium_reformat import get_orig_seq
-
+from statium_reformat import generate_random_seqs
+from util import list2file
 
 def main(argv):
     
@@ -15,6 +16,7 @@ def main(argv):
                        statium_wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [-v | --verbose]
                        statium_wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [-v | --verbose]
                        statium_wrapper.py get_orig_seq (IN_PDB_ORIG) [-v | --verbose]
+                       statium_wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [OUT_FILE] [-v | --verbose]                       
                        statium_wrapper.py [-h | --help]
                 """
     
@@ -74,6 +76,18 @@ def main(argv):
     elif(options['get_orig_seq']):
         (sequence, length, start, end) = get_orig_seq(options['IN_PDB_ORIG'])
         print("Native chain B peptide sequence is " + str(sequence) + " of length " + str(length) + " from position " + str(start) + " to " + str(end))
-        
+    
+    #Generate n random sequences of length j, possibly in outfile o if -f flag present
+    elif(options['generate_random_seqs']):
+        if(verbose): print("Generating " + options['NUM_SEQS'] + " random sequences of length " + options['SEQ_LENGTH'])
+        sequences = generate_random_seqs(int(options['SEQ_LENGTH']), int(options['NUM_SEQS']))
+        if(options['-f']):
+            outfile = 'random_seqs.txt' if (options['OUT_FILE'] == None) else options['OUT_FILE']
+            list2file(sequences, outfile)
+            if(verbose): print("Random sequences written to " + outfile)
+        else:
+            for sequence in sequences:
+                print(sequence)
+    
 if __name__ == "__main__":
     main(sys.argv[1:])
