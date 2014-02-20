@@ -16,7 +16,7 @@ def main(argv):
                        statium_wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [-v | --verbose]
                        statium_wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE IN_PDB_ORIG] [-v | --verbose]
                        statium_wrapper.py get_orig_seq (IN_PDB_ORIG) [-v | --verbose]
-                       statium_wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [OUT_FILE] [-v | --verbose]                       
+                       statium_wrapper.py [-fl] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [OUT_FILE TOTAL_PROTEIN_LIBRARY] [-v | --verbose]                       
                        statium_wrapper.py [-h | --help]
                 """
     
@@ -80,7 +80,8 @@ def main(argv):
     #Generate n random sequences of length j, possibly in outfile o if -f flag present
     elif(options['generate_random_seqs']):
         if(verbose): print("Generating " + options['NUM_SEQS'] + " random sequences of length " + options['SEQ_LENGTH'])
-        sequences = generate_random_seqs(int(options['SEQ_LENGTH']), int(options['NUM_SEQS']))
+        sequences = generate_random_seqs(int(options['SEQ_LENGTH']), int(options['NUM_SEQS']), options['-l'], options['TOTAL_PROTEIN_LIBRARY'])
+        
         if(options['-f']):
             outfile = 'random_seqs.txt' if (options['OUT_FILE'] == None) else options['OUT_FILE']
             list2file(sequences, outfile)
@@ -88,7 +89,6 @@ def main(argv):
         else:
             for sequence in sequences:
                 print(sequence)
-    
     
     
 if __name__ == "__main__":
