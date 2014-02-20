@@ -9,6 +9,7 @@ from util import AAint2char
 from util import get_sidechain_atoms
 from util import AA_cutoff_dist
 from util import filelines2deeplist
+from statium_reformat import get_orig_seq
 
 def statium_pipeline(in_res_path, in_pdb_path, in_pdb_lib_dir, in_ip_lib_dir, out_dir, verbose):
     
@@ -326,19 +327,44 @@ def get_pdb_info(in_pdb_path):
     
     return pdb_info
 
-def calc_energy(in_res_path, probs_dir, is_file, seq_or_file, outfile):
+def calc_energy(in_res_path, probs_dir, is_file, seq_or_file, in_pdb_orig, outfile):
+    
+    #read back from .res file where Chain B starts
+    lines = filelines2list(in_res_path)
+    residue_positions = [int(line.strip()) - 1 for line in lines]
+    
     if(is_file):
         
         lines = filelines2list(seq_or_file)
         out_lines = []
         
         for line in lines:
-            if(line.strip() == '' or line[0] == '#'):
+            if(line == '' or line[0] == '#'):
                 out_lines.append(line)
-                
+            
             else: #if it's not an empty line or commented line, it must be a sequence
+                parts = line.split() #checking if partial sequence
+                if(len(line) != len(residue_positions) and len(parts) == 1):
+                    out_lines.append(line + ": [NOTE: IRREGULAR SEQUENCE LENGTH WITHOUT A START POSITION!] " + str(calc_seq_energy(in_res_path, probs_dir, line)))
+                    continue
+                
+                elif(len(parts) > 1):
+                    start_seq = int(parts[0])
+                    start_reference = get_orig_seq(in_pdb_orig)[2]
+                    
+                    if(start_seq < start_reference): #the input sequence starts earlier than chain B sequence
+                        line = parts[1][(start_reference - start_seq):]
+                        
+                        
+                        if(line == ''):
+                            out_lines.append(line)
+                            continue
+                        
+                    elif(start_seq > start_reference): #input sequence starts later than chain B sequence
+                        line = 'X'*(start_seq - start_reference) + parts[1]
+                
                 out_lines.append(line + ": " + str(calc_seq_energy(in_res_path, probs_dir, line)))
-        
+                    
         list2file(out_lines, outfile)
         
     else:
@@ -350,6 +376,10 @@ def calc_seq_energy (in_res_path, probs_dir, seq):
     probs_files = os.listdir(probs_dir)
     all_probs = [[], []] #[[[PROBS FOR IP1], [PROBS FOR IP2], ...], [[IP1], [IP2],...]]
     
+    #read back from .res file where Chain B starts
+    lines = filelines2list(in_res_path)
+    residue_positions = [int(line.strip()) - 1 for line in lines]
+    
     for file in probs_files:
         file_path = os.path.join(probs_dir, file)
         lines = filelines2deeplist(file_path)
@@ -357,25 +387,17 @@ def calc_seq_energy (in_res_path, probs_dir, seq):
         probs = [float(x[1]) for x in lines]
         all_probs[0].append(probs)
         all_probs[1].append([int(file.split('_')[0]) - 1, int(file.split('_')[1]) - 1])
-    
-    #read back from .res file where Chain B starts
-    line = filelines2list(in_res_path)[0]
-    line = line[:-1] if line[-1] == '\n' else line
-    seq_ref = [int(line) - 1, 0]
-    
-    lines = filelines2list(in_res_path)
-    residue_positions = [int(line.strip()) - 1 for line in lines]
 
     energy = 0.0
     for i in range(len(all_probs[0])):
         
         (ip_probs, ip_pos) = (all_probs[0][i], all_probs[1][i])
-        pos1 = ip_pos[1]
+        pos1 = ip_pos[1] #peptide position on chain B
         
         try:
-            if seq[pos1 - seq_ref[0] + seq_ref[1]] == 'X': continue
+            if seq[pos1 - residue_positions[0]] == 'X': continue
             if pos1 in residue_positions:
-                AA = AAchar2int(seq[pos1 - seq_ref[0] + seq_ref[1]])
+                AA = AAchar2int(seq[pos1 - residue_positions[0]])
         except: continue
         
         energy += (ip_probs[AA] if  AAint2char(AA) != 'G' else 0.0)
