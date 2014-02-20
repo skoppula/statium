@@ -21,3 +21,6 @@ An example of an analysis sequence: <br>
 	python statium_wrapper.py -fv generate_random_seqs 11 10 random_seqs.txt
 	python statium_wrapper.py calc_energy testing/4hfz.res testing/4hfz_output_probs/ ETFSDLWKLLP
 	python statium_wrapper.py calc_energy -f testing/4hfz.res testing/4hfz_output_probs/ testing/4hfz_sequences.txt testing/4hfz_seq_energies.txt
+	
+	#if sequences in file are of irregular length (different from original chain length), include start position in front of irregular sequences (e.g. '17 EALL') and use parameters like follows
+	python statium_wrapper.py calc_energy -fv testing/4hfz.res testing/4hfz_output_probs/ testing/4hfz_sequences.txt testing/4hfz_seq_energies.txt testing/4hfz_orig.pdb
