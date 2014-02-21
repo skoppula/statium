@@ -9,9 +9,11 @@ from util import AAint2char
 from util import get_sidechain_atoms
 from util import AA_cutoff_dist
 from util import filelines2deeplist
+from util import binary_search
+from util import mean
+from util import std
 from statium_reformat import get_orig_seq
 from statium_reformat import generate_random_seqs
-import numpy
 
 def statium_pipeline(in_res_path, in_pdb_path, in_pdb_lib_dir, in_ip_lib_dir, out_dir, verbose):
     
@@ -332,13 +334,18 @@ def get_pdb_info(in_pdb_path):
 def generate_random_distribution (in_res, in_probs_dir, num_seqs=10000):
     
     sequence_length = len(filelines2list(in_res))
-    sequences = generate_random_seqs(sequence_length, 10000)
-    energies = [calc_seq_energy(in_res, in_probs_dir, sequence) for sequence in sequences]
-    energies.sort()
-    mean = numpy.mean(energies)
-    std = numpy.std(energies)
+    sequences = generate_random_seqs(sequence_length, num_seqs)
+    
+    if(num_seqs > 5000):
+        energies = list(zip(*calc_seq_energy(in_res, in_probs_dir, sequences, verbose=True))[0])
+    else:
+        energies = list(zip(*calc_seq_energy(in_res, in_probs_dir, sequences, verbose=False))[0])
         
-    return (sequence_length, sequences, energies, mean, std)
+    energies.sort()
+    avg = mean(energies)
+    sd = std(energies)
+        
+    return (sequence_length, sequences, energies, avg, sd)
 
 def calc_seq_zscore(mean, std, energy):
     zscore = (energy - mean)/std
@@ -347,7 +354,7 @@ def calc_seq_zscore(mean, std, energy):
 #binary search on sorted energies list
 def calc_seq_percentile(energies, energy):
     i = binary_search(energies, energy)
-    percentile = float(i)/len(energies)*100
+    percentile = i/len(energies)*100
     return percentile
 
 def fix_sequence_line(seq, desired_seq_length, in_pdb_orig=None):
@@ -357,6 +364,10 @@ def fix_sequence_line(seq, desired_seq_length, in_pdb_orig=None):
         print('NOTE: IRREGULAR SEQUENCE LENGTH WITHOUT A START POSITION FOR ' + seq)
     
     elif(len(parts) > 1):
+        if(in_pdb_orig == None):
+            print('Using syntax \'' + seq + '\' needs valid file --IN_PDB_ORIG.')
+            return parts[1]
+        
         start_seq = int(parts[0])
         start_reference = get_orig_seq(in_pdb_orig)[2]
         
@@ -371,7 +382,7 @@ def fix_sequence_line(seq, desired_seq_length, in_pdb_orig=None):
                     
     return seq
 
-def calc_seq_energy (in_res_path, probs_dir, seq, in_pdb_orig=None):
+def calc_seq_energy (in_res_path, probs_dir, seq, in_pdb_orig=None, verbose=False):
     
     #loading in probability into all_probs
     probs_files = os.listdir(probs_dir)
@@ -381,9 +392,6 @@ def calc_seq_energy (in_res_path, probs_dir, seq, in_pdb_orig=None):
     lines = filelines2list(in_res_path)
     residue_positions = [int(line.strip()) - 1 for line in lines]
     
-    #deal with irregularly sized sequences
-    seq = fix_sequence_line(seq, len(residue_positions), in_pdb_orig)
-    
     for file in probs_files:
         file_path = os.path.join(probs_dir, file)
         lines = filelines2deeplist(file_path)
@@ -391,7 +399,24 @@ def calc_seq_energy (in_res_path, probs_dir, seq, in_pdb_orig=None):
         probs = [float(x[1]) for x in lines]
         all_probs[0].append(probs)
         all_probs[1].append([int(file.split('_')[0]) - 1, int(file.split('_')[1]) - 1])
-
+    
+    if(isinstance(seq, str)):
+        return sum_energy(residue_positions, all_probs, seq, in_pdb_orig)
+    
+    elif(isinstance(seq, list)):
+        out = []
+        for (i,x) in enumerate(seq):
+            if(verbose and i%1000 == 1):
+                print('Calculating energy of ' + str(i) + 'th random sequence for the distribution...')
+            out.append(sum_energy(residue_positions, all_probs, x, in_pdb_orig))
+        
+        return out
+    
+def sum_energy(residue_positions, all_probs, seq, in_pdb_orig=None):
+    
+    #deal with irregularly sized sequences
+    seq = fix_sequence_line(seq, len(residue_positions), in_pdb_orig)
+    
     energy = 0.0
     for i in range(len(all_probs[0])):
         
@@ -406,4 +431,4 @@ def calc_seq_energy (in_res_path, probs_dir, seq, in_pdb_orig=None):
         
         energy += (ip_probs[AA] if  AAint2char(AA) != 'G' else 0.0)
             
-    return energy
+    return (energy, seq)

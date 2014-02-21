@@ -1,5 +1,6 @@
 import bidict
 import random
+import math
 
 def list2file(t, infile):
     file = open(infile, 'w')
@@ -29,6 +30,37 @@ def filelines2list(infile):
         t.append(line.strip())
         
     return t
+
+def binary_search(elements, e):
+    left, right = 0, len(elements)-1
+    mid = (left+right)/2
+    
+    if(elements[left] == e):
+        return left
+    elif(elements[right] == e):
+        return right
+    
+    while(right-left > 1):
+        if(e == elements[mid]):
+            return mid
+        elif(e > elements[mid]):
+            left = mid
+        else:
+            right = mid
+            
+        mid = (left+right)/2
+    
+    print('Could not find element in sorted list')   
+    return -1
+
+def mean(s):
+    return sum(s) * 1.0/len(s)
+
+def std(s):
+    avg = mean(s)
+    variance = map(lambda x: (x - avg)**2, s)
+    return math.sqrt(mean(variance))
+    
 
 def AA_cutoff_dist(AA):
     
