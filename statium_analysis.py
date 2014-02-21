@@ -10,6 +10,8 @@ from util import get_sidechain_atoms
 from util import AA_cutoff_dist
 from util import filelines2deeplist
 from statium_reformat import get_orig_seq
+from statium_reformat import generate_random_seqs
+import numpy
 
 def statium_pipeline(in_res_path, in_pdb_path, in_pdb_lib_dir, in_ip_lib_dir, out_dir, verbose):
     
@@ -327,50 +329,49 @@ def get_pdb_info(in_pdb_path):
     
     return pdb_info
 
-def calc_energy(in_res_path, probs_dir, is_file, seq_or_file, in_pdb_orig, outfile):
+def generate_random_distribution (in_res, in_probs_dir, num_seqs=10000):
     
-    #read back from .res file where Chain B starts
-    lines = filelines2list(in_res_path)
-    residue_positions = [int(line.strip()) - 1 for line in lines]
-    
-    if(is_file):
+    sequence_length = len(filelines2list(in_res))
+    sequences = generate_random_seqs(sequence_length, 10000)
+    energies = [calc_seq_energy(in_res, in_probs_dir, sequence) for sequence in sequences]
+    energies.sort()
+    mean = numpy.mean(energies)
+    std = numpy.std(energies)
         
-        lines = filelines2list(seq_or_file)
-        out_lines = []
-        
-        for line in lines:
-            if(line == '' or line[0] == '#'):
-                out_lines.append(line)
-            
-            else: #if it's not an empty line or commented line, it must be a sequence
-                parts = line.split() #checking if partial sequence
-                if(len(line) != len(residue_positions) and len(parts) == 1):
-                    out_lines.append(line + ": [NOTE: IRREGULAR SEQUENCE LENGTH WITHOUT A START POSITION!] " + str(calc_seq_energy(in_res_path, probs_dir, line)))
-                    continue
-                
-                elif(len(parts) > 1):
-                    start_seq = int(parts[0])
-                    start_reference = get_orig_seq(in_pdb_orig)[2]
-                    
-                    if(start_seq < start_reference): #the input sequence starts earlier than chain B sequence
-                        line = parts[1][(start_reference - start_seq):]
-                        
-                        
-                        if(line == ''):
-                            out_lines.append(line)
-                            continue
-                        
-                    elif(start_seq > start_reference): #input sequence starts later than chain B sequence
-                        line = 'X'*(start_seq - start_reference) + parts[1]
-                
-                out_lines.append(line + ": " + str(calc_seq_energy(in_res_path, probs_dir, line)))
-                    
-        list2file(out_lines, outfile)
-        
-    else:
-        return calc_seq_energy(in_res_path, probs_dir, seq_or_file)
+    return (sequence_length, sequences, energies, mean, std)
 
-def calc_seq_energy (in_res_path, probs_dir, seq):
+def calc_seq_zscore(mean, std, energy):
+    zscore = (energy - mean)/std
+    return zscore
+
+#binary search on sorted energies list
+def calc_seq_percentile(energies, energy):
+    i = binary_search(energies, energy)
+    percentile = float(i)/len(energies)*100
+    return percentile
+
+def fix_sequence_line(seq, desired_seq_length, in_pdb_orig=None):
+    parts = seq.split()
+    
+    if(len(seq) != desired_seq_length and len(parts) == 1):
+        print('NOTE: IRREGULAR SEQUENCE LENGTH WITHOUT A START POSITION FOR ' + seq)
+    
+    elif(len(parts) > 1):
+        start_seq = int(parts[0])
+        start_reference = get_orig_seq(in_pdb_orig)[2]
+        
+        if(start_seq < start_reference): #the input sequence starts earlier than chain B sequence
+                seq = parts[1][(start_reference - start_seq):]
+                              
+                if(seq == ''):
+                    print('UNRELATED SEQUENCE INPUT: ' + seq)
+                        
+        elif(start_seq > start_reference): #input sequence starts later than chain B sequence
+                seq = 'X'*(start_seq - start_reference) + parts[1]
+                    
+    return seq
+
+def calc_seq_energy (in_res_path, probs_dir, seq, in_pdb_orig=None):
     
     #loading in probability into all_probs
     probs_files = os.listdir(probs_dir)
@@ -379,6 +380,9 @@ def calc_seq_energy (in_res_path, probs_dir, seq):
     #read back from .res file where Chain B starts
     lines = filelines2list(in_res_path)
     residue_positions = [int(line.strip()) - 1 for line in lines]
+    
+    #deal with irregularly sized sequences
+    seq = fix_sequence_line(seq, len(residue_positions), in_pdb_orig)
     
     for file in probs_files:
         file_path = os.path.join(probs_dir, file)

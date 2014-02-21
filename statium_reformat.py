@@ -124,16 +124,22 @@ def get_orig_seq(in_pdb_path_orig):
                 residues.append(int(line[22:27]))
                 sequence += AA2char(line[17:20])
 
-def generate_random_seqs(seq_length, num_seqs, use_protein_library, library_path):
+def generate_random_seqs(seq_length, num_seqs, library_path = 'data/all_protein_sequences.txt'):
+    
+    use_protein_library = False if(library_path == None) else True
     
     size = 0
     if(use_protein_library):
-        with open (library_path, "r") as myfile:
-            data = myfile.read().replace('\n', '')
-            pattern = re.compile(r'\s+')
-            data = re.sub(pattern, '', data)
-            size = len(data) 
-    
+        try:
+            with open (library_path, "r") as myfile:
+                data = myfile.read().replace('\n', '')
+                pattern = re.compile(r'\s+')
+                data = re.sub(pattern, '', data)
+                size = len(data)
+        except IOError:
+            print('Could not find file ' + library_path + '. Using random AA generation')
+            use_protein_library = False
+        
     sequences = []
     for _ in range(num_seqs):
         if(use_protein_library):
