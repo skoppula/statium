@@ -8,14 +8,20 @@ def list2file(t, infile):
         file.write(element + "\n")
     file.close()
 
-def filelines2deeplist(infile):
+def filelines2deeplist(infile, skipComments=False, useTuples=False, skipEmptyLines=False):
   
     t = []
     file = open(infile, 'r')
     lines = file.readlines()
     
     for line in lines:
+        if(skipComments and line[0] == '#'):
+            continue
         items = line.strip().split()
+        if(skipEmptyLines and not items):
+            continue
+        if(useTuples):
+            items = tuple(items)
         t.append(items)
 
     return t

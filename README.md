@@ -9,7 +9,7 @@ Implementation of the STATIUM algorithm [protein-protein binding affinity scorin
 			   statium_wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG=None] [-z | --zscores] [-p | --percentiles] [-v | --verbose]
 			   statium_wrapper.py get_orig_seq (IN_PDB_ORIG) [-v | --verbose]
 			   statium_wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [-v | --verbose]                       
-			   statium_wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE MAX_TIME]
+			   statium_wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [-v | --verbose]
 			   statium_wrapper.py [-h | --help]
 
 An example of an analysis sequence: <br>
@@ -34,4 +34,6 @@ An example of an analysis sequence: <br>
 	#outputs energy and corresponding zscores and percentiles as compared to a energy distribution of random sequences
 	python statium_wrapper.py calc_energy -fzpv testing/4hfz.res testing/4hfz_output_probs/ testing/4hfz_sequences.txt testing/4hfz_seq_zscores_percentiles.txt --IN_PDB_ORIG=testing/4hfz_orig.pdb
 	
-	python statium_wrapper.py calc_top_seqs testing/4hfz.res testing/4hfz_output_probs/ 10
+	python statium_wrapper.py -v calc_top_seqs testing/4hfz.res testing/4hfz_output_probs/ 10
+	
+	python statium_wrapper.py -v classify testing/4hfz_seq_zscores.txt 0.3 testing/4hfz_classify_results_0.3.txt

@@ -519,11 +519,29 @@ def calc_top_seqs(in_res_path, probs_dir, num_sequences, outfile):
                 heapq.heappushpop(heap, (-1*energy, seq))
     
     heap = sorted(heap, reverse=True)
-    print(len(heap))
     results = [list(t) for t in zip(*heap)]
     out = [results[1][i] + '\t' + str(-1*energy) for i, energy in enumerate(results[0])]
     list2file(out, outfile)
+
+#based on a X/100 threshold, classifies top X% as strong binders, bottom X% as weak binders. Uses results file and last column of values in results file 
+#SHOULD IDEALLY USE INVERSE NORM, NOW JUST HARDCODING IN THRESHOLD Z-SCORES FOR ALPHA=0.05
+def classify(results_file, outfile, threshold=0.05):
+    results = filelines2deeplist(results_file, skipComments=True, useTuples=True, skipEmptyLines=True)
+    filtered_results = []
+    for result in results:
+        filtered_results.append((float(result[-1]), result[0]))
     
-    #print(ordered_probs)
-    #print(heap)
-    #print(max_num_balls)
+    z_score_threshold_low = -1.645
+    z_score_threshold_high = 1.645
+    
+    sorted_results = sorted(filtered_results)
+    out = []
+    for i, result in enumerate(sorted_results):
+        if(result[0] < z_score_threshold_low):
+            out.append(result[1] + '\t' + str(result[0]) + '\t' + 'strong')
+        elif(result[0] > z_score_threshold_high):
+            out.append(result[1] + '\t' + str(result[0]) + '\t' + 'weak')
+        else:
+            out.append(result[1] + '\t' + str(result[0]) + '\t' + 'inconclusive')
+            
+    list2file(out, outfile)

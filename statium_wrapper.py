@@ -10,6 +10,7 @@ from statium_analysis import generate_random_distribution
 from statium_analysis import calc_seq_zscore
 from statium_analysis import calc_seq_percentile
 from statium_analysis import calc_top_seqs
+from statium_analysis import classify
 from util import list2file
 from util import filelines2list
 
@@ -23,6 +24,7 @@ def main(argv):
                        statium_wrapper.py get_orig_seq (IN_PDB_ORIG) [-v | --verbose]
                        statium_wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [-v | --verbose]
                        statium_wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [-v | --verbose]
+                       statium_wrapper.py classify (RESULTS_FILE) [OUT_FILE] [ALPHA_THRESHOLD] [-v | --verbose]
                        statium_wrapper.py [-h | --help]
                 """
     
@@ -30,7 +32,7 @@ def main(argv):
     verbose = options['-v'] or options['--verbose']
     zscores = options['-z'] or options['--zscores']
     percentiles = options['-p'] or options['--percentiles']
-    
+   
     if(options['renumber']):
         if(verbose): print("Reformatting file: " + options['IN_PDB'])
         
@@ -135,10 +137,17 @@ def main(argv):
             if(verbose): print("Random sequences written to " + outfile)
    
     elif(options['calc_top_seqs']):
+        if(verbose): print('Calculating ' + options['N'] + ' sequences with lowest energy.')
         outfile = 'top_' + str(options['N']) + '_sequences.txt' if (options['OUT_FILE'] == None) else options['OUT_FILE']
         calc_top_seqs(options['IN_RES'], options['PROBS_DIR'], int(options['N']), outfile)
-            
         if(verbose): print("Done. Results written to " + outfile)
+    
+    elif(options['classify']):
+        threshold = 0.05 if options['ALPHA_THRESHOLD'] == None else options['ALPHA_THRESHOLD'] 
+        if(verbose): print('Classifying ' + options['RESULTS_FILE'] + ' with dummy (i.e. not considered right now in analysis) threshold ' + str(threshold))
+        outfile = 'classify_results_' + options['RESULTS_FILE'] + '_' + str(options['N']) + '.txt' if (options['OUT_FILE'] == None) else options['OUT_FILE']
+        classify(options['RESULTS_FILE'], outfile, float(threshold))
+        if(verbose): print('Done. Results in ' + outfile)
     
 if __name__ == "__main__":
     main(sys.argv[1:])
