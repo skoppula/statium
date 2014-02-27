@@ -1,5 +1,7 @@
 import os
 import math
+import heapq
+import itertools
 from util import filelines2list
 from util import list2file
 from util import isAA
@@ -12,6 +14,7 @@ from util import filelines2deeplist
 from util import binary_placement
 from util import mean
 from util import std
+from util import nCr
 from statium_reformat import get_orig_seq
 from statium_reformat import generate_random_seqs
 
@@ -433,10 +436,10 @@ def sum_energy(residue_positions, all_probs, seq, in_pdb_orig=None):
             
     return (energy, seq)
 
-def calc_top_seqs(in_res_path, probs_dir, num_sequences, outfile, max_time = 600000):
+def calc_top_seqs(in_res_path, probs_dir, num_sequences, outfile):
     probs_files = os.listdir(probs_dir)
     all_probs = [[], []] #[[[PROBS FOR IP1], [PROBS FOR IP2], ...], [[IP1], [IP2],...]]
-    
+     
     #read back from .res file where Chain B starts
     lines = filelines2list(in_res_path)
     residue_positions = [int(line.strip()) - 1 for line in lines]
@@ -448,20 +451,79 @@ def calc_top_seqs(in_res_path, probs_dir, num_sequences, outfile, max_time = 600
         probs = [float(x[1]) for x in lines]
         all_probs[0].append(probs)
         all_probs[1].append([int(file.split('_')[0]) - 1, int(file.split('_')[1]) - 1])
-    
+   
     #the following now fills ordered_probs
-    ordered_probs = [] #[[sorted list of AA probabilities for a specific residue position], [like before for residue pos 2], etc...]
+    ordered_probs = [] #[[sorted list of AA probabilities for a specific residue position: (0.3, 'A'), (0.5, 'C'),...], [like before for residue pos 2], etc...]
     AAs = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
     for residue in residue_positions:
         indices = [idx for idx in range(len(all_probs[1])) if residue in all_probs[1][idx]]
         probs = [all_probs[0][i] for i in indices]
         probs_sum = map(sum, zip(*probs))
-        sorted_probs = sorted(zip(AAs, probs_sum), key=lambda pair: pair[1])
+        sorted_probs = sorted(zip(probs_sum, AAs), key=lambda pair: pair[0])
         ordered_probs.append(sorted_probs)
     
     #enumerate all the balls in urns possibilities
+    #note that to maintain the max-heap property in Python's heapq implementation (which only does min-heap), we multiple by -1 before adding to heap
+    num_urns = len(residue_positions)
+    heap = []
     
+    seq = ''
+    energy = 0
+    for i, c in enumerate(residue_positions):
+        if(ordered_probs[i]):
+            aa = ordered_probs[i][0][1]
+            seq += aa
+            energy += (0.0 if aa == 'G' else ordered_probs[i][0][0])
+        else:
+            seq += 'X'
+    heapq.heappush(heap, (energy, seq))
     
-    print(ordered_probs)
-    print(len(ordered_probs))
-    print(len(residue_positions))
+    max_num_balls = 0
+    total = 0
+    while(total < num_sequences):
+        max_num_balls += 1
+        total += nCr((max_num_balls+num_urns-1), (max_num_balls))
+    
+    for num_balls in range(max_num_balls+1)[1:]:
+        combo_elements = range(num_balls+num_urns-1)
+        combos = list(itertools.combinations(combo_elements, (num_urns-1)))
+                
+        for combo in combos:
+            #print combo
+            urn_counts = [0]*num_urns
+            for i, position in enumerate(combo):
+                if(i == 0):
+                    urn_counts[i] = position
+                elif(i == len(combo)-1):
+                    urn_counts[i] = position - combo[i-1] - 1
+                    urn_counts[i+1] = len(combo_elements)-1-position
+                else:
+                    urn_counts[i] = position - combo[i-1] - 1
+            
+                seq = ''
+                energy = 0
+                for i, c in enumerate(urn_counts):
+                    if(ordered_probs[i]):
+                        aa = ordered_probs[i][c][1]
+                        seq += aa
+                        energy += (0.0 if aa == 'G' else ordered_probs[i][c][0])
+                    else:
+                        seq += 'X'
+            
+            if(seq in [i[1] for i in heap]):
+                continue
+                
+            if(len(heap) < num_sequences):
+                heapq.heappush(heap, (-1*energy, seq))
+            elif(energy < heap[0][0]*-1):
+                heapq.heappushpop(heap, (-1*energy, seq))
+    
+    heap = sorted(heap, reverse=True)
+    print(len(heap))
+    results = [list(t) for t in zip(*heap)]
+    out = [results[1][i] + '\t' + str(-1*energy) for i, energy in enumerate(results[0])]
+    list2file(out, outfile)
+    
+    #print(ordered_probs)
+    #print(heap)
+    #print(max_num_balls)

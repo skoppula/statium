@@ -61,6 +61,9 @@ def std(s):
     variance = map(lambda x: (x - avg)**2, s)
     return math.sqrt(mean(variance))
     
+def nCr(n,r):
+    f = math.factorial
+    return f(n) / f(r) / f(n-r)
 
 def AA_cutoff_dist(AA):
     
