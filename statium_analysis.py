@@ -9,7 +9,7 @@ from util import AAint2char
 from util import get_sidechain_atoms
 from util import AA_cutoff_dist
 from util import filelines2deeplist
-from util import binary_search
+from util import binary_placement
 from util import mean
 from util import std
 from statium_reformat import get_orig_seq
@@ -331,7 +331,7 @@ def get_pdb_info(in_pdb_path):
     
     return pdb_info
 
-def generate_random_distribution (in_res, in_probs_dir, num_seqs=10000):
+def generate_random_distribution (in_res, in_probs_dir, num_seqs=4000):
     
     sequence_length = len(filelines2list(in_res))
     sequences = generate_random_seqs(sequence_length, num_seqs)
@@ -353,8 +353,8 @@ def calc_seq_zscore(mean, std, energy):
 
 #binary search on sorted energies list
 def calc_seq_percentile(energies, energy):
-    i = binary_search(energies, energy)
-    percentile = i/len(energies)*100
+    i = binary_placement(energies, energy)
+    percentile = i*100/len(energies)
     return percentile
 
 def fix_sequence_line(seq, desired_seq_length, in_pdb_orig=None):
@@ -432,3 +432,36 @@ def sum_energy(residue_positions, all_probs, seq, in_pdb_orig=None):
         energy += (ip_probs[AA] if  AAint2char(AA) != 'G' else 0.0)
             
     return (energy, seq)
+
+def calc_top_seqs(in_res_path, probs_dir, num_sequences, outfile, max_time = 600000):
+    probs_files = os.listdir(probs_dir)
+    all_probs = [[], []] #[[[PROBS FOR IP1], [PROBS FOR IP2], ...], [[IP1], [IP2],...]]
+    
+    #read back from .res file where Chain B starts
+    lines = filelines2list(in_res_path)
+    residue_positions = [int(line.strip()) - 1 for line in lines]
+    
+    for file in probs_files:
+        file_path = os.path.join(probs_dir, file)
+        lines = filelines2deeplist(file_path)
+
+        probs = [float(x[1]) for x in lines]
+        all_probs[0].append(probs)
+        all_probs[1].append([int(file.split('_')[0]) - 1, int(file.split('_')[1]) - 1])
+    
+    #the following now fills ordered_probs
+    ordered_probs = [] #[[sorted list of AA probabilities for a specific residue position], [like before for residue pos 2], etc...]
+    AAs = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+    for residue in residue_positions:
+        indices = [idx for idx in range(len(all_probs[1])) if residue in all_probs[1][idx]]
+        probs = [all_probs[0][i] for i in indices]
+        probs_sum = map(sum, zip(*probs))
+        sorted_probs = sorted(zip(AAs, probs_sum), key=lambda pair: pair[1])
+        ordered_probs.append(sorted_probs)
+    
+    #enumerate all the balls in urns possibilities
+    
+    
+    print(ordered_probs)
+    print(len(ordered_probs))
+    print(len(residue_positions))

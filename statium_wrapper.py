@@ -9,6 +9,7 @@ from statium_reformat import generate_random_seqs
 from statium_analysis import generate_random_distribution
 from statium_analysis import calc_seq_zscore
 from statium_analysis import calc_seq_percentile
+from statium_analysis import calc_top_seqs
 from util import list2file
 from util import filelines2list
 
@@ -18,14 +19,17 @@ def main(argv):
                 usage: statium_wrapper.py renumber (IN_PDB) [OUT_PDB] [-v | --verbose]
                        statium_wrapper.py create_res (IN_PDB_ORIG IN_PDB_RENUMBERED) [OUT_RES] [-v | --verbose]
                        statium_wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [-v | --verbose]
-                       statium_wrapper.py [-fzp] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG=None] [-v | --verbose]
+                       statium_wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG=None] [-z | --zscores] [-p | --percentiles] [-v | --verbose]
                        statium_wrapper.py get_orig_seq (IN_PDB_ORIG) [-v | --verbose]
-                       statium_wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [-v | --verbose]                       
+                       statium_wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [-v | --verbose]
+                       statium_wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE MAX_TIME]
                        statium_wrapper.py [-h | --help]
                 """
     
     options = docopt(helpdoc, argv, help = True, version = "2.0.0", options_first=False)
     verbose = options['-v'] or options['--verbose']
+    zscores = options['-z'] or options['--zscores']
+    percentiles = options['-p'] or options['--percentiles']
     
     if(options['renumber']):
         if(verbose): print("Reformatting file: " + options['IN_PDB'])
@@ -72,7 +76,7 @@ def main(argv):
         
         if(verbose): print("Writing to file: ", options['-f'], ". Calculating z-score: ", options['-z'], ". Calculating percentile: ", options['-p'])
         
-        if(options['-z'] or options['-p']):
+        if(zscores or percentiles):
             if(verbose): print('Generating random distribution of energies...')
             distribution = generate_random_distribution(in_res, probs_dir)
             if(verbose): print('Done generating random distribution.')
@@ -86,30 +90,30 @@ def main(argv):
                     (energy, seq) = calc_seq_energy(in_res, probs_dir, line, options['--IN_PDB_ORIG'])
                     line = seq + "\t" + str(energy)
                     
-                    if(options['-z']):
+                    if(zscores):
                         line += "\t" + str(calc_seq_zscore(distribution[3], distribution[4], energy))
                     
-                    if(options['-p']):
+                    if(percentiles):
                         line += "\t" + str(calc_seq_percentile(distribution[2], energy))
                     
                 out_lines.append(line)
                     
             list2file(out_lines, outfile)
+            print('Done.')
         
         else:
             (energy, seq) = calc_seq_energy(in_res, probs_dir, seq_or_file, options['--IN_PDB_ORIG'])
             print("Sequence energy for " + seq + " is: " + str(energy))
             
-            if(options['-z']):
+            if(zscores):
                 zscore = calc_seq_zscore(distribution[3], distribution[4], energy)
                 print('Z-score is ' + str(zscore))
                 
-            if(options['-p']):
+            if(percentiles):
                 percentile = calc_seq_percentile(distribution[2], energy)
                 print('Percentile is ' + str(percentile))
 
 
-        
     #Get the original AA sequence of chain B, along with stats like the length and position of that chain
     elif(options['get_orig_seq']):
         (sequence, length, start, end) = get_orig_seq(options['IN_PDB_ORIG'])
@@ -129,6 +133,15 @@ def main(argv):
             outfile = 'random_seqs.txt' if (options['--OUT_FILE'] == None) else options['--OUT_FILE']
             list2file(sequences, outfile)
             if(verbose): print("Random sequences written to " + outfile)
+   
+    elif(options['calc_top_seqs']):
+        outfile = 'top_' + str(options['N']) + '_sequences.txt' if (options['OUT_FILE'] == None) else options['OUT_FILE']
+        if(options['MAX_TIME'] == None):
+            calc_top_seqs(options['IN_RES'], options['PROBS_DIR'], int(options['N']), outfile)
+        else:
+            calc_top_seqs(options['IN_RES'], options['PROBS_DIR'], int(options['N']), outfile, int(options['MAX_TIME']))
+            
+        if(verbose): print("Done.")
     
 if __name__ == "__main__":
     main(sys.argv[1:])
