@@ -11,6 +11,7 @@ from statium_analysis import calc_seq_zscore
 from statium_analysis import calc_seq_percentile
 from statium_analysis import calc_top_seqs
 from statium_analysis import classify
+from statium_analysis import get_confusion_matrix
 from util import list2file
 from util import filelines2list
 
@@ -25,6 +26,7 @@ def main(argv):
                        statium_wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [-v | --verbose]
                        statium_wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [-v | --verbose]
                        statium_wrapper.py classify (RESULTS_FILE) [OUT_FILE] [ALPHA_THRESHOLD] [-v | --verbose]
+                       statium_wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [OUTFILE] [--IN_PDB_ORIG=None] [-v | --verbose]
                        statium_wrapper.py [-h | --help]
                 """
     
@@ -148,6 +150,16 @@ def main(argv):
         outfile = 'classify_results_' + options['RESULTS_FILE'] + '_' + str(options['N']) + '.txt' if (options['OUT_FILE'] == None) else options['OUT_FILE']
         classify(options['RESULTS_FILE'], outfile, float(threshold))
         if(verbose): print('Done. Results in ' + outfile)
+    
+    elif(options['get_confusion_matrix']):
+        if(verbose): print('Calculating confusion matrix for ' + options['CLASS_RESULTS'] + ' with true classifications in ' + options['TRUE_CLASS'])
+        (TP, FP, TN, FN) = get_confusion_matrix(options['IN_RES'], options['CLASS_RESULTS'], options['TRUE_CLASS'], options['--IN_PDB_ORIG'])
+        outfile = options['CLASS_RESULTS'] + '_confusion_matrix.txt' if (options['OUT_FILE'] == None) else options['OUT_FILE']
+        out_str = 'TP: ' + str(TP) + '\t FN: ' + str(FN) + '\nFP: ' + str(FP) + '\tTN: ' + str(TN)
+        out = [out_str]
+        list2file(out, outfile)
+        print(out_str)
+        if(verbose): print('Confusion matrix written out to ' + outfile)
     
 if __name__ == "__main__":
     main(sys.argv[1:])

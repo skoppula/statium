@@ -545,3 +545,42 @@ def classify(results_file, outfile, threshold=0.05):
             out.append(result[1] + '\t' + str(result[0]) + '\t' + 'inconclusive')
             
     list2file(out, outfile)
+
+#TODO: IMPLEMENT THIS WITH DICTIONARIES LATER
+#TODO: FIX SEMICOLON BUSINESS
+def get_confusion_matrix(in_res_path, class_results_file, true_class_file, in_pdb_orig=None):
+    class_results = filelines2deeplist(class_results_file, skipComments = True, useTuples = False, skipEmptyLines = True)
+    true_class = filelines2deeplist(true_class_file, skipComments = True, useTuples = False, skipEmptyLines = True)
+    
+    #read back from .res file where Chain B starts
+    lines = filelines2list(in_res_path)
+    residue_positions = [int(line.strip()) - 1 for line in lines]
+    
+    for i, pair in enumerate(true_class):
+        seq = pair[0] if (len(pair) == 2) else pair[0]+' '+pair[1]
+        seq = fix_sequence_line(seq, len(residue_positions), in_pdb_orig)
+        true_class[i][0] = seq
+    
+    (TP, FP, TN, FN) = (0, 0, 0, 0)
+    for pair in class_results:
+        if(pair[2] == 'inconclusive'):
+            continue
+        
+        else:
+            for i in range(len(true_class)):
+                if true_class[i][0] == pair[0]:
+                    idx = i
+                    break
+            
+            if(pair[2] == 'strong' and true_class[idx][1] == 'strong'):
+                TP += 1
+            elif(pair[2] == 'weak' and true_class[idx][1] == 'weak'):
+                TN += 1
+            elif(pair[2] == 'strong' and true_class[idx][1] == 'weak'):
+                FP += 1
+            elif(pair[2] == 'weak' and true_class[idx][1] == 'strong'):
+                FN += 1
+            
+#            print('FOUND MATCH', true_class[idx], pair)
+    
+    return (TP, FP, TN, FN)

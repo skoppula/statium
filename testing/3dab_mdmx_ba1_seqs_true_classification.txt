@@ -1,0 +1,58 @@
+#Native chain B peptide sequence is ET FSDLWKLL PEN of length 12 from position 17 to 28
+ETFSDLWKLLPE	strong
+
+#http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0017898
+
+#Known binder: D1, should be more specific to MDM2
+LTFEHYWAQLTS	inconclusive;weak
+
+#From http://www.pnas.org/content/106/12/4665.full: peptide inhibitor of p53-MDM2 and p53-MDMX interactions
+#engineered inhibitor, higher affinity than natural p53
+TSFAEYWNLLSP	strong
+
+#From http://mcr.aacrjournals.org/content/1/14/1001.full:
+#BINDER 12/1: bound to p53 about 50 times more avidly than the natural p53 peptides
+PRFMDYWEGLN	strong
+
+
+#THIRD STUDY: MIP AND 3A more MDM2 specific
+PRFWEYWLRLME	inconclusive;weak
+LTAEHYAAQATS	inconclusive;weak
+
+
+#ANOTHER STUDY!
+#MDMX specific phages
+FAPLNRTVETSP	strong
+LTFEHYWAQLTS	strong
+LTFEHYWAQLTS	strong
+YAVSSSPRVAAL	strong
+LTFEHYWAQLTS	strong
+LTFEHTWAQLTS	strong
+VVHVPNSATPPR	strong
+LTFEHYWAQLTS	strong
+
+#MDM2 specific phages
+QQMHLMSYAPGP	inconclusive;weak
+TIRPSTIMDSPT	inconclusive;weak
+YANPQMEKAFES	inconclusive;weak
+LTFEHYWAQLTS	inconclusive;weak
+LPNLTWALMPGA	inconclusive;weak
+YANPQMEKAFAS	inconclusive;weak
+LLADTTHHRPWT	inconclusive;weak
+
+
+#THE FINAL STUDY WITH NICE IC50 MDM2/MDMX comparisons: all should be more specific to mdm2
+#WT, WT_P, WT_Y, WT_CON
+ETFSDLWKLLP	inconclusive;weak
+ETFSDYWKLLP	inconclusive;weak
+PTFSDYWKLLP	inconclusive;weak
+
+#12/1, 12/2, 12/5
+PRFMDYWEGLN	inconclusive;weak
+QNFIDYWTQQF	inconclusive;weak
+PAFTHYWATF	inconclusive;weak
+
+#15/1, 15/5, BB3
+PTFRDHWFALV	inconclusive;weak
+LVFADYWETLY	inconclusive;weak
+PAFSRFWSDLSA	inconclusive;weak

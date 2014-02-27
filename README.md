@@ -10,6 +10,7 @@ Implementation of the STATIUM algorithm [protein-protein binding affinity scorin
 			   statium_wrapper.py get_orig_seq (IN_PDB_ORIG) [-v | --verbose]
 			   statium_wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [-v | --verbose]                       
 			   statium_wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [-v | --verbose]
+			   statium_wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [--IN_PDB_ORIG=None] [-v | --verbose]
 			   statium_wrapper.py [-h | --help]
 
 An example of an analysis sequence: <br>
@@ -37,3 +38,6 @@ An example of an analysis sequence: <br>
 	python statium_wrapper.py -v calc_top_seqs testing/4hfz.res testing/4hfz_output_probs/ 10
 	
 	python statium_wrapper.py -v classify testing/4hfz_seq_zscores.txt 0.3 testing/4hfz_classify_results_0.3.txt
+	
+	python statium_wrapper.py -v get_confusion_matrix testing/1ycr_mdm2.res testing/1ycr_mdm2_classify_results_0.05.txt testing/1ycr_mdm2_seqs_true_classification.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb
+	python statium_wrapper.py -v get_confusion_matrix testing/3dab_mdmx_ba1.res testing/3dab_mdmx_ba1_classify_results_0.05.txt testing/3dab_mdmx_ba1_seqs_true_classification.txt --IN_PDB_ORIG=testing/3dab_mdmx_ba1_orig.pdb
