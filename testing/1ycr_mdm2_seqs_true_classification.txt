@@ -83,3 +83,32 @@ LVFADYWETLY	strong
 PAFSRFWSDLSA	strong
 
 
+
+#strongly not binding for both MDMX and MDM2: K_d > 11,000
+#control: TSFAEYWNLLS #CHECK TO MAKE SURE IN RIGHT FRAME
+TSAAEYWNLLSP	weak
+TSFAEYANLLSP	weak
+#somewhat not binding for both MDM2 (K_d > 190) and MDMX (K_d > 50): 
+TSFAEAWNLLSP	weak
+TSFAEYWNLASP	weak
+
+#3A: strongly not binding for both MDM2 and MDMX (IC > 50)
+#control: p53 QETFSDLWKLLP
+16 LTAEHYAAQATS	weak
+
+#MIP (Y6A) and MIP (W7A): not binding for MDM2
+16 PRFWEAWLRLME	weak
+16 PRFWEYALRLME	weak
+
+#n.d. for K_d
+ETASDLWKLLPE	weak
+ETFSDLAKLLPE	weak
+
+#12/5, >65 IC_50 for MDM2, >1000 for MDMX
+#control: _QETFSDLWKLLP
+15 TGPAFTHYWATF	weak
+
+#IC_50 > 50 for MDMX, binding MDM2
+#control: ETFSDLWKLLP
+PAFSRFWSDLSAGAH	strong
+
