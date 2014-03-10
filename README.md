@@ -37,7 +37,7 @@ An example of an analysis sequence: <br>
 	
 	python statium_wrapper.py -v calc_top_seqs testing/4hfz.res testing/4hfz_output_probs/ 10
 	
-	python statium_wrapper.py -v classify testing/4hfz_seq_zscores.txt 0.3 testing/4hfz_classify_results_0.3.txt
+	#right no alpha_threshold does not affect analysis; z-score classifying thresholds are hard-coded
+	python statium_wrapper.py -v classify testing/4hfz_seq_zscores.txt testing/4hfz_classify_results_0.05.txt ALPHA_THRESHOLD=0.05
 	
 	python statium_wrapper.py -v get_confusion_matrix testing/1ycr_mdm2.res testing/1ycr_mdm2_classify_results_0.05.txt testing/1ycr_mdm2_seqs_true_classification.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb
-	python statium_wrapper.py -v get_confusion_matrix testing/3dab_mdmx_ba1.res testing/3dab_mdmx_ba1_classify_results_0.05.txt testing/3dab_mdmx_ba1_seqs_true_classification.txt --IN_PDB_ORIG=testing/3dab_mdmx_ba1_orig.pdb

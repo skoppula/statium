@@ -1,2 +1,2 @@
-TP: 10	 FN: 0
-FP: 0	TN: 0
+TP: 8	 FN: 0
+FP: 3	TN: 0

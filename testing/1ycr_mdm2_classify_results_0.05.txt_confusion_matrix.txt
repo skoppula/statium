@@ -1,2 +1,2 @@
-TP: 30	 FN: 1
-FP: 1	TN: 1
+TP: 31	 FN: 1
+FP: 4	TN: 1
