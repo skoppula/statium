@@ -2,12 +2,15 @@ import bidict
 import random
 import math
 
-def read_results(results_file):
+def read_results(results_file, valueIsNum=True):
     results = filelines2deeplist(results_file, skipComments=True, useTuples=True, skipEmptyLines=True)
     results_dict = dict()
     for result in results:
         #remember seq stored in results file is already 'fixed' so we don't need to fix sequence it again
-        results_dict[result[0]] = float(result[-1])
+        if(valueIsNum):
+            results_dict[result[0]] = float(result[-1])
+        else:
+            results_dict[result[0]] = result[-1]
     
     return results_dict
 

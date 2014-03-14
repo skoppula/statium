@@ -571,14 +571,14 @@ def get_confusion_matrix(in_res_path, classification_results_file, true_class_fi
     
     return (TP, FP, TN, FN)
 
-def calc_auroc(in_res_path, results_file, true_class_file, in_pdb_orig=None):
-    true_class = get_true_class(in_res_path, true_class_file, in_pdb_orig)
-    results = read_results(results_file)
+def calc_auroc(in_res_path, results_file, true_class_file, class_results, in_pdb_orig=None):
+    true_class = get_true_class(in_res_path, true_class_file, class_results, in_pdb_orig)
+    results = read_results(results_file, class_results)
     
     roc_data = list()
     
     for seq in true_class:
-        class_type = 0 if true_class[seq].lower() == 'weak' else 1
+        class_type = 1 if true_class[seq].lower() == 'weak' else 0
         if seq in results:
             roc_data.append((class_type, results[seq]))
         else:
@@ -588,14 +588,15 @@ def calc_auroc(in_res_path, results_file, true_class_file, in_pdb_orig=None):
     return roc.auc()
     
 
-def plot_roc_curve(in_res_path, results_file, true_class_file, in_pdb_orig=None, title='ROC CURVE'):
-    true_class = get_true_class(in_res_path, true_class_file, in_pdb_orig)
-    results = read_results(results_file)
+def plot_roc_curve(in_res_path, results_file, true_class_file, class_results, in_pdb_orig=None, title='ROC CURVE'):
+    true_class = get_true_class(in_res_path, true_class_file, class_results, in_pdb_orig)
+    results = read_results(results_file, class_results)
+    
     
     roc_data = list()
     
     for seq in true_class:
-        class_type = 0 if true_class[seq].lower() == 'weak' else 1
+        class_type = 1 if true_class[seq].lower() == 'weak' else 0
         if seq in results:
             roc_data.append((class_type, results[seq]))
         else:
@@ -608,17 +609,23 @@ def plot_roc_curve(in_res_path, results_file, true_class_file, in_pdb_orig=None,
 #process input sequences and output lists of [[seq, class], [..],...]
 #returns dictionary
 #helper function
-def get_true_class(in_res_path, true_class_file, in_pdb_orig=None):
+def get_true_class(in_res_path, true_class_file, class_results=None, in_pdb_orig=None):
+    
     true_class = filelines2deeplist(true_class_file, skipComments = True, useTuples = False, skipEmptyLines = True)
     true_class_dict = dict()
-    
+        
     #read back from .res file where Chain B starts
     lines = filelines2list(in_res_path)
     residue_positions = [int(line.strip()) - 1 for line in lines]
-    
+
+    if(class_results != None):
+        class_results_dict = read_results(class_results, valueIsNum=False)
+            
     for i, pair in enumerate(true_class):
         seq = pair[0] if (len(pair) == 2) else pair[0]+' '+pair[1]
         seq = fix_sequence_line(seq, len(residue_positions), in_pdb_orig)
+        if(class_results != None and class_results_dict[seq] == 'inconclusive'):
+            continue
         true_class_dict[seq] = true_class[i][1]
         
     return true_class_dict

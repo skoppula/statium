@@ -1,5 +1,5 @@
 #Native chain B peptide sequence is ET FSDLWKLL PEN of length 12 from position 17 to 28
-ETFSDLWKLLPE	strong
+ETFSDLWKLLPEN	strong
 
 #http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0017898
 

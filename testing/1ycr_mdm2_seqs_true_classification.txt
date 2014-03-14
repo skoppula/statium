@@ -3,8 +3,8 @@ ETFSDLWKLLPEN	strong
 
 #http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0017898
 #ENGINEERED PEPTIDE SEQUENCES THAT BIND TO MDM2: 16-mer peptides
-PVFPFLWMDLVW	strong
-PVFPFLWMDLMW	strong
+SVFPFLWMDLVW	strong
+SVFPFLWMDLMW	strong
 AVFPFLWLDLMW	strong
 LGFAWEWLQLLG	strong
 SSFWAHWEKLLSE	strong
