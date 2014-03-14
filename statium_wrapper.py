@@ -12,6 +12,8 @@ from statium_analysis import calc_seq_percentile
 from statium_analysis import calc_top_seqs
 from statium_analysis import classify
 from statium_analysis import get_confusion_matrix
+from statium_analysis import calc_auroc
+from statium_analysis import plot_roc_curve
 from util import list2file
 from util import filelines2list
 
@@ -27,6 +29,8 @@ def main(argv):
                        statium_wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [-v | --verbose]
                        statium_wrapper.py classify (RESULTS_FILE) [OUT_FILE] [ALPHA_THRESHOLD] [-v | --verbose]
                        statium_wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [OUTFILE] [--IN_PDB_ORIG=None] [-v | --verbose]
+                       statium_wrapper.py calc_auroc (IN_RES CLASS_RESULTS TRUE_CLASS) [OUTFILE] [--IN_PDB_ORIG=None] [-v | --verbose]
+                       statium_wrapper.py plot_roc_curve (IN_RES CLASS_RESULTS TRUE_CLASS) [--IN_PDB_ORIG=None] [-v | --verbose]
                        statium_wrapper.py [-h | --help]
                 """
     
@@ -160,6 +164,19 @@ def main(argv):
         list2file(out, outfile)
         print(out_str)
         if(verbose): print('Confusion matrix written out to ' + outfile)
+    
+    elif(options['calc_auroc']):
+        if(verbose): print('Calculating AUROC for ' + options['CLASS_RESULTS'] + ' with true classifications in ' + options['TRUE_CLASS'])
+        auroc = calc_auroc(options['IN_RES'], options['CLASS_RESULTS'], options['TRUE_CLASS'], options['--IN_PDB_ORIG'])
+        outfile = options['CLASS_RESULTS'] + '_auroc.txt' if (options['OUT_FILE'] == None) else options['OUT_FILE']
+        list2file([auroc], outfile)
+        print(out_str)
+        if(verbose): print('AUROC written out to ' + outfile)
+        
+    elif(options['plot_roc_curve']):
+        if(verbose): print('Plotting ROC curve for ' + options['CLASS_RESULTS'] + ' with true classifications in ' + options['TRUE_CLASS'])
+        plot_roc_curve(options['IN_RES'], options['CLASS_RESULTS'], options['TRUE_CLASS'], options['--IN_PDB_ORIG'])
+        if(verbose): print('Done.')
     
 if __name__ == "__main__":
     main(sys.argv[1:])

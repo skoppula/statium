@@ -2,6 +2,7 @@ import os
 import math
 import heapq
 import itertools
+import pyroc
 from util import filelines2list
 from util import list2file
 from util import isAA
@@ -15,6 +16,9 @@ from util import binary_placement
 from util import mean
 from util import std
 from util import nCr
+from util import get_true_class
+from util import get_sorted_results
+from util import read_results
 from statium_reformat import get_orig_seq
 from statium_reformat import generate_random_seqs
 
@@ -526,17 +530,14 @@ def calc_top_seqs(in_res_path, probs_dir, num_sequences, outfile):
 #based on a X/100 threshold, classifies top X% as strong binders, bottom X% as weak binders. Uses results file and last column of values in results file 
 #SHOULD IDEALLY USE INVERSE NORM, NOW JUST HARDCODING IN THRESHOLD Z-SCORES FOR ALPHA=0.05
 def classify(results_file, outfile, threshold=0.05):
-    results = filelines2deeplist(results_file, skipComments=True, useTuples=True, skipEmptyLines=True)
-    filtered_results = []
-    for result in results:
-        filtered_results.append((float(result[-1]), result[0]))
+
+    sorted_results = get_sorted_results(results_file)
     
     z_score_threshold_low = -1.645
     z_score_threshold_high = 1.645
     
-    sorted_results = sorted(filtered_results)
     out = []
-    for i, result in enumerate(sorted_results):
+    for result in sorted_results:
         if(result[0] < z_score_threshold_low):
             out.append(result[1] + '\t' + str(result[0]) + '\t' + 'strong')
         elif(result[0] > z_score_threshold_high):
@@ -548,18 +549,9 @@ def classify(results_file, outfile, threshold=0.05):
 
 #TODO: IMPLEMENT THIS WITH DICTIONARIES LATER
 #TODO: FIX SEMICOLON BUSINESS
-def get_confusion_matrix(in_res_path, class_results_file, true_class_file, in_pdb_orig=None):
-    class_results = filelines2deeplist(class_results_file, skipComments = True, useTuples = False, skipEmptyLines = True)
-    true_class = filelines2deeplist(true_class_file, skipComments = True, useTuples = False, skipEmptyLines = True)
-    
-    #read back from .res file where Chain B starts
-    lines = filelines2list(in_res_path)
-    residue_positions = [int(line.strip()) - 1 for line in lines]
-    
-    for i, pair in enumerate(true_class):
-        seq = pair[0] if (len(pair) == 2) else pair[0]+' '+pair[1]
-        seq = fix_sequence_line(seq, len(residue_positions), in_pdb_orig)
-        true_class[i][0] = seq
+def get_confusion_matrix(in_res_path, classification_results_file, true_class_file, in_pdb_orig=None):
+    class_results = filelines2deeplist(classification_results_file, skipComments = True, useTuples = False, skipEmptyLines = True)
+    true_class = get_true_class(in_res_path, true_class_file, in_pdb_orig)
     
     (TP, FP, TN, FN) = (0, 0, 0, 0)
     for pair in class_results:
@@ -567,20 +559,49 @@ def get_confusion_matrix(in_res_path, class_results_file, true_class_file, in_pd
             continue
         
         else:
-            for i in range(len(true_class)):
-                if true_class[i][0] == pair[0]:
-                    idx = i
-                    break
-            
-            if(pair[2] == 'strong' and true_class[idx][1] == 'strong'):
-                TP += 1
-            elif(pair[2] == 'weak' and true_class[idx][1] == 'weak'):
-                TN += 1
-            elif(pair[2] == 'strong' and true_class[idx][1] == 'weak'):
-                FP += 1
-            elif(pair[2] == 'weak' and true_class[idx][1] == 'strong'):
-                FN += 1
+            if pair[0] in true_class:
+                if(pair[2] == 'strong' and true_class[pair[0]] == 'strong'):
+                    TP += 1
+                elif(pair[2] == 'weak' and true_class[pair[0]] == 'weak'):
+                    TN += 1
+                elif(pair[2] == 'strong' and true_class[pair[0]] == 'weak'):
+                    FP += 1
+                elif(pair[2] == 'weak' and true_class[pair[0]] == 'strong'):
+                    FN += 1
             
 #            print('FOUND MATCH', true_class[idx], pair)
     
     return (TP, FP, TN, FN)
+
+def calc_auroc(in_res_path, results_file, true_class_file, in_pdb_orig=None):
+    true_class = get_true_class(in_res_path, true_class_file, in_pdb_orig)
+    results = read_results(results_file)
+    
+    roc_data = list()
+    
+    for seq in true_class:
+        class_type = 0 if true_class[seq].lower() == 'weak' else 1
+        if seq in results:
+            roc_data.append((class_type, results[seq]))
+        else:
+            print 'Error: ' + seq + ' not found in results.'
+    
+    roc = pyroc.ROCData(roc_data)
+    return roc.auc()
+    
+
+def plot_roc_curve(in_res_path, results_file, true_class_file, in_pdb_orig=None, title='ROC CURVE'):
+    true_class = get_true_class(in_res_path, true_class_file, in_pdb_orig)
+    results = read_results(results_file)
+    
+    roc_data = list()
+    
+    for seq in true_class:
+        class_type = 0 if true_class[seq].lower() == 'weak' else 1
+        if seq in results:
+            roc_data.append((class_type, results[seq]))
+        else:
+            print 'Error: ' + seq + ' not found in results.'
+    
+    roc = pyroc.ROCData(roc_data)
+    roc.plot(title)
