@@ -23,7 +23,7 @@ def main(argv):
                 usage: statium_wrapper.py renumber (IN_PDB) [OUT_PDB] [-v | --verbose]
                        statium_wrapper.py create_res (IN_PDB_ORIG IN_PDB_RENUMBERED) [OUT_RES] [-v | --verbose]
                        statium_wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [-v | --verbose]
-                       statium_wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG=None] [-z | --zscores] [-p | --percentiles] [-v | --verbose]
+                       statium_wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG=None] [-z | --zscores] [-p | --percentiles] [-v | --verbose] [-d | --draw_histogram]
                        statium_wrapper.py get_orig_seq (IN_PDB_ORIG) [-v | --verbose]
                        statium_wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [-v | --verbose]
                        statium_wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [-v | --verbose]
@@ -38,6 +38,7 @@ def main(argv):
     verbose = options['-v'] or options['--verbose']
     zscores = options['-z'] or options['--zscores']
     percentiles = options['-p'] or options['--percentiles']
+    histogram = options['-d'] or options['--draw_histogram']
    
     if(options['renumber']):
         if(verbose): print("Reformatting file: " + options['IN_PDB'])
@@ -87,6 +88,15 @@ def main(argv):
         if(zscores or percentiles):
             if(verbose): print('Generating random distribution of energies...')
             distribution = generate_random_distribution(in_res, probs_dir)
+            if(histogram):
+                import matplotlib.pyplot as plt
+                import numpy as np
+
+                hist, bins = np.histogram(distribution[2], bins=50)
+                width = 0.7 * (bins[1] - bins[0])
+                center = (bins[:-1] + bins[1:]) / 2
+                plt.bar(center, hist, align='center', width=width)
+                plt.show()
             if(verbose): print('Done generating random distribution.')
                     
         if(options['-f']):
@@ -176,7 +186,7 @@ def main(argv):
             else:
                 print('Including tentative \'inconclusive sequences\' in ROC analysis')
         
-        print(class_results)      
+              
         auroc = calc_auroc(options['IN_RES'], options['RESULTS_FILE'], options['TRUE_CLASS'], class_results, options['--IN_PDB_ORIG'])
         outfile = options['CLASS_RESULTS'] + '_auroc.txt' if (options['OUT_FILE'] == None) else options['OUT_FILE']
         list2file([str(auroc)], outfile)

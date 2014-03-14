@@ -2,7 +2,6 @@ import os
 import math
 import heapq
 import itertools
-import pyroc
 from util import filelines2list
 from util import list2file
 from util import isAA
@@ -599,12 +598,14 @@ def get_roc_curve_data(in_res_path, results_file, true_class_file, class_results
     return roc_data
 
 def calc_auroc(in_res_path, results_file, true_class_file, class_results, in_pdb_orig=None):
+    import pyroc
     roc_data = get_roc_curve_data(in_res_path, results_file, true_class_file, class_results, in_pdb_orig)
     roc = pyroc.ROCData(roc_data)
     return roc.auc()
     
 
 def plot_roc_curve(in_res_path, results_file, true_class_file, class_results, in_pdb_orig=None, title='ROC CURVE'):
+    import pyroc
     roc_data = get_roc_curve_data(in_res_path, results_file, true_class_file, class_results, in_pdb_orig)
     roc = pyroc.ROCData(roc_data)
     roc.plot(title)
