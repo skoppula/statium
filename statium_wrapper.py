@@ -167,14 +167,16 @@ def main(argv):
     
     #by default, analysis includes tentative inconclusives. the -i flag removes them from analysis 
     elif(options['calc_auroc']):
-        if(verbose): print('Calculating AUROC for ' + options['CLASS_RESULTS'] + ' with true classifications in ' + options['TRUE_CLASS'])
+        if(verbose): print('Calculating AUROC for ' + options['RESULTS_FILE'] + ' with true classifications in ' + options['TRUE_CLASS'])
+        
+        class_results = options['--CLASS_RESULTS']
         if(verbose):
             if(options['-i']):
                 print('Discarding tentative \'inconclusive sequences\' in ROC analysis')
-                class_results = None
             else:
                 print('Including tentative \'inconclusive sequences\' in ROC analysis')
-                class_results = options['--CLASS_RESULTS']
+        
+        print(class_results)      
         auroc = calc_auroc(options['IN_RES'], options['RESULTS_FILE'], options['TRUE_CLASS'], class_results, options['--IN_PDB_ORIG'])
         outfile = options['CLASS_RESULTS'] + '_auroc.txt' if (options['OUT_FILE'] == None) else options['OUT_FILE']
         list2file([str(auroc)], outfile)
@@ -182,14 +184,15 @@ def main(argv):
         if(verbose): print('AUROC written out to ' + outfile)
         
     elif(options['plot_roc_curve']):
-        if(verbose): print('Plotting ROC curve for ' + options['CLASS_RESULTS'] + ' with true classifications in ' + options['TRUE_CLASS'])
+        if(verbose): print('Plotting ROC curve for ' + options['RESULTS_FILE'] + ' with true classifications in ' + options['TRUE_CLASS'])
         if(verbose):
             if(options['-i']):
                 print('Discarding tentative \'inconclusive sequences\' in ROC analysis')
-                class_results = None
+                class_results = options['--CLASS_RESULTS']
             else:
                 print('Including tentative \'inconclusive sequences\' in ROC analysis')
-                class_results = options['--CLASS_RESULTS']
+                class_results = None
+                
         plot_roc_curve(options['IN_RES'], options['RESULTS_FILE'], options['TRUE_CLASS'], class_results, options['--IN_PDB_ORIG'])
         if(verbose): print('Done.')
     
