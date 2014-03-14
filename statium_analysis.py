@@ -16,8 +16,6 @@ from util import binary_placement
 from util import mean
 from util import std
 from util import nCr
-from util import get_true_class
-from util import get_sorted_results
 from util import read_results
 from statium_reformat import get_orig_seq
 from statium_reformat import generate_random_seqs
@@ -605,3 +603,34 @@ def plot_roc_curve(in_res_path, results_file, true_class_file, in_pdb_orig=None,
     
     roc = pyroc.ROCData(roc_data)
     roc.plot(title)
+
+#from true classification key (text file of format, SEQ\tCLASSIFICATION of 'weak' or 'strong'),
+#process input sequences and output lists of [[seq, class], [..],...]
+#returns dictionary
+#helper function
+def get_true_class(in_res_path, true_class_file, in_pdb_orig=None):
+    true_class = filelines2deeplist(true_class_file, skipComments = True, useTuples = False, skipEmptyLines = True)
+    true_class_dict = dict()
+    
+    #read back from .res file where Chain B starts
+    lines = filelines2list(in_res_path)
+    residue_positions = [int(line.strip()) - 1 for line in lines]
+    
+    for i, pair in enumerate(true_class):
+        seq = pair[0] if (len(pair) == 2) else pair[0]+' '+pair[1]
+        seq = fix_sequence_line(seq, len(residue_positions), in_pdb_orig)
+        true_class_dict[seq] = true_class[i][1]
+        
+    return true_class_dict
+
+#helper function
+def get_sorted_results(results_file):
+    results = filelines2deeplist(results_file, skipComments=True, useTuples=True, skipEmptyLines=True)
+    filtered_results = []
+    for result in results:
+        #remember seq stored in results file is already 'fixed' so we don't need to fix sequence it again
+        filtered_results.append((float(result[-1]), result[0]))
+    
+    sorted_results = sorted(filtered_results)
+    
+    return sorted_results

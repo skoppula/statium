@@ -149,10 +149,10 @@ def main(argv):
         if(verbose): print("Done. Results written to " + outfile)
     
     elif(options['classify']):
-        threshold = 0.05 if options['ALPHA_THRESHOLD'] == None else options['ALPHA_THRESHOLD'] 
+        threshold = 0.05 if options['ALPHA_THRESHOLD'] == None else float(options['ALPHA_THRESHOLD'].split('=')[1])
         if(verbose): print('Classifying ' + options['RESULTS_FILE'] + ' with dummy (i.e. not considered right now in analysis) threshold ' + str(threshold))
         outfile = 'classify_results_' + options['RESULTS_FILE'] + '_' + str(options['N']) + '.txt' if (options['OUT_FILE'] == None) else options['OUT_FILE']
-        classify(options['RESULTS_FILE'], outfile, float(threshold))
+        classify(options['RESULTS_FILE'], outfile, threshold)
         if(verbose): print('Done. Results in ' + outfile)
     
     elif(options['get_confusion_matrix']):

@@ -8,11 +8,14 @@ Implementation of the STATIUM algorithm [protein-protein binding affinity scorin
 			   statium_wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [-v | --verbose]
 			   statium_wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG=None] [-z | --zscores] [-p | --percentiles] [-v | --verbose]
 			   statium_wrapper.py get_orig_seq (IN_PDB_ORIG) [-v | --verbose]
-			   statium_wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [-v | --verbose]                       
+			   statium_wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [-v | --verbose]
 			   statium_wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [-v | --verbose]
-			   statium_wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [--IN_PDB_ORIG=None] [-v | --verbose]
+			   statium_wrapper.py classify (RESULTS_FILE) [OUT_FILE] [ALPHA_THRESHOLD] [-v | --verbose]
+			   statium_wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [OUTFILE] [--IN_PDB_ORIG=None] [-v | --verbose]
+			   statium_wrapper.py calc_auroc (IN_RES CLASS_RESULTS TRUE_CLASS) [OUTFILE] [--IN_PDB_ORIG=None] [-v | --verbose]
+			   statium_wrapper.py plot_roc_curve (IN_RES CLASS_RESULTS TRUE_CLASS) [--IN_PDB_ORIG=None] [-v | --verbose]
 			   statium_wrapper.py [-h | --help]
-
+			   
 An example of an analysis sequence: <br>
 
 	python statium_wrapper.py renumber testing/4hfz_orig.pdb testing/4hfz.pdb -v
@@ -41,3 +44,5 @@ An example of an analysis sequence: <br>
 	python statium_wrapper.py -v classify testing/4hfz_seq_zscores.txt testing/4hfz_classify_results_0.05.txt ALPHA_THRESHOLD=0.05
 	
 	python statium_wrapper.py -v get_confusion_matrix testing/1ycr_mdm2.res testing/1ycr_mdm2_classify_results_0.05.txt testing/1ycr_mdm2_seqs_true_classification.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb
+
+	python statium_wrapper.py -v calc_auroc testing/1ycr_mdm2.res testing/4hfz_seq_zscores.txt testing/1ycr_mdm2_seqs_true_classification.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb
