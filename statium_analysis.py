@@ -587,6 +587,8 @@ def get_roc_curve_data(in_res_path, results_file, true_class_file, class_results
             class_type = 1
         elif('strong' in true_class[seq].lower()):
             class_type = 0
+        else:
+            continue
         
 #        print (seq, true_class[seq])
             
