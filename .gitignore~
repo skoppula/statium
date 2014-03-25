@@ -1,6 +1,7 @@
 *.swp
 culled_90/
-
+backups/
+backups/*
 pdbs.tar.gz
 
 .gitignore
@@ -12,7 +13,4 @@ ip_90_wGLY/*
 data/*
 testing/output/*
 testing/output_probs/*
-*.res
-*.pdb
-!*_orig.pdb
-*.txt
+

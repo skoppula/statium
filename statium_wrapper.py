@@ -89,6 +89,7 @@ def main(argv):
             if(verbose): print('Generating random distribution of energies...')
             distribution = generate_random_distribution(in_res, probs_dir)
             if(histogram):
+                if(verbose): print('Drawing histogram...')
                 import matplotlib.pyplot as plt
                 import numpy as np
 

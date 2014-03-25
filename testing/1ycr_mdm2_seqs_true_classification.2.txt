@@ -1,0 +1,89 @@
+#make sure in right reading frame; starts at 17
+#can verify with PDB's original sequence
+
+#THRESHOLD: <10^-6 is strong; <10^-4 weak
+#ANY IC_50 < 1000 is strong; else weak
+
+#				MDM2,K_D
+#				M
+TSFAEYWNLLSP	strong
+
+ASFAEYWNLLSP	strong
+TAFAEYWNLLSP	strong
+TSAAEYWNLLSP	inconclusive
+TSFAEYWNLLSP	strong
+TSFAAYWNLLSP	strong
+TSFAEAWNLLSP	strong
+TSFAEYANLLSP	weak
+TSFAEYWALLSP	strong
+TSFAEYWNALSP	strong
+TSFAEYWNLASP	strong
+TSFAEYWNLLAP	strong
+TSFAEYWNLLSA	strong
+
+TSFAEYWNLL	strong
+18 SFAEYWNLL	strong
+19 FAEYWNLL	inconclusive
+19 FAEYWNLLS	inconclusive
+19 FAEYWNLLSP	inconclusive
+
+
+#				MDM2,IC_50
+#				mu_molar/L
+16 PRFWEYWLRLME	strong
+16 LTFEHYWAQLTS	strong
+16 LTAEHYAAQATS	weak
+16 QETFSDLWKLLP	strong
+16 PRAWEYWLRLME	strong
+16 PRAWEAWLRLME	weak
+16 PRAWEYALRLME	weak
+16 PRAWEYWLALME	strong
+16 PRAWEYWLRAME	strong
+16 PRAWEYWLRLAE	strong
+
+#				MDM2,K_D
+#				M
+ETFSDLWKLLPE	strong
+ATFSDLWKLLPE	strong
+EAFSDLWKLLPE	inconclusive
+ETASDLWKLLPE	weak
+ETFADLWKLLPE	strong
+ETFSALWKLLPE	strong
+ETFSDAWKLLPE	inconclusive
+ETFSDLAKLLPE	weak
+ETFSDLWALLPE	strong
+ETFSDLWKALPE	strong
+ETFSDLWKLAPE	strong
+ETFSDLWKLLAE	strong
+ETFSDLWKLLPA	strong
+
+ETFSDLWKLL		strong
+18 TFSDLWKLL	inconclusive
+19 FSDLWKLL		inconclusive
+19 FSDLWKLLP	weak
+19 FSDLWKLLPE	weak
+  
+  
+#				MDM2,IC_50
+#				mu_molar/L
+#				ELISE
+16 QETFSDLWKLLP	strong
+16 MPRFMDYWEGLN	strong
+16 LTFEHYWAQLTS	strong
+16 LTFEHYWAQLTS	weak
+
+
+#				MDM2,IC_50
+#				mu_molar/L
+16 QETFSDLWKLLP	strong
+16 QPTFSDLWKLLP	strong
+16 QETFSDYWKLLP	strong
+16 QPTFSDYWKLLP	strong
+
+16 MPRFMDYWEGLN	strong
+16 VQNFIDYWTQQF	strong
+15 TGPAFTHYWATF	strong
+
+13 IDRAPTFRDHWFALV	strong
+13 PRPALVFADYWETLY	strong
+PAFSRFWSDLSAGAH	strong
