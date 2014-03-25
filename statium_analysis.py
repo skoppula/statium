@@ -335,7 +335,7 @@ def get_pdb_info(in_pdb_path):
     
     return pdb_info
 
-def generate_random_distribution (in_res, in_probs_dir, num_seqs=4000):
+def generate_random_distribution (in_res, in_probs_dir, num_seqs=10000):
     
     sequence_length = len(filelines2list(in_res))
     sequences = generate_random_seqs(sequence_length, num_seqs)
@@ -596,7 +596,8 @@ def get_roc_curve_data(in_res_path, results_file, true_class_file, class_results
             roc_data.append((class_type, results[seq]))
         else:
             print 'Error: ' + seq + ' not found in results.'
-            
+    
+    print roc_data        
     return roc_data
 
 def calc_auroc(in_res_path, results_file, true_class_file, class_results, in_pdb_orig=None):

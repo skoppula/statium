@@ -1,114 +1,89 @@
-#Native chain B peptide sequence is ET FSDLWKLL PEN of length 13 from position 17 to 29
-ETFSDLWKLLPEN	strong
+#make sure in right reading frame; starts at 17
+#can verify with PDB's original sequence
 
-#http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0017898
-#ENGINEERED PEPTIDE SEQUENCES THAT BIND TO MDM2: 16-mer peptides
-SVFPFLWMDLVW	strong
-SVFPFLWMDLMW	strong
-AVFPFLWLDLMW	strong
-LGFAWEWLQLLG	strong
-SSFWAHWEKLLSE	strong
-19 FAWHWKILSKF	strong
-LYFLSELMELIL	strong
-FYFLSALVLVLSG	strong
-ALFLVGLTRGLSE	strong
-VGFSDARALLFIV	strong
-RLFIRARCKLLLL	strong
-19 FLRLLARLFIS	strong
-19 FLCLLSLLHRS	strong
-CLIVCRRRLLVRV	strong
-CICVVVRVLLWSS	strong
-MPFLFHWLNLYLH	strong
-18 SAGYLWLLVMRS	strong
+#THRESHOLD: <10^-6 is strong; <10^-4 weak
+#ANY IC_50 < 1000 is strong; else weak
 
-#Known binder: D1, should be more specific to MDM2
-LTFEHYWAQLTS	strong
-
-#ENGINEERED PEPTIDE SEQUENCES THAT BIND TO MDM2: 12-mer peptides
-PRFWEYWLRLME	strong
-KSFQQLWQELML	strong
-KTFEEYWLMLMS	strong
-PSFWEHWVELML	strong
-KRFQDYWSELML	strong
-
-#From http://www.pnas.org/content/106/12/4665.full: peptide inhibitor of p53-MDM2 and p53-MDMX interactions
-#engineered inhibitor, higher affinity than natural p53
+#				MDM2,K_D
+#				M
 TSFAEYWNLLSP	strong
 
-#From http://mcr.aacrjournals.org/content/1/14/1001.full:
-#BINDER 12/1: bound to p53 about 50 times more avidly than the natural p53 peptides
-PRFMDYWEGLN	strong
-
-
-#THIRD STUDY: MIP AND 3A more MDM2 specific
-PRFWEYWLRLME	strong
-LTAEHYAAQATS	strong
-
-
-#ANOTHER STUDY!
-#MDMX specific phages
-FAPLNRTVETSP	weak
-LTFEHYWAQLTS	weak
-LTFEHYWAQLTS	weak
-YAVSSSPRVAAL	weak
-LTFEHYWAQLTS	weak
-LTFEHTWAQLTS	weak
-VVHVPNSATPPR	weak
-LTFEHYWAQLTS	weak
-
-#MDM2 specific phages
-QQMHLMSYAPGP	strong
-TIRPSTIMDSPT	strong
-YANPQMEKAFES	strong
-LTFEHYWAQLTS	strong
-LPNLTWALMPGA	strong
-YANPQMEKAFAS	strong
-LLADTTHHRPWT	strong
-
-
-#THE FINAL STUDY WITH NICE IC50 MDM2/MDMX comparisons: all should be more specific to mdm2
-#WT, WT_P, WT_Y, WT_CON
-ETFSDLWKLLP	strong
-ETFSDYWKLLP	strong
-PTFSDYWKLLP	strong
-
-#12/1, 12/2, 12/5
-PRFMDYWEGLN	strong
-QNFIDYWTQQF	strong
-PAFTHYWATF	strong
-
-#15/1, 15/5, BB3
-PTFRDHWFALV	strong
-LVFADYWETLY	strong
-PAFSRFWSDLSA	strong
-
-
-
-#strongly not binding for both MDMX and MDM2: K_d > 11,000
-#control: TSFAEYWNLLS #CHECK TO MAKE SURE IN RIGHT FRAME
-TSAAEYWNLLSP	weak
+ASFAEYWNLLSP	strong
+TAFAEYWNLLSP	strong
+TSAAEYWNLLSP	inconclusive
+TSFAEYWNLLSP	strong
+TSFAAYWNLLSP	strong
+TSFAEAWNLLSP	strong
 TSFAEYANLLSP	weak
-#somewhat not binding for both MDM2 (K_d > 190) and MDMX (K_d > 50): 
-TSFAEAWNLLSP	weak
-TSFAEYWNLASP	weak
+TSFAEYWALLSP	strong
+TSFAEYWNALSP	strong
+TSFAEYWNLASP	strong
+TSFAEYWNLLAP	strong
+TSFAEYWNLLSA	strong
 
-#3A: strongly not binding for both MDM2 and MDMX (IC > 50)
-#control: p53 QETFSDLWKLLP
+TSFAEYWNLL	strong
+18 SFAEYWNLL	strong
+19 FAEYWNLL	inconclusive
+19 FAEYWNLLS	inconclusive
+19 FAEYWNLLSP	inconclusive
+
+
+#				MDM2,IC_50
+#				mu_molar/L
+16 PRFWEYWLRLME	strong
+16 LTFEHYWAQLTS	strong
 16 LTAEHYAAQATS	weak
+16 QETFSDLWKLLP	strong
+16 PRAWEYWLRLME	strong
+16 PRAWEAWLRLME	weak
+16 PRAWEYALRLME	weak
+16 PRAWEYWLALME	strong
+16 PRAWEYWLRAME	strong
+16 PRAWEYWLRLAE	strong
 
-#MIP (Y6A) and MIP (W7A): not binding for MDM2
-16 PRFWEAWLRLME	weak
-16 PRFWEYALRLME	weak
-
-#n.d. for K_d
+#				MDM2,K_D
+#				M
+ETFSDLWKLLPE	strong
+ATFSDLWKLLPE	strong
+EAFSDLWKLLPE	inconclusive
 ETASDLWKLLPE	weak
+ETFADLWKLLPE	strong
+ETFSALWKLLPE	strong
+ETFSDAWKLLPE	inconclusive
 ETFSDLAKLLPE	weak
+ETFSDLWALLPE	strong
+ETFSDLWKALPE	strong
+ETFSDLWKLAPE	strong
+ETFSDLWKLLAE	strong
+ETFSDLWKLLPA	strong
 
-#12/5, >65 IC_50 for MDM2, >1000 for MDMX
-#control: _QETFSDLWKLLP
-15 TGPAFTHYWATF	weak
+ETFSDLWKLL		strong
+18 TFSDLWKLL	inconclusive
+19 FSDLWKLL		inconclusive
+19 FSDLWKLLP	weak
+19 FSDLWKLLPE	weak
+  
+  
+#				MDM2,IC_50
+#				mu_molar/L
+#				ELISE
+16 QETFSDLWKLLP	strong
+16 MPRFMDYWEGLN	strong
+16 LTFEHYWAQLTS	strong
+16 LTFEHYWAQLTS	weak
 
-#IC_50 > 50 for MDMX, binding MDM2
-#control: ETFSDLWKLLP
+
+#				MDM2,IC_50
+#				mu_molar/L
+16 QETFSDLWKLLP	strong
+16 QPTFSDLWKLLP	strong
+16 QETFSDYWKLLP	strong
+16 QPTFSDYWKLLP	strong
+
+16 MPRFMDYWEGLN	strong
+16 VQNFIDYWTQQF	strong
+15 TGPAFTHYWATF	strong
+
+13 IDRAPTFRDHWFALV	strong
+13 PRPALVFADYWETLY	strong
 PAFSRFWSDLSAGAH	strong
-
