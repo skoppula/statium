@@ -2,6 +2,7 @@ import os
 import math
 import heapq
 import itertools
+from operator import itemgetter
 from util import filelines2list
 from util import list2file
 from util import isAA
@@ -335,7 +336,7 @@ def get_pdb_info(in_pdb_path):
     
     return pdb_info
 
-def generate_random_distribution (in_res, in_probs_dir, num_seqs=10000):
+def generate_random_distribution (in_res, in_probs_dir, num_seqs=100000):
     
     sequence_length = len(filelines2list(in_res))
     sequences = generate_random_seqs(sequence_length, num_seqs)
@@ -361,10 +362,10 @@ def calc_seq_percentile(energies, energy):
     percentile = i*100/len(energies)
     return percentile
 
-def fix_sequence_line(seq, desired_seq_length, in_pdb_orig=None):
+def fix_sequence_line(seq, desired_seq_length, in_pdb_orig=None, warning=False):
     parts = seq.split()
     
-    if(len(seq) != desired_seq_length and len(parts) == 1):
+    if(len(seq) != desired_seq_length and len(parts) == 1 and warning):
         print('NOTE: IRREGULAR SEQUENCE LENGTH WITHOUT A START POSITION FOR ' + seq)
     
     elif(len(parts) > 1):
@@ -643,3 +644,33 @@ def get_sorted_results(results_file):
     sorted_results = sorted(filtered_results)
     
     return sorted_results
+
+#function to combine sequence energy and true classification files so that we can easily read file in format: SEQ       ENERGY  TRUE_CLASS
+def summarize(in_energy_file_path, in_true_class_file_path, in_res_path, in_pdb_orig, out_file = '1ycr_mdm2_summarize.txt'):
+    lines = open(in_energy_file_path).readlines()
+    lines2 = open(in_true_class_file_path).readlines()
+    lines = [line for line in lines if line[0] != '#' and line[0] != '\n']
+    lines2 = [line for line in lines2 if line[0] != '#' and line[0] != '\n' and line[0] != '\r']
+    lines = [line[:-1] for line in lines]
+    table1 = [line.split('\t') for line in lines]
+    lines2 = [line[:-2] for line in lines2]
+    table2 = [line.split('\t') for line in lines2 if not line.isspace()]
+
+    res_lines = filelines2list(in_res_path)
+    residue_positions = [int(line.strip()) - 1 for line in res_lines]
+    table2 = [[fix_sequence_line(pair[0], len(residue_positions), in_pdb_orig),pair[1]] for pair in table2]
+
+    out = []
+    for pair in table1:
+        for i, pair2 in enumerate(table2):
+            if pair2[0] == pair[0]:
+                s = pair[0] + ' ' + pair[1] + ' ' +  pair2[1]
+                out.append(s)
+                break
+
+    out_parts = [(triplet.split(' ')[0], float(triplet.split(' ')[1]), triplet.split(' ')[2]) for triplet in out]
+    out_parts = sorted(out_parts, key=itemgetter(1), reverse=True) 
+    if out_file is not None:
+	    list2file([part[0] + ' ' + str(part[1]) + ' ' + part[2] for part in out_parts], out_file)
+    return out_parts
+
