@@ -11,9 +11,10 @@ STATIUM is an ongoing project at the Keating Lab to quantitatively understand ho
 <i>Information</i>: Runs STATIUM analysis to create weights for each possible amino acid at the protein's interacting pair positions. Note that this command is a shortcut combination of the `renumber`,`create_res`, `run_statium`, and `get_orig_seq` commands.
 ***
 <b>Helpful Hints</b>:
-+ Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.<BR>
++ Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.
 + Arguments wrapped in parenthesis () are required; arguments wrapped in square brackets [] are optional.
 
+<b>Thanks for using STATIUM!</b>:
  statium_wrapper.py renumber (IN_PDB) [OUT_PDB] [-v | --verbose]
  
 					   statium_wrapper.py create_res (IN_PDB_ORIG IN_PDB_RENUMBERED) [OUT_RES] [-v | --verbose]
