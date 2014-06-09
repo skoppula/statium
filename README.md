@@ -1,7 +1,7 @@
 <b>STATIUM: smart scoring. promising proteins.</b><br>
 STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository implements a still-under-development algorithm we call STATIUM that effectively scores how well two proteins bind.
 
-<b>Details and Documentation*</b>
+<b>Details and Documentation</b>
 ***
 `precompute`:<br>
 <i>Template</i>: `python wrapper.py precompute (--in_pdb --in_pdb_lib_dir --in_ip_lib_dir) [--out_dir]`<br>
@@ -10,9 +10,9 @@ STATIUM is an ongoing project at the Keating Lab to quantitatively understand ho
 
 <i>Information</i>: Runs STATIUM analysis to create weights for each possible amino acid at the protein's interacting pair positions. Note that this command is a shortcut combination of the `renumber`,`create_res`, `run_statium`, and `get_orig_seq` commands.
 ***
-*Helpful Hints:
-+Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.<BR>
-+Arguments wrapped in parenthesis () are required; arguments wrapped in square brackets [] are optional.
+<b>Helpful Hints</b>:
++ Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.<BR>
++ Arguments wrapped in parenthesis () are required; arguments wrapped in square brackets [] are optional.
 
  statium_wrapper.py renumber (IN_PDB) [OUT_PDB] [-v | --verbose]
  
