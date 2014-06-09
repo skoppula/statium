@@ -3,8 +3,7 @@ STATIUM is an ongoing project at the Keating Lab to quantitatively understand ho
 
 <b>Details and Documentation</b><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<FONT FACE="courier">precompute*</FONT>:<br>
-	Template: python statium_wrapper.py precompute (IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR]
-
+	Template: '''python statium_wrapper.py precompute (IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR]'''
 	Example:  python statium_wrapper.py precompute --in_pdb=1ycr_mdm2.pdb --in_pdb_lib_dir=data/culled_90/ --in_ip_lib_dir=data/ip_90_wGLY --out_dir=testing/output
 	
 	Information:
