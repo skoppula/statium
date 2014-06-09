@@ -20,34 +20,34 @@ from util import filelines2list
 def main(argv):
 	
 	helpdoc =   """
-				usage: statium_wrapper.py precompute (--in_pdb --in_pdb_lib_dir --in_ip_lib_dir) [--out_dir]
-					   statium_wrapper.py renumber (IN_PDB) [OUT_PDB] [-v | --verbose]
-					   statium_wrapper.py create_res (IN_PDB_ORIG IN_PDB_RENUMBERED) [OUT_RES] [-v | --verbose]
-					   statium_wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [-v | --verbose]
-					   statium_wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG=None] [-z | --zscores] [-p | --percentiles] [-v | --verbose] [-d | --draw_histogram]
-					   statium_wrapper.py get_orig_seq (IN_PDB_ORIG) [-v | --verbose]
-					   statium_wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [-v | --verbose]
-					   statium_wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [-v | --verbose]
-					   statium_wrapper.py classify (RESULTS_FILE) [OUT_FILE] [ALPHA_THRESHOLD] [-v | --verbose]
-					   statium_wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG=None] [-v | --verbose]
-					   statium_wrapper.py [-i] calc_auroc (IN_RES RESULTS_FILE TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG=None] [--CLASS_RESULTS=None] [-v | --verbose]
-					   statium_wrapper.py [-i] plot_roc_curve (IN_RES RESULTS_FILE TRUE_CLASS) [--IN_PDB_ORIG=None] [--CLASS_RESULTS=None] [-v | --verbose]
-					   statium_wrapper.py [-h | --help]
+				usage: wrapper.py precompute (--in_pdb --in_pdb_lib_dir --in_ip_lib_dir) [--out_dir] [--noverbose]
+					   wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN] [--noverbose]
+					   wrapper.py create_res (IN_PDB_ORIG IN_PDB_RENUMBERED) [OUT_RES] [--noverbose]
+					   wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [--noverbose]
+					   wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG] [-z | --zscores] [-p | --percentiles] [--noverbose] [--histogram]
+					   wrapper.py get_orig_seq (IN_PDB_ORIG) [--noverbose]
+					   wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [--noverbose]
+					   wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [--noverbose]
+					   wrapper.py classify (RESULTS_FILE) [OUT_FILE] [ALPHA_THRESHOLD] [--noverbose]
+					   wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG=None] [--noverbose]
+					   wrapper.py [-i] calc_auroc (IN_RES RESULTS_FILE TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG=None] [--CLASS_RESULTS=None] [--noverbose]
+					   wrapper.py [-i] plot_roc_curve (IN_RES RESULTS_FILE TRUE_CLASS) [--IN_PDB_ORIG=None] [--CLASS_RESULTS=None] [--noverbose]
+					   wrapper.py [-h | --help]
 				"""
 	
-	options = docopt(helpdoc, argv, help = True, version = "2.0.0", options_first=False)
-	verbose = !(options['-nv'] or options['--noverbose'])
+	options = docopt(helpdoc, argv, help = True, version = "3.0.0", options_first=False)
+	verbose = not options['--noverbose']
 	zscores = options['-z'] or options['--zscores']
 	percentiles = options['-p'] or options['--percentiles']
-	histogram = options['-d'] or options['--draw_histogram']
+	histogram = options['--histogram']
    
 	if(options['precompute']):
 
 		in_pdb = options['--in_pdb']
 		in_ip_lib_dir = options['--in_ip_lib_dir']
 		in_pdb_lib_dir = options['--in_pdb_lib_dir']
-		out_dir = options['--out_dir'] if options['--out_dir'] != None else in_pdb[:-4]
-		pdb_renumbered = in_pdb[:-4]+'renumbered.pdb'
+		out_dir = options['--out_dir'] if options['--out_dir'] is not None else in_pdb[:-4]
+		pdb_renumbered = in_pdb[:-4]+'_renumbered.pdb'
 		res = in_pdb[:-4]+'.res'
 
 		if(verbose): print("Renumbering file " + in_pdb)
@@ -67,15 +67,14 @@ def main(argv):
 
 
 	if(options['renumber']):
-		if(verbose): print("Reformatting file: " + options['IN_PDB'])
-		
-		if(options['OUT_PDB'] == None):
-			renumber(1, 1, options['IN_PDB'], options['IN_PDB'][:-4]+'_renumbered.pdb')
-			if(verbose): print("Done. Formatted file: " + options['IN_PDB'][:-4]+'_renumbered.pdb')
-			
-		else:
-			renumber(1, 1, options['IN_PDB'], options['OUT_PDB'])
-			if(verbose): print("Done. Formatted file: " + options['OUT_PDB'])
+		in_pdb = options['--in_pdb']
+		out_pdb = options['--out_pdb'] if options['--out_pdb') is not None else in_pdb[:-4]+'_renumbered.pdb'
+		SRN = 1 if options['--SRN'] == None else int(options['--SRN']) #start residue number
+		SAN = 1 if options['--SAN'] == None else int(options['--SAN']) #start atom number
+
+		if(verbose): print("Renumbering PDB file: " + in_pdb)		
+		renumber(SRN, SAN, in_pdb, out_pdb)
+		if(verbose): print("Done. Renumbered file: " + out_pdb)
 	
 		
 	elif(options['create_res']):

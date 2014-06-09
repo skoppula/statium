@@ -10,14 +10,19 @@ STATIUM is an ongoing project at the Keating Lab to quantitatively understand ho
 
 <i>Information</i>: Runs STATIUM analysis to create weights for each possible amino acid at the protein's interacting pair positions. Note that this command is a shortcut combination of the `renumber`,`create_res`, `run_statium`, and `get_orig_seq` commands.
 ***
+'renumber':<br>
+<i>Template</i> 'python wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN]'<br>
+
+<i>Example</i> 'python wrapper.py renumber testing/1ycr_mdm2_orig.pdb testing/1ycr_mdm2_new.pdb
+
+<i>Information</i>: Internal function. Takes a PDB file, strips away the meta-data, and renumbers the residues and atoms. Renumbering starts on the first valid line of the PDB file, at starting atom number = SAN and starting residue number = SRN. 'Valid line' is any PDB line with 'ATOM' or 'HETATM' with 'MSE' (selenomethionine).
+***
 <b>Helpful Hints</b>:
 + Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.
 + Arguments wrapped in parenthesis () are required; arguments wrapped in square brackets [] are optional.
 
 <b>Thanks for using STATIUM!</b>:
- statium_wrapper.py renumber (IN_PDB) [OUT_PDB] [-v | --verbose]
- 
-					   statium_wrapper.py create_res (IN_PDB_ORIG IN_PDB_RENUMBERED) [OUT_RES] [-v | --verbose]
+			   statium_wrapper.py create_res (IN_PDB_ORIG IN_PDB_RENUMBERED) [OUT_RES] [-v | --verbose]
 			   statium_wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [-v | --verbose]
 			   statium_wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG=None] [-z | --zscores] [-p | --percentiles] [-v | --verbose] [-d | --draw_histogram]
 			   statium_wrapper.py get_orig_seq (IN_PDB_ORIG) [-v | --verbose]
@@ -31,7 +36,7 @@ STATIUM is an ongoing project at the Keating Lab to quantitatively understand ho
 
 An example of an analysis sequence: <br>
 
-	python statium_wrapper.py renumber testing/1ycr_mdm2_orig.pdb testing/1ycr_mdm2.pdb -v
+	python statium_wrapper.py renumber 
 	python statium_wrapper.py create_res testing/1ycr_mdm2_orig.pdb testing/1ycr_mdm2.pdb testing/1ycr_mdm2.res -v
 	python statium_wrapper.py run_statium testing/1ycr_mdm2.res testing/1ycr_mdm2.pdb data/culled_90/ data/ip_90_wGLY/ testing/output -v
 	python statium_wrapper.py get_orig_seq testing/1ycr_mdm2_orig.pdb
