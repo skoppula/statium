@@ -1,9 +1,25 @@
 statium!
 =======
 
-Implementation of the STATIUM algorithm [protein-protein binding affinity scoring]
-		usage: 	   statium_wrapper.py precompute (IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] statium_wrapper.py renumber (IN_PDB) [OUT_PDB] [-v | --verbose]
-			   statium_wrapper.py create_res (IN_PDB_ORIG IN_PDB_RENUMBERED) [OUT_RES] [-v | --verbose]
+<b>STATIUM: smart scoring. promising proteins.</b>
+STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository implements a still-under-development algorithm we call STATIUM that effectively scores how well two proteins bind.
+
+<b>Details and Documentation</b>
+
+precompute*:
+	Template: python statium_wrapper.py precompute (IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR]
+
+	Example:  python statium_wrapper.py precompute --in_pdb=1ycr_mdm2.pdb --in_pdb_lib_dir=data/culled_90/ --in_ip_lib_dir=data/ip_90_wGLY --out_dir=testing/output
+	
+	Information:
+		
+
+
+For this function, verbose output is default. To turn verbose output off, include the '-nv' or '--noverbose' flag.
+
+ statium_wrapper.py renumber (IN_PDB) [OUT_PDB] [-v | --verbose]
+ 
+					   statium_wrapper.py create_res (IN_PDB_ORIG IN_PDB_RENUMBERED) [OUT_RES] [-v | --verbose]
 			   statium_wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [-v | --verbose]
 			   statium_wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG=None] [-z | --zscores] [-p | --percentiles] [-v | --verbose] [-d | --draw_histogram]
 			   statium_wrapper.py get_orig_seq (IN_PDB_ORIG) [-v | --verbose]

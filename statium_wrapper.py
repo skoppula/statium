@@ -20,7 +20,7 @@ from util import filelines2list
 def main(argv):
 	
 	helpdoc =   """
-				usage: statium_wrapper.py precompute (IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR]
+				usage: statium_wrapper.py precompute (--IN_PDB --IN_PDB_LIB_DIR --IN_IP_LIB_DIR) [OUT_DIR]
 					   statium_wrapper.py renumber (IN_PDB) [OUT_PDB] [-v | --verbose]
 					   statium_wrapper.py create_res (IN_PDB_ORIG IN_PDB_RENUMBERED) [OUT_RES] [-v | --verbose]
 					   statium_wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [-v | --verbose]
