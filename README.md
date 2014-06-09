@@ -8,27 +8,28 @@ STATIUM is an ongoing project at the Keating Lab to quantitatively understand ho
 
 <i>Example</i>:  `python wrapper.py precompute --in_pdb=1ycr_mdm2.pdb --in_pdb_lib_dir=data/culled_90/ --in_ip_lib_dir=data/ip_90_wGLY --out_dir=testing/output`<br>
 
-<i>Information</i>: Runs STATIUM analysis to create weights for each possible amino acid at the protein's interacting pair positions. Note that this command is a shortcut combination of the `renumber`,`create_res`, `run_statium`, and `get_orig_seq` commands. <br>
+<i>Specifics</i>: Runs STATIUM analysis to create weights for each possible amino acid at the protein's interacting pair positions. Note that this command is a shortcut combination of the `renumber`,`create_res`, `run_statium`, and `get_orig_seq` commands.
+
 The easy-to-use `precompute` function assumes that the interacting sequence that you wish to analyze is the entirety of chain <b>B</b> (in the input PDB file). If you wish to change these (or other parameters), run the above sequence of four commands with appropriate parameters.
-***
-`create_res`:<br>
-<i>Template</i> `python wrapper.py create_res (--in_pdb_orig --in_pdb_renum) [--out_res --chain --start --end]`<br>
-
-<i>Example</i> `python wrapper.py create_res --in_pdb_orig=testing/1ycr_mdm2_orig.pdb --in_pdb_renum=testing/1ycr_mdm2_new.pdb --out_res=testing/1ycr_mdm2.res` <br>
-
-<i>Information</i>: Takes in both the original and renumbered PDB files (see 'renumber'). It translates pairs of (chain identifier, number) uniquely demarcating a residues on the original PDB file to a number uniquely demarcating a residue in the renumbered file. These set of numbers are written to a file and used as the positions to be analyzed by the STATIUM algorithm.
-
-Assumes that the set of positions to be analyzed is continuous from the *start* to the *end* positions.
-
-If you fail to include a chain parameter ('A', 'B', etc.), the function attempts to analyze chain 'B'. Similarly, if the start and end parameters default to None, and if either is left blank, will assume you mean to analyze from the beginning or end of the chain, respectively.
-
 ***
 `renumber`:<br>
 <i>Template</i> `python wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN]`<br>
 
 <i>Example</i> `python wrapper.py renumber --in_pdb=testing/1ycr_mdm2_orig.pdb --out_pdb=testing/1ycr_mdm2_new.pdb` <br>
 
-<i>Information</i>: Takes a PDB file, strips away the meta-data, and renumbers the residues and atoms, retaining atom coordinate positions and rewriting occupancy and temperature factors to 1.0 and 0.0, respectively. Renumbering starts on the first valid line of the PDB file, at starting atom number = SAN and starting residue number = SRN. 'Valid line' is any PDB line with 'ATOM' or 'HETATM' with 'MSE' (selenomethionine).
+<i>Specifics</i>: Takes a PDB file, strips away the meta-data, and renumbers the residues and atoms, retaining atom coordinate positions and rewriting occupancy and temperature factors to 1.0 and 0.0, respectively. Renumbering starts on the first valid line of the PDB file, at starting atom number = SAN and starting residue number = SRN. 'Valid line' is any PDB line with 'ATOM' or 'HETATM' with 'MSE' (selenomethionine).
+***
+'create_res`:<br>
+<i>Template</i> `python wrapper.py create_res (--in_pdb_orig --in_pdb_renum) [--out_res --chain --start --end]`<br>
+
+<i>Example</i> `python wrapper.py create_res --in_pdb_orig=testing/1ycr_mdm2_orig.pdb --in_pdb_renum=testing/1ycr_mdm2_new.pdb --out_res=testing/1ycr_mdm2.res` <br>
+
+<i>Specifics</i>: Takes in both the original and renumbered PDB files (see 'renumber'). It translates pairs of (chain identifier, number) uniquely demarcating a residues on the original PDB file to a number uniquely demarcating a residue in the renumbered file. These set of numbers are written to a file and used as the positions to be analyzed by the STATIUM algorithm.
+
+Assumes that the set of positions to be analyzed is continuous from the *start* to the *end* positions.
+
+If you fail to include a chain parameter ('A', 'B', etc.), the function attempts to analyze chain 'B'. Similarly, if the start and end parameters default to None, and if either is left blank, will assume you mean to analyze from the beginning or end of the chain, respectively.
+
 ***
 <b>Helpful Hints</b>:
 + Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.
