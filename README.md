@@ -1,5 +1,5 @@
 <b>STATIUM: smart scoring. promising proteins.</b><br>
-STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository implements a still-under-development algorithm we call STATIUM that effectively scores how well two proteins bind.
+STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository implements a still-under-development algorithm we call STATIUM that scores how well two proteins bind at their interacting positions.
 
 <b>Details and Documentation</b>
 ***
@@ -10,10 +10,10 @@ STATIUM is an ongoing project at the Keating Lab to quantitatively understand ho
 
 <i>Information</i>: Runs STATIUM analysis to create weights for each possible amino acid at the protein's interacting pair positions. Note that this command is a shortcut combination of the `renumber`,`create_res`, `run_statium`, and `get_orig_seq` commands.
 ***
-'renumber':<br>
-<i>Template</i> 'python wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN]'<br>
+`renumber`:<br>
+<i>Template</i> `python wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN]`<br>
 
-<i>Example</i> 'python wrapper.py renumber testing/1ycr_mdm2_orig.pdb testing/1ycr_mdm2_new.pdb
+<i>Example</i> `python wrapper.py renumber testing/1ycr_mdm2_orig.pdb testing/1ycr_mdm2_new.pdb`
 
 <i>Information</i>: Internal function. Takes a PDB file, strips away the meta-data, and renumbers the residues and atoms. Renumbering starts on the first valid line of the PDB file, at starting atom number = SAN and starting residue number = SRN. 'Valid line' is any PDB line with 'ATOM' or 'HETATM' with 'MSE' (selenomethionine).
 ***
