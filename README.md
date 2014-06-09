@@ -3,11 +3,11 @@ STATIUM is an ongoing project at the Keating Lab to quantitatively understand ho
 
 ---
 <b>Details and Documentation*</b><br>
-&nbsp;&nbsp;&nbsp;&nbsp;'precompute':<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Template</i>: `python statium_wrapper.py precompute (--in_pdb --in_pdb_lib_dir --in_ip_lib_dir) [--out_dir]`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Example</i>:  `python statium_wrapper.py precompute --in_pdb=1ycr_mdm2.pdb --in_pdb_lib_dir=data/culled_90/ --in_ip_lib_dir=data/ip_90_wGLY --out_dir=testing/output`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Information</i>:
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hello
+>`precompute`:<br>
+><i>Template</i>: `python statium_wrapper.py precompute (--in_pdb --in_pdb_lib_dir --in_ip_lib_dir) [--out_dir]`
+><i>Example</i>:  `python statium_wrapper.py precompute --in_pdb=1ycr_mdm2.pdb --in_pdb_lib_dir=data/culled_90/ --in_ip_lib_dir=data/ip_90_wGLY --out_dir=testing/output`
+><i>Information</i>:
+>hello
 <div style="margin-left: 1em;">
 hellokitty
 </div>
