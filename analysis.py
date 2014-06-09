@@ -17,8 +17,8 @@ from util import mean
 from util import std
 from util import nCr
 from util import read_results
-from statium_reformat import get_orig_seq
-from statium_reformat import generate_random_seqs
+from reformat import get_orig_seq
+from reformat import generate_random_seqs
 
 def statium_pipeline(in_res_path, in_pdb_path, in_pdb_lib_dir, in_ip_lib_dir, out_dir, verbose):
     
