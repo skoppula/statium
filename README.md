@@ -19,7 +19,7 @@ The easy-to-use `precompute` function assumes that the interacting sequence that
 
 <i>Specifics</i>: Takes a PDB file, strips away the meta-data, and renumbers the residues and atoms, retaining atom coordinate positions and rewriting occupancy and temperature factors to 1.0 and 0.0, respectively. Renumbering starts on the first valid line of the PDB file, at starting atom number = SAN and starting residue number = SRN. 'Valid line' is any PDB line with 'ATOM' or 'HETATM' with 'MSE' (selenomethionine).
 ***
-'create_res`:<br>
+`create_res`:<br>
 <i>Template</i> `python wrapper.py create_res (--in_pdb_orig --in_pdb_renum) [--out_res --chain --start --end]`<br>
 
 <i>Example</i> `python wrapper.py create_res --in_pdb_orig=testing/1ycr_mdm2_orig.pdb --in_pdb_renum=testing/1ycr_mdm2_new.pdb --out_res=testing/1ycr_mdm2.res` <br>
