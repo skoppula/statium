@@ -3,47 +3,55 @@ from util import get_random_AA
 import re
 import random
 
-#Function to create *.res file: each line containing residue position to be considered in STATIUM analysis
-def create_res(in_pdb_path_orig, in_pdb_path_renumbered, out_res_path):
+#Function to create *.res file:
+#	each line a residue position (in renumbered file) for STATIUM analysis
+def create_res(pdb_orig_path, pdb_renum_path, out_res_path, start=None, end=None, chain='B'):
 	
-	infile_og =  open(in_pdb_path_orig, 'r')
-	infile_rn =  open(in_pdb_path_renumbered, 'r')
-	outfile =  open(out_res_path, 'w')
+	orig =  open(pdb_orig_path, 'r')
+	renum =  open(pdb_renum_path, 'r')
+	out =  open(out_res_path, 'w')
+	chain = 'B' if chain is None else chain
 	
-	lines_og = infile_og.readlines()
-	lines_rn = infile_rn.readlines()
+	lines_orig = orig.readlines()
+	lines_renum = renum.readlines()
 	
-	bchain_start_line = ""
+	chain_start_line = ""
 	num_residues = 0
 	init = 0
 	
-	for line in lines_og:
-		
-		if(line[21]=='B' and bchain_start_line == "" and line[0:4] =='ATOM'):
-			bchain_start_line = line
-			
-		elif(line[21]=='B' and line[0:3] =='TER' and bchain_start_line != ""):
-			num_residues = int(line[22:27]) - int(bchain_start_line[22:27]) + 1
+	#count the number of residues
+	#	by identifying chain's start line (or line with start=residue number)
+	#	and end line
+	for line in lines_orig:
+		if(line[21]==chain and chain_start_line == "" and line[0:4] =='ATOM'):
+			if (not start) or int(line[22:27]) == start:
+				chain_start_line = line
+
+		elif(line[21]==chain and chain_start_line != "" and (line[0:3] =='TER' or int(line[22:27]) == end)):
+			num_residues = int(line[22:27]) - int(chain_start_line[22:27]) + 1
 			break
 
-	for line in lines_rn:
-		#If AA identity and coordinates are the same, must be same atom and residue
-		if(line[17:21] == bchain_start_line[17:21] and line[32:55] == bchain_start_line[32:55]):
+	#Get start position in renumbered file
+	#	If AA identity and coordinates are the same, must be same atom and residue
+	for line in lines_renum:
+		if(line[17:21] == chain_start_line[17:21] and line[32:55] == chain_start_line[32:55]):
 			init = int(line[22:27])
 			break
 	
-	if(num_residues == 0):
-		print("Could not find a valid B-chain in: " + in_pdb_path_orig)
+	if(num_residues < 1):
+		print('Could not find a valid' + chain + '-chain.')
 		return
 	
+	#count from start position in renumbered file
+	#	to start position + num_residues	
 	for i in range(num_residues-1):
-		outfile.write(str(i+init) + '\n')
+		out.write(str(i+init) + '\n')
 		
 	outfile.write(str(num_residues-1+init)) #to ensure no newline at end of file
 	
-	outfile.close()
-	infile_og.close()
-	infile_rn.close()
+	out.close()
+	orig.close()
+	renum.close()
 
 #Take a .pdb file from pdb.org and strip away meta-data so that output PDB only contains atoms and coordinates
 def renumber(start_res_num, start_atom_num, in_pdb, out_pdb):

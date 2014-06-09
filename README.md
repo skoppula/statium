@@ -6,23 +6,37 @@ STATIUM is an ongoing project at the Keating Lab to quantitatively understand ho
 `precompute`:<br>
 <i>Template</i>: `python wrapper.py precompute (--in_pdb --in_pdb_lib_dir --in_ip_lib_dir) [--out_dir]`<br>
 
-<i>Example</i>:  `python wrapper.py precompute --in_pdb=1ycr_mdm2.pdb --in_pdb_lib_dir=data/culled_90/ --in_ip_lib_dir=data/ip_90_wGLY --out_dir=testing/output`<BR>
+<i>Example</i>:  `python wrapper.py precompute --in_pdb=1ycr_mdm2.pdb --in_pdb_lib_dir=data/culled_90/ --in_ip_lib_dir=data/ip_90_wGLY --out_dir=testing/output`<br>
 
-<i>Information</i>: Runs STATIUM analysis to create weights for each possible amino acid at the protein's interacting pair positions. Note that this command is a shortcut combination of the `renumber`,`create_res`, `run_statium`, and `get_orig_seq` commands.
+<i>Information</i>: Runs STATIUM analysis to create weights for each possible amino acid at the protein's interacting pair positions. Note that this command is a shortcut combination of the `renumber`,`create_res`, `run_statium`, and `get_orig_seq` commands. <br>
+The easy-to-use `precompute` function assumes that the interacting sequence that you wish to analyze is the entirety of chain <b>B</b> (in the input PDB file). If you wish to change these (or other parameters), run the above sequence of four commands with appropriate parameters.
+***
+`create_res`:<br>
+<i>Template</i> `python wrapper.py create_res (--in_pdb_orig --in_pdb_renum) [--out_res --chain --start --end]`<br>
+
+<i>Example</i> `python wrapper.py create_res --in_pdb_orig=testing/1ycr_mdm2_orig.pdb --in_pdb_renum=testing/1ycr_mdm2_new.pdb --out_res=testing/1ycr_mdm2.res` <br>
+
+<i>Information</i>: Takes in both the original and renumbered PDB files (see 'renumber'). It translates pairs of (chain identifier, number) uniquely demarcating a residues on the original PDB file to a number uniquely demarcating a residue in the renumbered file. These set of numbers are written to a file and used as the positions to be analyzed by the STATIUM algorithm.
+
+Assumes that the set of positions to be analyzed is continuous from the *start* to the *end* positions.
+
+If you fail to include a chain parameter ('A', 'B', etc.), the function attempts to analyze chain 'B'. Similarly, if the start and end parameters default to None, and if either is left blank, will assume you mean to analyze from the beginning or end of the chain, respectively.
+
 ***
 `renumber`:<br>
 <i>Template</i> `python wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN]`<br>
 
-<i>Example</i> `python wrapper.py renumber testing/1ycr_mdm2_orig.pdb testing/1ycr_mdm2_new.pdb`
+<i>Example</i> `python wrapper.py renumber --in_pdb=testing/1ycr_mdm2_orig.pdb --out_pdb=testing/1ycr_mdm2_new.pdb` <br>
 
-<i>Information</i>: Internal function. Takes a PDB file, strips away the meta-data, and renumbers the residues and atoms. Renumbering starts on the first valid line of the PDB file, at starting atom number = SAN and starting residue number = SRN. 'Valid line' is any PDB line with 'ATOM' or 'HETATM' with 'MSE' (selenomethionine).
+<i>Information</i>: Takes a PDB file, strips away the meta-data, and renumbers the residues and atoms, retaining atom coordinate positions and rewriting occupancy and temperature factors to 1.0 and 0.0, respectively. Renumbering starts on the first valid line of the PDB file, at starting atom number = SAN and starting residue number = SRN. 'Valid line' is any PDB line with 'ATOM' or 'HETATM' with 'MSE' (selenomethionine).
 ***
 <b>Helpful Hints</b>:
 + Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.
 + Arguments wrapped in parenthesis () are required; arguments wrapped in square brackets [] are optional.
 
 <b>Thanks for using STATIUM!</b>:
-			   statium_wrapper.py create_res (IN_PDB_ORIG IN_PDB_RENUMBERED) [OUT_RES] [-v | --verbose]
+<br>
+
 			   statium_wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [-v | --verbose]
 			   statium_wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG=None] [-z | --zscores] [-p | --percentiles] [-v | --verbose] [-d | --draw_histogram]
 			   statium_wrapper.py get_orig_seq (IN_PDB_ORIG) [-v | --verbose]
@@ -36,7 +50,6 @@ STATIUM is an ongoing project at the Keating Lab to quantitatively understand ho
 
 An example of an analysis sequence: <br>
 
-	python statium_wrapper.py renumber 
 	python statium_wrapper.py create_res testing/1ycr_mdm2_orig.pdb testing/1ycr_mdm2.pdb testing/1ycr_mdm2.res -v
 	python statium_wrapper.py run_statium testing/1ycr_mdm2.res testing/1ycr_mdm2.pdb data/culled_90/ data/ip_90_wGLY/ testing/output -v
 	python statium_wrapper.py get_orig_seq testing/1ycr_mdm2_orig.pdb

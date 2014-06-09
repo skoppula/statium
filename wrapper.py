@@ -19,26 +19,26 @@ from util import filelines2list
 
 def main(argv):
 	
-	helpdoc =   """
-				usage: wrapper.py precompute (--in_pdb --in_pdb_lib_dir --in_ip_lib_dir) [--out_dir] [--noverbose]
-					   wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN] [--noverbose]
-					   wrapper.py create_res (IN_PDB_ORIG IN_PDB_RENUMBERED) [OUT_RES] [--noverbose]
-					   wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [--noverbose]
-					   wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG] [-z | --zscores] [-p | --percentiles] [--noverbose] [--histogram]
-					   wrapper.py get_orig_seq (IN_PDB_ORIG) [--noverbose]
-					   wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [--noverbose]
-					   wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [--noverbose]
-					   wrapper.py classify (RESULTS_FILE) [OUT_FILE] [ALPHA_THRESHOLD] [--noverbose]
-					   wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG=None] [--noverbose]
-					   wrapper.py [-i] calc_auroc (IN_RES RESULTS_FILE TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG=None] [--CLASS_RESULTS=None] [--noverbose]
-					   wrapper.py [-i] plot_roc_curve (IN_RES RESULTS_FILE TRUE_CLASS) [--IN_PDB_ORIG=None] [--CLASS_RESULTS=None] [--noverbose]
-					   wrapper.py [-h | --help]
-				"""
+	helpdoc =   	"""
+			usage:	wrapper.py precompute (--in_pdb --in_pdb_lib_dir --in_ip_lib_dir) [--out_dir] [--noverbose]
+				wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN] [--noverbose]
+				wrapper.py create_res (--in_pdb_orig --in_pdb_renum) [--out_res --chain --start --end] [--noverbose]
+				wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [--noverbose]
+				wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG] [-z | --zscore] [-p | --percentile] [--histogram] [--noverbose]
+				wrapper.py get_orig_seq (IN_PDB_ORIG) [--noverbose]
+				wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [--noverbose]
+				wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [--noverbose]
+				wrapper.py classify (RESULTS_FILE) [OUT_FILE] [ALPHA_THRESHOLD] [--noverbose]
+				wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG=None] [--noverbose]
+				wrapper.py [-i] calc_auroc (IN_RES RESULTS_FILE TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG=None] [--CLASS_RESULTS=None] [--noverbose]
+				wrapper.py [-i] plot_roc_curve (IN_RES RESULTS_FILE TRUE_CLASS) [--IN_PDB_ORIG=None] [--CLASS_RESULTS=None] [--noverbose]
+				wrapper.py [-h | --help]
+			"""
 	
 	options = docopt(helpdoc, argv, help = True, version = "3.0.0", options_first=False)
 	verbose = not options['--noverbose']
-	zscores = options['-z'] or options['--zscores']
-	percentiles = options['-p'] or options['--percentiles']
+	zscores = options['-z'] or options['--zscore']
+	percentiles = options['-p'] or options['--percentile']
 	histogram = options['--histogram']
    
 	if(options['precompute']):
@@ -78,15 +78,17 @@ def main(argv):
 	
 		
 	elif(options['create_res']):
-		if(verbose): print("Creating .res file using: " + options['IN_PDB_ORIG'] + " and " + options['IN_PDB_RENUMBERED'])
-		
-		if(options['OUT_RES'] == None):
-			create_res(options['IN_PDB_ORIG'], options['IN_PDB_RENUMBERED'], options['IN_PDB_RENUMBERED'][:-4]+'.res')
-			if(verbose): print("Done. .res file: " + options['IN_PDB_RENUMBERED'][:-4]+'.res')
-			
-		else:
-			create_res(options['IN_PDB_ORIG'], options['IN_PDB_RENUMBERED'], options['OUT_RES'])
-			if(verbose): print("Done. .res file: " + options['OUT_RES'])
+		pdb_orig = options['--in_pdb_orig']
+		pdb_renum = options['--in_pdb_renum']
+		chain = options['--chain']
+		start = options['--start']
+		end = options['--end']
+		res = pdb_orig[:-4]+'.res' if options['--out_res'] is None else options['--out_res']
+
+		if(verbose): print("Creating .res file using: " + pdb_orig + " and " + pdb_renum) 
+		create_res(pdb_orig, pdb_renum, res, start, end)
+		if(verbose): print("Done. .res file: " + res)
+
 	
 	elif(options['run_statium']):
 		
