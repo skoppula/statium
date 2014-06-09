@@ -20,7 +20,7 @@ from util import filelines2list
 def main(argv):
 	
 	helpdoc =   """
-				usage: statium_wrapper.py precompute (--IN_PDB --IN_PDB_LIB_DIR --IN_IP_LIB_DIR) [OUT_DIR]
+				usage: statium_wrapper.py precompute (--in_pdb --in_pdb_lib_dir --in_ip_lib_dir) [--out_dir]
 					   statium_wrapper.py renumber (IN_PDB) [OUT_PDB] [-v | --verbose]
 					   statium_wrapper.py create_res (IN_PDB_ORIG IN_PDB_RENUMBERED) [OUT_RES] [-v | --verbose]
 					   statium_wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [-v | --verbose]
@@ -42,27 +42,28 @@ def main(argv):
 	histogram = options['-d'] or options['--draw_histogram']
    
 	if(options['precompute']):
-		if(verbose): print("Renumbering file " + options['IN_PDB'])
-		renumber(1, 1, options['IN_PDB'], options['IN_PDB'][:-4]+'_renumbered.pdb')
-		if(verbose): print("Finished reformatting PDB file..." + options['IN_PDB'][:-4]+'_renumbered.pdb now in directory')
-			
-		if(!verbose): print("Creating .res file to store PDB's chain B positions: ")
-		create_res(options['IN_PDB'], options['IN_PDB'][:-4]+'_renumbered.pdb', options['IN_PDB'][:-4]+'.res')
-		if(verbose): print("Finished creating .res file: " + options['IN_PDB_RENUMBERED'][:-4]+'.res')
 
-		if(verbose): print("Running STATIUM with: " + options['IN_RES'] + " " + options['IN_PDB'] + " " + options['IN_PDB_LIB_DIR'] + " " + options['IN_IP_LIB_DIR'])
-			
-		if(options['OUT_DIR'] == None):   
-			statium_pipeline(options['IN_PDB'][:-4]+'.res', options['IN_PDB'][:-4]+'_renumbered.pdb', options['IN_PDB_LIB_DIR'], options['IN_IP_LIB_DIR'], options['IN_RES'][:-4], verbose)
-			if(verbose): print("Done. STATIUM probabilities in output directory: " + options['IN_RES'][:-4]);
-			
-		else:
-			statium_pipeline(options['IN_PDB'][:-4]+'.res', options['IN_PDB'][:-4]+'_renumbered.pdb', options['IN_PDB_LIB_DIR'], options['IN_IP_LIB_DIR'], options['OUT_DIR'], verbose)
-			if(verbose): print("Done. STATIUM probabilities in output directory: " + options['OUT_DIR']);
+		in_pdb = options['--in_pdb']
+		in_ip_lib_dir = options['--in_ip_lib_dir']
+		in_pdb_lib_dir = options['--in_pdb_lib_dir']
+		out_dir = options['--out_dir'] if options['--out_dir'] != None else in_pdb[:-4]
+		pdb_renumbered = in_pdb[:-4]+'renumbered.pdb'
+		res = in_pdb[:-4]+'.res'
 
+		if(verbose): print("Renumbering file " + in_pdb)
+		renumber(1, 1, in_pdb, pdb_renumbered)
+		if(verbose): print("Finished reformatting PDB file into: " + pdb_renumbered)
+			
+		if(verbose): print("Creating .res file to store PDB's chain B positions: ")
+		create_res(in_pdb, pdb_renumbered, res)
+		if(verbose): print("Finished creating .res file: " + res)
+
+		if(verbose): print("Running STATIUM with: " + res + " " + in_pdb + " " + in_pdb_lib_dir + " " + in_ip_lib_dir)
+		statium_pipeline(res, pdb_renumbered, in_pdb_lib_dir, in_ip_lib_dir, out_dir, verbose)
+		if(verbose): print("Done. STATIUM probabilities in output directory: " + out_dir);
+			
 		(sequence, length, start, end) = get_orig_seq(options['IN_PDB'])
 		print("For reference, native chain B peptide sequence is " + str(sequence) + " of length " + str(length) + " from position " + str(start) + " to " + str(end))
-		
 
 
 	if(options['renumber']):

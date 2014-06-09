@@ -1,16 +1,20 @@
 <b>STATIUM: smart scoring. promising proteins.</b><br>
 STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository implements a still-under-development algorithm we call STATIUM that effectively scores how well two proteins bind.
 
-<b>Details and Documentation</b><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<FONT FACE="courier">precompute*</FONT>:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Template: `python statium_wrapper.py precompute (IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR]`
-	Example:  python statium_wrapper.py precompute --in_pdb=1ycr_mdm2.pdb --in_pdb_lib_dir=data/culled_90/ --in_ip_lib_dir=data/ip_90_wGLY --out_dir=testing/output
-	
-	Information:
-		
+---
+<b>Details and Documentation*</b><br>
+&nbsp;&nbsp;&nbsp;&nbsp;'precompute':<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Template</i>: `python statium_wrapper.py precompute (--in_pdb --in_pdb_lib_dir --in_ip_lib_dir) [--out_dir]`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Example</i>:  `python statium_wrapper.py precompute --in_pdb=1ycr_mdm2.pdb --in_pdb_lib_dir=data/culled_90/ --in_ip_lib_dir=data/ip_90_wGLY --out_dir=testing/output`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Information</i>:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hello
+<div style="margin-left: 1em;">
+hellokitty
+</div>
 
-
-For this function, verbose output is default. To turn verbose output off, include the '-nv' or '--noverbose' flag.
+Helpful Hints:
+..*Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.
+..*Arguments wrapped in parenthesis () are required; arguments wrapped in square brackets [] are optional.
 
  statium_wrapper.py renumber (IN_PDB) [OUT_PDB] [-v | --verbose]
  
