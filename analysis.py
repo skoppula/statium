@@ -263,12 +263,12 @@ def distance(C1, C2):
 
 #Creates a list with information for each residue:
 #e.g for each residue: [[1, ''], '16', [['CA', 'CB', 'OG1', 'CG2'], [[21.142, -19.229, 4.185], [21.957, -18.596, 5.322], [23.023, 17.818, 4.773], [22.547, -19.67, 6.206]]]]
-def get_pdb_info(in_pdb_path):
+def get_pdb_info(pdb_path):
 
 	pdb_info = [] #list of lists: contains info on each AA
 	res_list = []
  
-	lines = filelines2list(in_pdb_path)
+	lines = filelines2list(pdb_path)
 	
 	for i, line in enumerate(lines):
 		if line[0:4] == 'ATOM' and line[13:15] == 'CA':
@@ -317,12 +317,12 @@ def get_pdb_info(in_pdb_path):
 
 	for t in pdb_info:
 		if len(t) != 3:
-			print 'INCORRECT FORMAT: ' + in_pdb_path + ': ' + t
+			print 'INCORRECT FORMAT: ' + pdb_path + ': ' + t
 		
 		for point in t[2][1]:
 			for k in range(3):
 				try: float(point[k])
-				except: print 'Bad coordinate at ' + str(point[k]) + ' in ' + in_pdb_path
+				except: print 'Bad coordinate at ' + str(point[k]) + ' in ' + pdb_path
 	
 	return pdb_info
 

@@ -128,10 +128,10 @@ def AAint2char(a):
     
 def get_sidechain_atoms(a):
     
-    sidechain_mappings = {'A':['CB'], 'C':['CB', 'SG'], 'D':['CB', 'OD1', 'OD2'], 'E':['CB', 'OE1', 'OE2'], 'F':['CB', 'CE1', 'CE2', 'CZ'], 'G':['CA'],  
-    'H':['CB', 'CE1', 'NE2'], 'I':['CB', 'CG1', 'CG2', 'CD1'], 'K':['CB', 'NZ'], 'L':['CB', 'CD1', 'CD2'], 'M':['CB', 'CE'], 
-    'N':['CB', 'OD1', 'ND2'], 'P':['CB', 'CG', 'CD'], 'Q':['CB', 'OE1', 'NE2'], 'R':['CB', 'NE', 'CZ'], 'S':['CB', 'OG'], 
-    'T':['CB', 'OG1', 'CG2'], 'V':['CB', 'CG1', 'CG2'], 'W':['CB', 'CD1', 'CD2', 'NE1', 'CZ2', 'CZ3', 'CH2'], 
-    'Y':['CB', 'CD1', 'CD2', 'CE1', 'CE2', 'CZ', 'OH']}
+    sidechain_mappings = {'A':{'CB'}, 'C':{'CB', 'SG'}, 'D':{'CB', 'OD1', 'OD2'}, 'E':{'CB', 'OE1', 'OE2'}, 'F':{'CB', 'CE1', 'CE2', 'CZ'}, 'G':{'CA'},  
+    'H':{'CB', 'CE1', 'NE2'}, 'I':{'CB', 'CG1', 'CG2', 'CD1'}, 'K':{'CB', 'NZ'}, 'L':{'CB', 'CD1', 'CD2'}, 'M':{'CB', 'CE'}, 
+    'N':{'CB', 'OD1', 'ND2'}, 'P':{'CB', 'CG', 'CD'}, 'Q':{'CB', 'OE1', 'NE2'}, 'R':{'CB', 'NE', 'CZ'}, 'S':{'CB', 'OG'}, 
+    'T':{'CB', 'OG1', 'CG2'}, 'V':{'CB', 'CG1', 'CG2'}, 'W':{'CB', 'CD1', 'CD2', 'NE1', 'CZ2', 'CZ3', 'CH2'}, 
+    'Y':{'CB', 'CD1', 'CD2', 'CE1', 'CE2', 'CZ', 'OH'}}
     
-    return(sidechain_mappings[a])
+    return sidechain_mappings[a]
