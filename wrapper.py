@@ -99,7 +99,7 @@ def main(argv):
 		dist = options['--dist_cutoff'] if options['--dist_cutoff'] is not None else 6.0
 		
 		if(verbose): print("Running STATIUM with: " + pdb + " " + res + " " + pdb_lib + " " + ip_lib)
-		statium_pipeline(pdb, res, pdb_lib, ip_lib, out_dir, dist, verbose)
+		statium(pdb, res, pdb_lib, ip_lib, out_dir, dist, verbose)
 		if(verbose): print("Done. STATIUM probabilities in output directory: " + out_dir)
 
 	elif(options['calc_energy']):

@@ -18,10 +18,12 @@ from util import mean
 from util import std
 from util import nCr
 from util import read_results
+from util import Residue
+from util import Atom
 from reformat import get_orig_seq
 from reformat import generate_random_seqs
 
-def statium_pipeline(in_res, in_pdb, in_pdb_lib, in_ip_lib, out_dir, dist, verbose):
+def statium(in_res, in_pdb, in_pdb_lib, in_ip_lib, out_dir, dist, verbose):
 	
 	if verbose: print 'Preparing directory folders...'
 	lib_pdbs = [os.path.join(in_pdb_lib, pdb) for pdb in os.listdir(in_pdb_lib)]
@@ -29,12 +31,12 @@ def statium_pipeline(in_res, in_pdb, in_pdb_lib, in_ip_lib, out_dir, dist, verbo
 
 	if verbose: print 'Starting STATUM analysis...' 
 	tic = timeit.default_timer()
-	run_analysis(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, dist, verbose)
+	sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, dist, verbose)
 	toc = timeit.default_timer()
 	if verbose: print 'Done in ' + str((tic-toc)/60) + 'minutes! Output in: ' + out_dir)
 
 
-def run_analysis(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, pair_dist_cutoff, verbose):
+def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, pair_dist_cutoff, verbose):
 	
 
 	if verbose: print 'Extracting residue position from ' + in_res + '...'
@@ -44,8 +46,8 @@ def run_analysis(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, pair_dist_cutoff,
 	if verbose: print 'Extracting information from ' + in_pdb + '...'
 	pdb_info = get_pdb_info(in_pdb_path)
 
+	if verbose: print 'Computing inter-atomic distances...'
 	distance_matrix = compute_distance_matrix(pdb_info)
-	if(verbose): print("Finished computing inter-atomic distances for residues in input PDB file")
 	
 	use_indices = [] #check which residue pairs to use (within interacting distance)
 	for i in range(len(pdb_info)):
@@ -261,70 +263,65 @@ def distance(C1, C2):
 	return math.sqrt(((C1[0] - C2[0])**2) + ((C1[1] - C2[1])**2) + ((C1[2] - C2[2])**2))
 
 
-#Creates a list with information for each residue:
-#e.g for each residue: [[1, ''], '16', [['CA', 'CB', 'OG1', 'CG2'], [[21.142, -19.229, 4.185], [21.957, -18.596, 5.322], [23.023, 17.818, 4.773], [22.547, -19.67, 6.206]]]]
+#NEW VERSION:
+#	Outputs list of Residues()
+#OLD VERSION:
+#	Creates a list with information for each residue:
+#	e.g for each residue: [[1, ''], '16', [['CA', 'CB', 'OG1', 'CG2'], [[21.142, -19.229, 4.185], [21.957, -18.596, 5.322], [23.023, 17.818, 4.773], [22.547, -19.67, 6.206]]]]
 def get_pdb_info(pdb_path):
 
-	pdb_info = [] #list of lists: contains info on each AA
-	res_list = []
+	info = list()
+	res = set()
  
 	lines = filelines2list(pdb_path)
 	
-	for i, line in enumerate(lines):
-		if line[0:4] == 'ATOM' and line[13:15] == 'CA':
-			try:
-				position = int(line[22:28].strip())
-				chainID = line[21:22].strip()
-				
-				if position in res_list:
-					continue
-				res_list.append(position)
-				
-			except:
-				continue
-			
-			AA = line[17:20]
-			if isAA(AA):
-				
-				pdb_info.append([])
-				pdb_info[-1].append([position, chainID])		#Put in position
-				pdb_info[-1].append(AAchar2int(AA2char(AA)))	#Put in AA identity
-				
-				pdb_info[-1].append([[], []])				   #Put in alpha carbon, and coordinates of alpha carbon
-				pdb_info[-1][-1][0].append('CA')
-				pdb_info[-1][-1][1].append([float(line[30:38]), float(line[39:46]), float(line[47:54])])
-				
-				atoms_list = get_sidechain_atoms(AA2char(AA))
-				found_list = []
-				
-				for line2 in lines[i: len(lines)]:
-					if line2[0:4] == 'ATOM':
-						try:
-							position2 = int(line2[22:28].strip())
-							chainID2 = line2[21:22].strip()
-						except: continue
-						
-						if position2 > position:
-							break
-						elif position2 == position and chainID2 == chainID:
-							atom_type = line2[13:16].strip()
-						
-							#Put in other atoms, and coordinates of atoms
-							if atom_type in atoms_list and not atom_type in found_list:
-								found_list.append(atom_type)							
-								pdb_info[-1][-1][0].append(atom_type)
-								pdb_info[-1][-1][1].append([float(line2[30:38]), float(line2[39:46]), float(line2[47:54])])
+	curr_position = None
+	curr_chainID = None
+	curr_name = None
+	curr_atoms = list()
+	curr_possible_atoms = set()
+	curr_found_atoms = set()
 
-	for t in pdb_info:
-		if len(t) != 3:
-			print 'INCORRECT FORMAT: ' + pdb_path + ': ' + t
-		
-		for point in t[2][1]:
-			for k in range(3):
-				try: float(point[k])
-				except: print 'Bad coordinate at ' + str(point[k]) + ' in ' + pdb_path
-	
-	return pdb_info
+	for line in lines:
+		if line[0:4] == 'ATOM':
+			if line[13:15] == 'CA':
+				info.append(Residue(curr_name, curr_position, curr_chainID, curr_atoms))
+
+				try:
+					curr_position = int(line[22:28].strip())
+					curr_chainID = line[21:22].strip()
+					curr_name = line[17:20]
+					if curr_position in res or not isAA(AA): continue
+					res.append(curr_position)
+				except:
+					continue
+
+				x = float(line[30:38])
+				y = float(line[39:46])
+				z = float(line[47:54])
+				name = 'CA'
+				curr_atoms.append(Atom(name, x, y, z))
+
+				curr_possible_atoms = get_sidechain_atoms(curr_name)
+				curr_found_atoms = {'CA'}
+
+			else:
+				try:
+					pos = int(line[22:28].strip())
+					chain = line[21:22].strip()
+				except: continue
+
+				if pos > curr_position: continue
+				elif pos == curr_position and chain == curr_chainID:
+					name = line2[13:16].strip()
+					if name in curr_possible_atoms and name not in curr_found_atoms:
+						curr_found_atoms.append(name)
+						x = float(line[30:38])
+						y = float(line[39:46])
+						z = float(line[47:54])
+						curr_atoms.append(Atom(name, x, y, z))	
+						
+	return info[1:]
 
 def generate_random_distribution (in_res, in_probs_dir, num_seqs=100000):
 	
