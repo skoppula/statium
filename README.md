@@ -4,13 +4,16 @@ STATIUM is an ongoing project at the Keating Lab to quantitatively understand ho
 <b>Details and Documentation</b>
 ***
 `precompute`:<br>
-<i>Template</i>: `python wrapper.py precompute (--in_pdb --in_pdb_lib_dir --in_ip_lib_dir) [--out_dir]`<br>
+<i>Template</i>: `python wrapper.py precompute (--in_pdb --in_pdb_lib --in_ip_lib) [--out_dir]`<br>
 
-<i>Example</i>:  `python wrapper.py precompute --in_pdb=1ycr_mdm2.pdb --in_pdb_lib_dir=data/culled_90/ --in_ip_lib_dir=data/ip_90_wGLY --out_dir=testing/output`<br>
+<i>Example</i>:  `python wrapper.py precompute --in_pdb=1ycr_mdm2.pdb --in_pdb_lib=data/culled_90/ --in_ip_lib=data/ip_90_wGLY --out_dir=testing/output`<br>
 
 <i>Specifics</i>: Runs STATIUM analysis to create weights for each possible amino acid at the protein's interacting pair positions. Note that this command is a shortcut combination of the `renumber`,`create_res`, `run_statium`, and `get_orig_seq` commands.
 
 The easy-to-use `precompute` function assumes that the interacting sequence that you wish to analyze is the entirety of chain <b>B</b> (in the input PDB file). If you wish to change these (or other parameters), run the above sequence of four commands with appropriate parameters.
+
+The function takes as input the PDB of the to-be-analyzed complex (--in_pdb), the directory of the total protein library with all protein PDBs (--in_pdb_lib), and the directory containing a list of precomputed interacting pairs for each PDB in the protein library (--in_ip_lib).
+
 ***
 `renumber`:<br>
 <i>Template</i> `python wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN]`<br>
@@ -29,16 +32,25 @@ The easy-to-use `precompute` function assumes that the interacting sequence that
 Assumes that the set of positions to be analyzed is continuous from the *start* to the *end* positions.
 
 If you fail to include a chain parameter ('A', 'B', etc.), the function attempts to analyze chain 'B'. Similarly, if the start and end parameters default to None, and if either is left blank, will assume you mean to analyze from the beginning or end of the chain, respectively.
+***
+`run_statium`:<br>
+<i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --in_pdb_lib --in_ip_lib) [--out_dir]`<br>
 
+<i>Example</i> `python wrapper.py run_statium --in_pdb=testing/1ycr_mdm2_renum.pdb --in_res=testing/1ycr_mdm2.res --in_pdb_lib=testing/culled90/ --in_ip_lib=testing/ip_90_wGLY/` <br>
+
+<i>Specifics</i>: Takes in a renumbered PDB file (see 'renumber'), the directory of the total protein library with all protein PDBs (--in_pdb_lib), and the directory containing a list of precomputed interacting pairs for each PDB in the protein library (--in_ip_lib).
+
+The function creates a directory containing a set of files, one file per interacting pair. A valid 'interacting pair' is a set of pair residues (one on the main chain and one on the sidechain [in STATIUM sidechain]) that are predicted to interact as per the criteria: 
+
+Each file contains a set of probabilities, one for each amino acid identity describing how likely it is that that identity would exist at that position on the sidechain, given the fact that it is in an interacting pair with the main chain.
 ***
 <b>Helpful Hints</b>:
 + Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.
 + Arguments wrapped in parenthesis () are required; arguments wrapped in square brackets [] are optional.
-
+***
 <b>Thanks for using STATIUM!</b>:
 <br>
 
-			   statium_wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [-v | --verbose]
 			   statium_wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG=None] [-z | --zscores] [-p | --percentiles] [-v | --verbose] [-d | --draw_histogram]
 			   statium_wrapper.py get_orig_seq (IN_PDB_ORIG) [-v | --verbose]
 			   statium_wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [-v | --verbose]
@@ -49,10 +61,6 @@ If you fail to include a chain parameter ('A', 'B', etc.), the function attempts
 			   statium_wrapper.py [-i] plot_roc_curve (IN_RES RESULTS_FILE TRUE_CLASS) [--IN_PDB_ORIG=None] [--CLASS_RESULTS=None] [-v | --verbose]
 			   statium_wrapper.py [-h | --help]
 
-An example of an analysis sequence: <br>
-
-	python statium_wrapper.py create_res testing/1ycr_mdm2_orig.pdb testing/1ycr_mdm2.pdb testing/1ycr_mdm2.res -v
-	python statium_wrapper.py run_statium testing/1ycr_mdm2.res testing/1ycr_mdm2.pdb data/culled_90/ data/ip_90_wGLY/ testing/output -v
 	python statium_wrapper.py get_orig_seq testing/1ycr_mdm2_orig.pdb
 	
 	python statium_wrapper.py -v generate_random_seqs 11 10
@@ -86,6 +94,6 @@ An example of an analysis sequence: <br>
 	python statium_wrapper.py -iv plot_roc_curve testing/1ycr_mdm2.res testing/1ycr_mdm2_seq_zscores.txt testing/1ycr_mdm2_seqs_true_classification.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb --CLASS_RESULTS=testing/1ycr_mdm2_classify_results_0.05.txt
 	python statium_wrapper.py -iv plot_roc_curve testing/1ycr_mdm2.res testing/1ycr_mdm2_seq_energies.txt testing/1ycr_mdm2_seqs_true_classification.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb --CLASS_RESULTS=testing/1ycr_mdm2_classify_results_0.05.txt
 
-#import this function and call with appropriate arguments to combine sequence energy and true classification into readable file
+import this function and call with appropriate arguments to combine sequence energy and true classification into readable file
 summarize(in_energy_file_path, in_true_class_file_path, in_res_path, in_pdb_orig, out_file = '1ycr_mdm2_summarize.txt')
 	

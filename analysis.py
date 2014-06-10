@@ -20,13 +20,13 @@ from util import read_results
 from reformat import get_orig_seq
 from reformat import generate_random_seqs
 
-def statium_pipeline(in_res_path, in_pdb_path, in_pdb_lib_dir, in_ip_lib_dir, out_dir, verbose):
+def statium_pipeline(in_res_path, in_pdb_path, in_pdb_lib, in_ip_lib, out_dir, verbose):
     
     if(verbose): print("Preparing directory folders...")
-    lib_pdbs_path = prepare_directory(in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir)
+    lib_pdbs_path = prepare_directory(in_res_path, in_pdb_path, in_pdb_lib, out_dir)
     if(verbose): print("Written list of library PDB paths to: " + lib_pdbs_path)
     
-    run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, in_ip_lib_dir, out_dir, 6.0, verbose)
+    run_analysis(in_res_path, in_pdb_path, lib_pdbs_path, in_ip_lib, out_dir, 6.0, verbose)
     if(verbose): print("Done.")
 
 def prepare_directory(in_res_path, in_pdb_path, in_pdb_lib_dir, out_dir):

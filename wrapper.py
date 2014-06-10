@@ -20,10 +20,10 @@ from util import filelines2list
 def main(argv):
 	
 	helpdoc =   	"""
-			usage:	wrapper.py precompute (--in_pdb --in_pdb_lib_dir --in_ip_lib_dir) [--out_dir] [--noverbose]
+			usage:	wrapper.py precompute (--in_pdb --in_pdb_lib --in_ip_lib) [--out_dir] [--noverbose]
 				wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN] [--noverbose]
 				wrapper.py create_res (--in_pdb_orig --in_pdb_renum) [--out_res --chain --start --end] [--noverbose]
-				wrapper.py run_statium (IN_RES IN_PDB IN_PDB_LIB_DIR IN_IP_LIB_DIR) [OUT_DIR] [--noverbose]
+				wrapper.py run_statium (--in_res --in_pdb --in_pdb_lib --in_ip_lib) [--out_dir] [--noverbose]
 				wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG] [-z | --zscore] [-p | --percentile] [--histogram] [--noverbose]
 				wrapper.py get_orig_seq (IN_PDB_ORIG) [--noverbose]
 				wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [--noverbose]
@@ -44,8 +44,8 @@ def main(argv):
 	if(options['precompute']):
 
 		in_pdb = options['--in_pdb']
-		in_ip_lib_dir = options['--in_ip_lib_dir']
-		in_pdb_lib_dir = options['--in_pdb_lib_dir']
+		in_ip_lib_dir = options['--in_ip_lib']
+		in_pdb_lib_dir = options['--in_pdb_lib']
 		out_dir = options['--out_dir'] if options['--out_dir'] is not None else in_pdb[:-4]
 		pdb_renumbered = in_pdb[:-4]+'_renumbered.pdb'
 		res = in_pdb[:-4]+'.res'
@@ -91,20 +91,18 @@ def main(argv):
 
 	
 	elif(options['run_statium']):
+		res = options['--in_res']
+		pdb = options['--in_pdb']
+		pdb_lib = options['--in_pdb_lib']
+		ip_lib = options['--in_ip_lib']
+		out_dir = options['--out_dir'] if options['--out_dir'] is not None else res[:-4]
 		
-		if(verbose): print("Running STATIUM with: " + options['IN_RES'] + " " + options['IN_PDB'] + " " + options['IN_PDB_LIB_DIR'] + " " + options['IN_IP_LIB_DIR'])
-		
-		if(options['OUT_DIR'] == None):   
-			statium_pipeline(options['IN_RES'], options['IN_PDB'], options['IN_PDB_LIB_DIR'], options['IN_IP_LIB_DIR'], options['IN_RES'][:-4], verbose)
-			if(verbose): print("Done. STATIUM probabilities in output directory: " + options['IN_RES'][:-4]);
-			
-		else:
-			statium_pipeline(options['IN_RES'], options['IN_PDB'], options['IN_PDB_LIB_DIR'], options['IN_IP_LIB_DIR'], options['OUT_DIR'], verbose)
-			if(verbose): print("Done. STATIUM probabilities in output directory: " + options['OUT_DIR']);
+		if(verbose): print("Running STATIUM with: " + pdb + " " + res + " " + pdb_lib + " " + ip_lib)
+		statium_pipeline(pdb, res, pdb_lib, ip_lib, out_dir, verbose)
+		if(verbose): print("Done. STATIUM probabilities in output directory: " + out_dir)
 
 	elif(options['calc_energy']):
 		
-		#solely for neat code
 		in_res = options['IN_RES']
 		probs_dir = options['PROBS_DIR']
 		seq_or_file = options['SEQ_OR_FILE']
