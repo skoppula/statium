@@ -96,9 +96,10 @@ def main(argv):
 		pdb_lib = options['--in_pdb_lib']
 		ip_lib = options['--in_ip_lib']
 		out_dir = options['--out_dir'] if options['--out_dir'] is not None else res[:-4]
+		dist = options['--dist_cutoff'] if options['--dist_cutoff'] is not None else 6.0
 		
 		if(verbose): print("Running STATIUM with: " + pdb + " " + res + " " + pdb_lib + " " + ip_lib)
-		statium_pipeline(pdb, res, pdb_lib, ip_lib, out_dir, verbose)
+		statium_pipeline(pdb, res, pdb_lib, ip_lib, out_dir, dist, verbose)
 		if(verbose): print("Done. STATIUM probabilities in output directory: " + out_dir)
 
 	elif(options['calc_energy']):

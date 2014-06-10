@@ -34,13 +34,15 @@ Assumes that the set of positions to be analyzed is continuous from the *start* 
 If you fail to include a chain parameter ('A', 'B', etc.), the function attempts to analyze chain 'B'. Similarly, if the start and end parameters default to None, and if either is left blank, will assume you mean to analyze from the beginning or end of the chain, respectively.
 ***
 `run_statium`:<br>
-<i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --in_pdb_lib --in_ip_lib) [--out_dir]`<br>
+<i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --in_pdb_lib --in_ip_lib) [--out_dir --dist_cutoff]`<br>
 
 <i>Example</i> `python wrapper.py run_statium --in_pdb=testing/1ycr_mdm2_renum.pdb --in_res=testing/1ycr_mdm2.res --in_pdb_lib=testing/culled90/ --in_ip_lib=testing/ip_90_wGLY/` <br>
 
 <i>Specifics</i>: Takes in a renumbered PDB file (see 'renumber'), the directory of the total protein library with all protein PDBs (--in_pdb_lib), and the directory containing a list of precomputed interacting pairs for each PDB in the protein library (--in_ip_lib).
 
 The function creates a directory containing a set of files, one file per interacting pair. A valid 'interacting pair' is a set of pair residues (one on the main chain and one on the sidechain [in STATIUM sidechain]) that are predicted to interact as per the criteria: 
+
+The optional parameter --dist_cutoff defaults to 6 (Angstroms) and determines the pair distance cutoff at which 
 
 Each file contains a set of probabilities, one for each amino acid identity describing how likely it is that that identity would exist at that position on the sidechain, given the fact that it is in an interacting pair with the main chain.
 ***
