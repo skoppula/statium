@@ -14,11 +14,13 @@ def read_results(results_file, valueIsNum=True):
 	
 	return results_dict
 
+
 def list2file(t, infile):
 	file = open(infile, 'w')
 	for element in t:
 		file.write(element + "\n")
 	file.close()
+
 
 def filelines2deeplist(infile, skipComments=False, useTuples=False, skipEmptyLines=False):
   
@@ -38,6 +40,7 @@ def filelines2deeplist(infile, skipComments=False, useTuples=False, skipEmptyLin
 
 	return t
 
+
 #Returns lines of file in a list
 def filelines2list(infile):
 	t = []
@@ -48,6 +51,7 @@ def filelines2list(infile):
 		t.append(line.strip())
 		
 	return t
+
 
 #uses binary search to determine where element e ranks in a sorted list
 def binary_placement(elements, e):
@@ -71,27 +75,24 @@ def binary_placement(elements, e):
 	
 	return mid
 
+
 def mean(s):
 	return sum(s) * 1.0/len(s)
+
 
 def std(s):
 	avg = mean(s)
 	variance = map(lambda x: (x - avg)**2, s)
 	return math.sqrt(mean(variance))
+
 	
 def nCr(n,r):
 	f = math.factorial
 	return f(n) / f(r) / f(n-r)
 
-def AA_cutoff_dist(AA):
-	
-	if(AA == 'A' or AA == 'G'):
-		return 0.2
-	else:
-		return 0.4
 
 def get_random_AA():
-	library_AA_distro = dict({'A':1391008, 'C':379677, 'D':825255 , 'E':911171 , 'F':1415079 , 'G':947640 , 'H':522382 , 'I':1838459 , 'K':822707 , 'L':2756022 , 'M':491788 , 'N':708103 , 'P':808079 , 'Q':614885 , 'R':983182 , 'S':954331 , 'T':1090982 , 'V':2059360 , 'W':539073 , 'Y':1190549 , 'X':0})
+	library_AA_distro = {'A':1391008, 'C':379677, 'D':825255 , 'E':911171 , 'F':1415079 , 'G':947640 , 'H':522382 , 'I':1838459 , 'K':822707 , 'L':2756022 , 'M':491788 , 'N':708103 , 'P':808079 , 'Q':614885 , 'R':983182 , 'S':954331 , 'T':1090982 , 'V':2059360 , 'W':539073 , 'Y':1190549 , 'X':0}
 	maxFreq = max(library_AA_distro.values())
 	normalizer = 10 ** (len(str(maxFreq))-1)
 	total = sum([x/normalizer for x in library_AA_distro.values()])
@@ -104,6 +105,7 @@ def get_random_AA():
 			return AA
 
 	return 'X'
+
 
 def AA2char(a):
 	AA = bidict.bidict({'ALA':'A', 'CYS':'C', 'ASP':'D', 'GLU':'E', 'PHE':'F', 'GLY':'G', 'ILE':'I', 'LYS':'K', 'LEU':'L', 'MET':'M', 'ASN':'N', 'PRO':'P', 'GLN':'Q', 'ARG':'R', 'SER':'S', 'THR':'T', 'VAL':'V', 'TRP':'W', 'TYR':'Y', 'MSE':'X', 'HIS':'H'})
@@ -136,6 +138,7 @@ def get_sidechain_atoms(a):
 	
 	return sidechain_mappings[a]
 
+
 class Atom:
 	def __init__(self, name, x, y, z):
 		self.name = name
@@ -144,10 +147,22 @@ class Atom:
 		self.z = z
 		self.coordinates = (self.x, self.y, self.z)
 
-	def distance(self, atom):
+	def distanceTo(self, atom):
 		return math.sqrt((self.x-atom.x)**2+(self.y-atom.y)**2+(self.z-atom.z)**2)
+	
+	def __hash__(self):
+		return hash((self.name, self.x, self.y, self.z))
+
+	def __eq__(self, other):
+		return (self.name, self.x, self.y, self.z) == (other.name, other.x, other.y, other.z)
+
+
 
 class Residue:
+	#string_name is the three letter amino acid identifier
+	#position is the position along the chain in the renumbered PDB
+	#chainID is the chain identifier (duh)
+	#atoms is a list of Atom() objects in the order listed in the corresponding PDB
 	def __init__(self, string_name, position, chainID, atoms):
 		self.string_name = string_name
 		self.char_name = char2AA(string_name)
@@ -156,4 +171,31 @@ class Residue:
 		self.position = position
 		self.chainID = chainID
 		self.atoms = atoms
+
+		self.atom_names = list()
+		self.atom_dict = dict()
+		for a in atoms:
+			self.atom_names.append(a.name)
+			self.atom_dict[a.name] = a	
+
+		self.stubIntact = True if 'CA' in self.atom_names and 'CB' in self.atom_names else False
+					
+
+	#Returns dictionary of pairs of atoms mapped to each pair's distance
+	def distancesTo(self, other):
+		out = dict()
+		for atom_one in self.atoms:
+			for atom_two in other.atoms:
+				out[(atom_one, atom_two)] = atom_one.distanceTo(atom_two)
+				out[(atom_two, atom_one)] = atom_one.distanceTo(atom_two)
+		return out
+
+
+	def __hash__(self):
+		return hash((self.int_name, self.position, self.chainID, tuple(self.atoms)))
+
+
+	def __eq__(self, other):
+		return (self.int_name, self.position, self.chainID, tuple(self.atoms)) == \
+			(other.int_name, other.position, other.chainID, tuple(other.atoms))
 		

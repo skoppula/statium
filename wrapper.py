@@ -1,4 +1,5 @@
 import sys
+import ast
 from docopt import docopt
 from reformat import renumber
 from reformat import create_res
@@ -23,7 +24,7 @@ def main(argv):
 			usage:	wrapper.py precompute (--in_pdb --in_pdb_lib --in_ip_lib) [--out_dir] [--noverbose]
 				wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN] [--noverbose]
 				wrapper.py create_res (--in_pdb_orig --in_pdb_renum) [--out_res --chain --start --end] [--noverbose]
-				wrapper.py run_statium (--in_res --in_pdb --in_pdb_lib --in_ip_lib) [--out_dir] [--noverbose]
+				wrapper.py run_statium (--in_res --in_pdb --in_pdb_lib --in_ip_lib) [--out_dir --ip_dist_cutoff --matching_res_dist_cutoffs --counts] [--noverbose]
 				wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG] [-z | --zscore] [-p | --percentile] [--histogram] [--noverbose]
 				wrapper.py get_orig_seq (IN_PDB_ORIG) [--noverbose]
 				wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [--noverbose]
@@ -96,10 +97,14 @@ def main(argv):
 		pdb_lib = options['--in_pdb_lib']
 		ip_lib = options['--in_ip_lib']
 		out_dir = options['--out_dir'] if options['--out_dir'] is not None else res[:-4]
-		dist = options['--dist_cutoff'] if options['--dist_cutoff'] is not None else 6.0
+		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 6.0
+		
+		default = {'A':2, 'C':6, 'D':6, 'E':6, 'F':6, 'G':2, 'H':6, 'I':6, 'K':6, 'L':6, 'M':6, 'N':6, 'P':6, 'Q':6, 'R':6, 'S':6, 'T':6, 'V':6, 'W':6, 'Y':6, 'X':0}
+		match_dist = ast.literal_eval(options['--matching_res_dist_cutoffs']) if options['--matching_res_dist_cutoffs'] else default
+		count = True if options['--counts'] is not None else False 
 		
 		if(verbose): print("Running STATIUM with: " + pdb + " " + res + " " + pdb_lib + " " + ip_lib)
-		statium(pdb, res, pdb_lib, ip_lib, out_dir, dist, verbose)
+		statium(pdb, res, pdb_lib, ip_lib, out_dir, ip_dist, verbose)
 		if(verbose): print("Done. STATIUM probabilities in output directory: " + out_dir)
 
 	elif(options['calc_energy']):
