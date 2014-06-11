@@ -23,7 +23,7 @@ from util import Atom
 from reformat import get_orig_seq
 from reformat import generate_random_seqs
 
-def statium(in_res, in_pdb, in_pdb_lib, in_ip_lib, out_dir, ip_cutoff_dist, matching_res_cutoff_dists, counts, verbose):
+def statium(in_res, in_pdb, in_pdb_lib, in_ip_lib, out_dir, ip_cutoff_dist, match_cutoff_dists, counts, verbose):
 	
 	if verbose: print 'Preparing directory folders...'
 	lib_pdbs = [os.path.join(in_pdb_lib, pdb) for pdb in os.listdir(in_pdb_lib)]
@@ -31,12 +31,12 @@ def statium(in_res, in_pdb, in_pdb_lib, in_ip_lib, out_dir, ip_cutoff_dist, matc
 
 	if verbose: print 'Starting STATUM analysis...' 
 	tic = timeit.default_timer()
-	sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_cutoff_dist, matching_res_cutoff_dists, counts, verbose)
+	sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_cutoff_dist, match_cutoff_dists, counts, verbose)
 	toc = timeit.default_timer()
 	if verbose: print 'Done in ' + str((tic-toc)/60) + 'minutes! Output in: ' + out_dir)
 
 
-def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, match_dist_cutoffs, counts, verbose):
+def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, match_dist_cutoffs, print_counts, verbose):
 	
 	if verbose: print 'Extracting residue position from ' + in_res + '...'
 	res_lines = filelines2list(in_res)
@@ -95,76 +95,56 @@ def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, matc
 				if lib_pdb[lib_pos2].stubIntact and lib_AA1==AA1:
 					p2_base_chain = [lib_pdb[lib_pos2].atom_dict('CA'), lib_pdb[lib_pos2].atom_dict['CB']] 
 					lib_dist = filter_sc_dists(lib_pdb[lib_pos1].atoms, p2_base_chain, lib_distance_matrix[lib_pos1][lib_pos2], "forward")
-					if matching_sidechain_pair(distances[j], lib_dist, match_dists(pdbI[pos1].char_name)):
+					if matching_sidechain_pair(distances[j], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
 						counts[j][lib_AA2] += 1
 						
 				if lib_pdb[lib_pos1].stubIntact and lib_AA2==AA1:
 					p1_base_chain = [lib_pdb[lib_pos1].atom_dict('CA'), lib_pdb[lib_pos1].atom_dict['CB']] 
 					lib_dist = filter_sc_dists(['CA', 'CB'], lib_pdb[lib_pos2].atoms, lib_distance_matrix[lib_pos1][lib_pos2], "backward") 
-					if matching_sidechain_pair(distances[j], lib_dist, match_dists(pdbI[pos1].char_name)):
+					if matching_sidechain_pair(distances[j], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
 						counts[j][lib_AA1] += 1
 	
-	if(verbose): print("Finished processing library .pdb files. Writing counted results to files in directory: " + out_dir)
-			  
-	counts_file = open(os.path.join(out_dir, 'lib_ip_residue_counts.txt'), 'w')
-	for i in range(20): counts_file.write(AAint2char(i) + '\t' + str(ip_res[i]) + '\n')
-	counts_file.close()
+	if(verbose): print('Finished processing library .pdb files.')
 
+	if print_counts:
+		if verbose: print 'Writing raw library counts to files...'
+
+		counts_dir = out_dir[-1] + '_counts' if out_dir[-1] == '/' else out_dir + '_counts'
+		if not os.path.exists(counts_dir):
+			os.mkdir(counts_dir)
+
+		total_counts_file = open(os.path.join(counts_dir, 'lib_ip_residue_totals.txt'), 'w')
+		for i in range(20): total_counts_file.write(AAint2char(i) + '\t' + str(totals[i]) + '\n')
+		total_counts_file.close()
+
+		for (i, pair) in enumerate(use_indices):
+			counts_file = open(os.path.join(counts_dir, str(pair[0] + 1) + '_' + str(pair[1] + 1) + '_counts.txt'), 'w')
+			for j in range(20): counts_file.write(AAint2char(j) + '\t' + str(counts[i][j]) + '\n')
+			counts_file.close()
+	
+	if(verbose): print("Computing probabilities from counts...")
+	determine_probs(totals, counts, out_dir, verbose)
+
+def determine_probs(totals, counts, out_dir, verbose):
+	
+	#create the output directory
+	if not os.path.exists(out_dir):
+		os.mkdir(out_dir)
+	
+	lib_sum= float(sum(totals))
+	lib_total_probs = [x/lib_sum for x in totals]
+	
 	for (i, pair) in enumerate(use_indices):
-		counts_file = open(os.path.join(out_dir, str(pair[0] + 1) + '_' + str(pair[1] + 1) + '_counts.txt'), 'w')
-		for j in range(20): counts_file.write(AAint2char(j) + '\t' + str(counts[i][j]) + '\n')
-	counts_file.close()
-	
-	if(verbose): print("Determining probabilities from counts...")
-	determine_probs(out_dir, verbose)
-
-def determine_probs(out_dir, verbose):
-	
-	#create the _probs output directory
-	if(out_dir[-1] == '/'):
-		probs_dir = out_dir[-1] + '_probs'
-	else:
-		probs_dir = out_dir + '_probs'
-		
-	if not os.path.exists(probs_dir):
-		os.mkdir(probs_dir)
-	
-	if(verbose): print("Reading in the total residue counts of the PDB library: lib_ip_residue_counts.txt")
-	output_files = os.listdir(out_dir)
-	lib_summary_path = filter(lambda x: 'lib_ip_residue' in x, output_files) #search files for lib_ip_residue_counts.txt
-	lib_sum_data = filelines2deeplist(os.path.join(out_dir, lib_summary_path[0]))
-	
-	lib_pdb_total = float(sum([int(x[1]) for x in lib_sum_data]))
-	lib_AA_probs = [float(x[1]) / lib_pdb_total for x in lib_sum_data]
-	
-	#Transform every count file into a _probs file	
-	for file in output_files:
-		if('count' in file and len(file.split('_')) == 3):
-			path = os.path.join(out_dir, file)
-			counts = filelines2deeplist(path)
-			out_path = os.path.join(probs_dir, file.split('_')[0] + '_' + file.split('_')[1] + '_probs.txt')
-
-			total = float(sum([int(x[1]) for x in counts]))
-
-			if(total > 99):
-				out = open(out_path, 'w')
-				AA_probs = [(float(x[1])/total if int(x[1]) != 0 else 1/total) for x in counts]
-				
-				for i in range(20):
-					e = -1.0 * math.log(AA_probs[i] / lib_AA_probs[i])
-					out.write(AAint2char(i) + '\t' + str(e) + '\n')
-				
-				out.close()   
-	
+		total = float(sum(counts[i]))
+		if total > 99:
+			path = os.path.join(out_dir, str(pair[0] + 1) + '_' + str(pair[1] + 1) + '_probs.txt')
+			prob_file = open(path, 'w')
+			AA_probs = [(x/total if x != 0 else 1/total) for x in counts[i]]
+			for j in range(20):
+				e = -1.0 * math.log(AA_probs[j] / lib_total_probs[j])
+				counts_file.write(AAint2char(j) + '\t' + e + '\n')
 	if(verbose): print("Finished calculating probabilities. Written to: " + out_dir + '_probs')
 
-	
-	
-def matching_residue_cutoff_dist(AA):
-        if(AA == 'A' or AA == 'G'):
-                return 0.2
-        else:
-                return 0.4
 	
 def matching_sidechain_pair(dists1, dists2, cutoff):
   
