@@ -116,7 +116,7 @@ def char2AA(a):
 	return AA[:a]
 
 def isAA(a):
-	AA = ['ALA', 'CYS', 'ASP', 'GLU', 'PHE', 'GLY', 'ILE', 'LYS', 'LEU', 'MET', 'ASN', 'PRO', 'GLN', 'ARG', 'SER', 'THR', 'VAL', 'TRP', 'TYR', 'MSE', 'HIS']
+	AA = {'ALA', 'CYS', 'ASP', 'GLU', 'PHE', 'GLY', 'ILE', 'LYS', 'LEU', 'MET', 'ASN', 'PRO', 'GLN', 'ARG', 'SER', 'THR', 'VAL', 'TRP', 'TYR', 'MSE', 'HIS'}
 	return (a in AA)
 
 def AAchar2int(a):
@@ -145,7 +145,17 @@ class Atom:
 		self.x = x
 		self.y = y
 		self.z = z
+		self.num = 0
 		self.coordinates = (self.x, self.y, self.z)
+
+	def __init__(self, name, x, y, z, num):
+		self.name = name
+		self.x = x
+		self.y = y
+		self.z = z
+		self.num = num
+		self.coordinates = (self.x, self.y, self.z)
+
 
 	def distanceTo(self, atom):
 		return math.sqrt((self.x-atom.x)**2+(self.y-atom.y)**2+(self.z-atom.z)**2)
@@ -156,6 +166,9 @@ class Atom:
 	def __eq__(self, other):
 		return (self.name, self.x, self.y, self.z) == (other.name, other.x, other.y, other.z)
 
+	def __str__(self):
+		return '(' + self.name + ', ' + str(self.num) + ',' + str(self.coordinates) + ')'
+
 
 
 class Residue:
@@ -165,7 +178,7 @@ class Residue:
 	#atoms is a list of Atom() objects in the order listed in the corresponding PDB
 	def __init__(self, string_name, position, chainID, atoms):
 		self.string_name = string_name
-		self.char_name = char2AA(string_name)
+		self.char_name = AA2char(string_name)
 		self.int_name = AAchar2int(self.char_name)
 		
 		self.position = position
@@ -198,4 +211,103 @@ class Residue:
 	def __eq__(self, other):
 		return (self.int_name, self.position, self.chainID, tuple(self.atoms)) == \
 			(other.int_name, other.position, other.chainID, tuple(other.atoms))
+
+	def __str__(self):
+		return '(' + self.string_name + ', ' + str(self.position) + ', ' + self.chainID + ')'
 		
+#NEW VERSION:
+#       Outputs list of Residues()
+#OLD VERSION:
+#       Creates a list with information for each residue:
+#       e.g for each residue: [[1, ''], '16', [['CA', 'CB', 'OG1', 'CG2'], [[21.142, -19.229, 4.185], [21.957, -18.596, 5.322], [23.023, 17.818, 4.773], [22.547, -19.67, 6.206]]]]
+def get_pdb_info(pdb_path):
+
+	info = list()
+	res = set()
+ 
+	lines = filelines2list(pdb_path)
+	
+	curr_position = None
+	curr_chainID = None
+	curr_name = None
+	curr_atoms = list()
+	curr_possible_atoms = set()
+	curr_found_atoms = set()
+
+	atom_count = 1
+	first_run = True
+
+	for i, line in enumerate(lines):
+		if line[0:4] == 'ATOM' or (line[0:6] == 'HETATM' and line[17:20] == 'MSE'):
+			name = line[13:17].strip()
+			if name ==  'N':
+				if lines[i+1][13:17].strip() == 'CA':
+					if not first_run: info.append(Residue(curr_name, curr_position, curr_chainID, curr_atoms))
+					first_run = False
+					curr_found_atoms.add(name)
+					x = float(line[30:38])
+					y = float(line[39:46])
+					z = float(line[47:54])			
+					curr_atoms = [Atom(name, x, y, z, atom_count)]
+					atom_count += 1
+					continue
+	
+			if name == 'CA':
+				try:
+					curr_position = int(line[22:28].strip())
+					curr_chainID = line[21:22].strip()
+					curr_name = 'MET' if line[17:20] == 'MSE' else line[17:20]
+					if (curr_chainID, curr_position) in res or not isAA(curr_name): continue
+					res.add((curr_chainID, curr_position))
+					
+				except:
+					continue
+
+				x = float(line[30:38])
+				y = float(line[39:46])
+				z = float(line[47:54])
+				name = 'CA'
+				curr_atoms .append(Atom(name, x, y, z, atom_count))
+				atom_count += 1
+
+				curr_possible_atoms = get_sidechain_atoms(AA2char(curr_name))
+				curr_found_atoms = {'CA'}
+
+			else:
+				try:
+					pos = int(line[22:28].strip())
+					chain = line[21:22].strip()
+				except: continue
+
+				if chain != curr_chainID or pos != curr_position: continue
+				
+				if name not in curr_found_atoms or name in curr_found_atoms:# and name in curr_possible_atoms:
+					curr_found_atoms.add(name)
+					x = float(line[30:38])
+					y = float(line[39:46])
+					z = float(line[47:54])
+					curr_atoms.append(Atom(name, x, y, z, atom_count))
+					atom_count += 1
+
+	info.append(Residue(curr_name, curr_position, curr_chainID, curr_atoms))
+	
+	return info
+
+def print_pdb(residues, path):
+	outfile = open(path, 'w')
+	for residue in residues:
+		rname = (3-len(residue.string_name))*' ' + residue.string_name
+		rchainID = residue.chainID
+		rnum = (4-len(str(residue.position)))*' ' + str(residue.position)
+		
+		for atom in residue.atoms:
+			anum = (5-len(str(atom.num)))*' ' + str(atom.num)
+			aname =  atom.name + (4-len(atom.name))*' '
+			ax = (8-len(str(atom.x)))*' ' + str(atom.x)
+			ay = (8-len(str(atom.y)))*' ' + str(atom.y)
+			az = (8-len(str(atom.z)))*' ' + str(atom.z)
+			line = 'ATOM  ' + anum + ' ' + aname + ' ' + rname + ' ' + rchainID + rnum + ' ' + ax + ay + az + '\n'
+			outfile.write(line)
+
+	outfile.write('TER\nEND')
+	outfile.close()

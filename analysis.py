@@ -20,6 +20,7 @@ from util import nCr
 from util import read_results
 from util import Residue
 from util import Atom
+from util import get_pdb_info
 from reformat import get_orig_seq
 from reformat import generate_random_seqs
 
@@ -219,71 +220,6 @@ def compute_distance_matrix(pdb):
 			distance_matrix[i][j] = pdb[i].distancesTo(pdb[j])
 	return distance_matrix
 
-
-#just apply distance formula
-def distance(C1, C2):
-	return math.sqrt(((C1[0] - C2[0])**2) + ((C1[1] - C2[1])**2) + ((C1[2] - C2[2])**2))
-
-
-#NEW VERSION:
-#	Outputs list of Residues()
-#OLD VERSION:
-#	Creates a list with information for each residue:
-#	e.g for each residue: [[1, ''], '16', [['CA', 'CB', 'OG1', 'CG2'], [[21.142, -19.229, 4.185], [21.957, -18.596, 5.322], [23.023, 17.818, 4.773], [22.547, -19.67, 6.206]]]]
-def get_pdb_info(pdb_path):
-
-	info = list()
-	res = set()
- 
-	lines = filelines2list(pdb_path)
-	
-	curr_position = None
-	curr_chainID = None
-	curr_name = None
-	curr_atoms = list()
-	curr_possible_atoms = set()
-	curr_found_atoms = set()
-
-	for line in lines:
-		if line[0:4] == 'ATOM':
-			if line[13:15] == 'CA':
-				info.append(Residue(curr_name, curr_position, curr_chainID, curr_atoms))
-
-				try:
-					curr_position = int(line[22:28].strip())
-					curr_chainID = line[21:22].strip()
-					curr_name = line[17:20]
-					if curr_position in res or not isAA(AA): continue
-					res.append(curr_position)
-				except:
-					continue
-
-				x = float(line[30:38])
-				y = float(line[39:46])
-				z = float(line[47:54])
-				name = 'CA'
-				curr_atoms.append(Atom(name, x, y, z))
-
-				curr_possible_atoms = get_sidechain_atoms(curr_name)
-				curr_found_atoms = {'CA'}
-
-			else:
-				try:
-					pos = int(line[22:28].strip())
-					chain = line[21:22].strip()
-				except: continue
-
-				if pos > curr_position: continue
-				elif pos == curr_position and chain == curr_chainID:
-					name = line2[13:16].strip()
-					if name in curr_possible_atoms and name not in curr_found_atoms:
-						curr_found_atoms.append(name)
-						x = float(line[30:38])
-						y = float(line[39:46])
-						z = float(line[47:54])
-						curr_atoms.append(Atom(name, x, y, z))	
-						
-	return info[1:]
 
 def generate_random_distribution (in_res, in_probs_dir, num_seqs=100000):
 	

@@ -1,10 +1,10 @@
 from util import AA2char
 from util import get_random_AA
+from util import get_pdb_info
+from util import print_pdb
 import re
 import random
 
-#Function to create *.res file:
-#	each line a residue position (in renumbered file) for STATIUM analysis
 def create_res(pdb_orig_path, pdb_renum_path, out_res_path, start=None, end=None, chain='B'):
 	
 	orig =  open(pdb_orig_path, 'r')
@@ -53,58 +53,35 @@ def create_res(pdb_orig_path, pdb_renum_path, out_res_path, start=None, end=None
 	orig.close()
 	renum.close()
 
-#Take a .pdb file from pdb.org and strip away meta-data so that output PDB only contains atoms and coordinates
-def renumber(start_res_num, start_atom_num, in_pdb, out_pdb):
+def renumber(start_res_num, start_atom_num, chains, in_pdb, out_pdb):
    
-	infile =  open(in_pdb, 'r')
-	outfile =  open(out_pdb, 'w')
-	lines = infile.readlines()
+	RN = start_res_num 
+	AN = start_atom_num
 	
-	RN = start_res_num #initialize residue number
-	AN = start_atom_num #initialize atom number
-	
-	FRN = -1; 
-	
-	for line in lines:
-		line = line.strip()
-		#add whitespace so checks below don't error out
-		line = (line + ' '*16 + '\n') if len(line) < 61 else (line + '\n') 
-		#check if the line corresponds to an ATOM
-		# or coordinated-molecule (specifically, MSE = selenomethionine)
-		if(line[0:4] == 'ATOM' or (line[0:6] == 'HETATM' and line[17:20] == 'MSE')):
-			
-			#if first line, set FRN to first residue number
-			FRN = int(line[22:26]) if FRN<0 else FRN  
-			CRN = int(line[22:26])	#current residue number
-			
-			#checks if next residue has been reached
-			#if so, update FRN and RN
-			if CRN != FRN: 
-				RN += 1
-				FRN = CRN
-			
-			#Replace old number with new residue count
-			num_digits = len(str(RN))
-			line = line[:22] + ' '*(4-num_digits) + str(RN) + line[26:]
-			
-			#Replace old number with new atom count
-			num_digits = len(str(AN))
-			line = line[:6] + ' '*(5-num_digits) + str(AN) + line[12:]
+	residues = get_pdb_info(in_pdb)
+	new_residues = list()
+
+	#Putting non-mutating chains first
+	for residue in residues:
+		if residue.chainID in chains: continue
+		residue.position = RN
+		for atom in residue.atoms:
+			atom.num = AN
 			AN += 1
-			
-			#replace selenomethionine with MET
-			if(line[17:20] == 'MSE'):
-				line = line[:18] + 'ET' + line[20:]
-				line = 'ATOM  ' + line[6:]
-		
-			#replace occupancy and temperature factor
-			line = line[:56] + '1.00  0.00' + line[66:]
-		
-			outfile.write(line)
-		
-	outfile.write('TER\nEND')
-	infile.close()
-	outfile.close()
+		RN += 1
+		new_residues.append(residue)
+
+	#Put mutating chains second
+	for residue in residues:
+		if residue.chainID not in chains: continue
+		residue.position = RN
+		for atom in residue.atoms:
+			atom.num = AN
+			AN += 1
+		RN += 1
+		new_residues.append(residue)
+
+	print_pdb(new_residues, out_pdb)
 
 #Get the original AA sequence of chain B, along with stats like the length and position of that chain
 def get_orig_seq(in_pdb_path_orig):
