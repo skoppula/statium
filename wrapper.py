@@ -3,7 +3,7 @@ import ast
 from docopt import docopt
 from reformat import renumber
 from reformat import create_res
-from analysis import statium_pipeline
+from analysis import statium
 from analysis import calc_seq_energy
 from reformat import get_orig_seq
 from reformat import generate_random_seqs
@@ -20,20 +20,25 @@ from util import filelines2list
 
 def main(argv):
 	
-	helpdoc =   	"""
-			usage:	wrapper.py precompute (--in_pdb --in_pdb_lib --in_ip_lib) [--out_dir] [--noverbose]
-				wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN] [--noverbose]
+	helpdoc =   	"""usage: wrapper.py precompute (--in_pdb --in_pdb_lib --in_ip_lib) [--out_dir] [--noverbose]
+				wrapper.py renumber --in_pdb=A [--out_pdb=B --chains=C --SRN=1 --SAN=1] [--noverbose]
 				wrapper.py create_res (--in_pdb_orig --in_pdb_renum) [--out_res --chain --start --end] [--noverbose]
 				wrapper.py run_statium (--in_res --in_pdb --in_pdb_lib --in_ip_lib) [--out_dir --ip_dist_cutoff --matching_res_dist_cutoffs --counts] [--noverbose]
 				wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG] [-z | --zscore] [-p | --percentile] [--histogram] [--noverbose]
 				wrapper.py get_orig_seq (IN_PDB_ORIG) [--noverbose]
-				wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [--noverbose]
+				wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE] [--TOTAL_PROTEIN_LIBRARY] [--noverbose]
 				wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [--noverbose]
 				wrapper.py classify (RESULTS_FILE) [OUT_FILE] [ALPHA_THRESHOLD] [--noverbose]
-				wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG=None] [--noverbose]
-				wrapper.py [-i] calc_auroc (IN_RES RESULTS_FILE TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG=None] [--CLASS_RESULTS=None] [--noverbose]
-				wrapper.py [-i] plot_roc_curve (IN_RES RESULTS_FILE TRUE_CLASS) [--IN_PDB_ORIG=None] [--CLASS_RESULTS=None] [--noverbose]
+				wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG] [--noverbose]
+				wrapper.py [-i] calc_auroc (IN_RES RESULTS_FILE TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG] [--CLASS_RESULTS] [--noverbose]
+				wrapper.py [-i] plot_roc_curve (IN_RES RESULTS_FILE TRUE_CLASS) [--IN_PDB_ORIG] [--CLASS_RESULTS] [--noverbose]
 				wrapper.py [-h | --help]
+			Options:
+				--in_pdb=A
+				--out_pdb=B
+				--chains=C
+				--SRN=1
+				--SAN=1
 			"""
 	
 	options = docopt(helpdoc, argv, help = True, version = "3.0.0", options_first=False)
@@ -69,12 +74,13 @@ def main(argv):
 
 	if(options['renumber']):
 		in_pdb = options['--in_pdb']
-		out_pdb = options['--out_pdb'] if options['--out_pdb') is not None else in_pdb[:-4]+'_renumbered.pdb'
+		out_pdb = options['--out_pdb'] if options['--out_pdb'] is not None else in_pdb[:-4]+'_renumbered.pdb'
 		SRN = 1 if options['--SRN'] == None else int(options['--SRN']) #start residue number
 		SAN = 1 if options['--SAN'] == None else int(options['--SAN']) #start atom number
+		chains =  {'B'} if options['--chains'] == None else set(ast.literal_eval(options['--chains']))
 
 		if(verbose): print("Renumbering PDB file: " + in_pdb)		
-		renumber(SRN, SAN, in_pdb, out_pdb)
+		renumber(SRN, SAN, chains, in_pdb, out_pdb)
 		if(verbose): print("Done. Renumbered file: " + out_pdb)
 	
 		

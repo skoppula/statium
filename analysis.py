@@ -33,7 +33,7 @@ def statium(in_res, in_pdb, in_pdb_lib, in_ip_lib, out_dir, ip_cutoff_dist, matc
 	tic = timeit.default_timer()
 	sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_cutoff_dist, match_cutoff_dists, counts, verbose)
 	toc = timeit.default_timer()
-	if verbose: print 'Done in ' + str((tic-toc)/60) + 'minutes! Output in: ' + out_dir)
+	if verbose: print 'Done in ' + str((tic-toc)/60) + 'minutes! Output in: ' + out_dir
 
 
 def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, match_dist_cutoffs, print_counts, verbose):
@@ -157,7 +157,7 @@ def matching_sidechain_pair(dists1, dists2, cutoff):
 				sd += (dists1[atom_pair1]-dists2[atom_pair2])**2
 				count += 1
 
-	return math.sqrt(sd / count) < cutoff:
+	return math.sqrt(sd / count) < cutoff
 
 def get_distance_matrix(pdb):
 	N = len(pdb)

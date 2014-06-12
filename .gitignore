@@ -1,2 +1,5 @@
 *.swp
 *.md~
+data/*
+data/
+*.pyc

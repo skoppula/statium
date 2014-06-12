@@ -56,8 +56,8 @@ def create_res(pdb_orig_path, pdb_renum_path, out_res_path, start=None, end=None
 #Take a .pdb file from pdb.org and strip away meta-data so that output PDB only contains atoms and coordinates
 def renumber(start_res_num, start_atom_num, in_pdb, out_pdb):
    
-	infile =  open(in_pdb_path, 'r')
-	outfile =  open(out_pdb_path, 'w')
+	infile =  open(in_pdb, 'r')
+	outfile =  open(out_pdb, 'w')
 	lines = infile.readlines()
 	
 	RN = start_res_num #initialize residue number
@@ -74,8 +74,8 @@ def renumber(start_res_num, start_atom_num, in_pdb, out_pdb):
 		if(line[0:4] == 'ATOM' or (line[0:6] == 'HETATM' and line[17:20] == 'MSE')):
 			
 			#if first line, set FRN to first residue number
-			FRN = int(line[23:26]) if FRN<0 else FRN  
-			CRN = int(line[23:26])	#current residue number
+			FRN = int(line[22:26]) if FRN<0 else FRN  
+			CRN = int(line[22:26])	#current residue number
 			
 			#checks if next residue has been reached
 			#if so, update FRN and RN
@@ -85,11 +85,11 @@ def renumber(start_res_num, start_atom_num, in_pdb, out_pdb):
 			
 			#Replace old number with new residue count
 			num_digits = len(str(RN))
-			line = line[:21] + ' '*(5-num_digits) + str(RN) + line[26:]
+			line = line[:22] + ' '*(4-num_digits) + str(RN) + line[26:]
 			
 			#Replace old number with new atom count
 			num_digits = len(str(AN))
-			line = line[:6] + ' '*(5-num_digits) + str(AN) + line[11:]
+			line = line[:6] + ' '*(5-num_digits) + str(AN) + line[12:]
 			AN += 1
 			
 			#replace selenomethionine with MET
