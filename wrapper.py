@@ -77,7 +77,7 @@ def main(argv):
 		out_pdb = options['--out_pdb'] if options['--out_pdb'] is not None else in_pdb[:-4]+'_renumbered.pdb'
 		SRN = 1 if options['--SRN'] == None else int(options['--SRN']) #start residue number
 		SAN = 1 if options['--SAN'] == None else int(options['--SAN']) #start atom number
-		chains =  {'B'} if options['--chains'] == None else set(ast.literal_eval(options['--chains']))
+		chains =  {'B'} if options['--chains'] == None else set(options['--chains'].split(','))
 
 		if(verbose): print("Renumbering PDB file: " + in_pdb)		
 		renumber(SRN, SAN, chains, in_pdb, out_pdb)
