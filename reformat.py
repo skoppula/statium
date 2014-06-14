@@ -4,55 +4,6 @@ from util import get_pdb_info
 from util import print_pdb
 import re
 import random
-
-def create_res(pdb_orig_path, pdb_renum_path, out_res_path, start=None, end=None, chain='B'):
-	
-	orig =  open(pdb_orig_path, 'r')
-	renum =  open(pdb_renum_path, 'r')
-	out =  open(out_res_path, 'w')
-	chain = 'B' if chain is None else chain
-	
-	lines_orig = orig.readlines()
-	lines_renum = renum.readlines()
-	
-	chain_start_line = ""
-	num_residues = 0
-	init = 0
-	
-	#count the number of residues
-	#	by identifying chain's start line (or line with start=residue number)
-	#	and end line
-	for line in lines_orig:
-		if(line[21]==chain and chain_start_line == "" and line[0:4] =='ATOM'):
-			if (not start) or int(line[22:27]) == start:
-				chain_start_line = line
-
-		elif(line[21]==chain and chain_start_line != "" and (line[0:3] =='TER' or int(line[22:27]) == end)):
-			num_residues = int(line[22:27]) - int(chain_start_line[22:27]) + 1
-			break
-
-	#Get start position in renumbered file
-	#	If AA identity and coordinates are the same, must be same atom and residue
-	for line in lines_renum:
-		if(line[17:21] == chain_start_line[17:21] and line[32:55] == chain_start_line[32:55]):
-			init = int(line[22:27])
-			break
-	
-	if(num_residues < 1):
-		print('Could not find a valid' + chain + '-chain.')
-		return
-	
-	#count from start position in renumbered file
-	#	to start position + num_residues	
-	for i in range(num_residues-1):
-		out.write(str(i+init) + '\n')
-		
-	outfile.write(str(num_residues-1+init)) #to ensure no newline at end of file
-	
-	out.close()
-	orig.close()
-	renum.close()
-
 def renumber(start_res_num, start_atom_num, chains, in_pdb, out_pdb):
    
 	RN = start_res_num 
@@ -82,6 +33,52 @@ def renumber(start_res_num, start_atom_num, chains, in_pdb, out_pdb):
 		new_residues.append(residue)
 
 	print_pdb(new_residues, out_pdb)
+
+def create_res(pdb_orig_path, pdb_renum_path, out_res_path, positions):
+	
+	orig =  get_pdb_info(pdb_orig_path)
+	renum =  get_pdb_info(pdb_renum_path)
+
+	#Adding all ligand residues we're interesting in mutating to this set()
+	#	and converting them to residues in new_res
+	res = set()
+	new_res = set()
+
+	for position in positions:
+		if isinstance(position, tuple):
+			(chain, start, end) = position
+			i = 0
+			while orig[i].chainID != chain and orig[i].position != start:
+				i += 1
+			while orig[i].chainID != chain and orig[i].position != end:
+				res.add(orig[i])
+				i += 1
+			res.add(orig[i])
+
+		elif len(position) == 1:
+			inchain = False
+			for residue in orig:
+				if residue.chainID == position:
+					inchain = True
+					res.add(residue)	
+				else:
+					if inchain: break
+		else:
+			for residue in orig:
+				if residue.chainID == position[0] and residue.position == position[1:]:
+					res.add(residue)
+					break
+
+	for residue in res:
+		i = renum.index(residue)
+		new_res.add(i)
+
+	out =  open(out_res_path, 'w')
+	for residue in new_res:
+		out.write(residue.position + '\n')
+	
+	out.close()
+
 
 #Get the original AA sequence of chain B, along with stats like the length and position of that chain
 def get_orig_seq(in_pdb_path_orig):

@@ -31,7 +31,7 @@ One requirement of STATIUM as implemented here is that the input PDB has the rec
 
 <i>Specifics</i>: Takes in both the original and renumbered PDB files (see 'renumber'). It translates pairs of (chain identifier, number) uniquely demarcating a residues on the original PDB file to a number uniquely demarcating a residue in the renumbered file. These set of numbers are written to a file and used as the positions to be analyzed by the STATIUM algorithm.
 
-The --position_pairs argument specifies which the set of positions to be included as binder/ligand sequences in the STATIUM analysis. There must be an even number of comma seperated terms, which in groups of two, represent continuous sequence of residues to be included in the ligand sequence. In the example above, residues on the L chain, position 1-20, and residues on the H chain, positions 2-33 will be included in the output residues file.
+The --position_pairs argument specifies which the set of positions to be included as binder/ligand sequences in the STATIUM analysis. There must be an even number of comma seperated terms, which in groups of two, represent continuous sequence of residues to be included in the ligand sequence. If you want the entirety of a chain, simply put the name of chain in the list (e.g. --position_pairs=H). In the example above, residues on the L chain, position 1-20, and residues on the H chain, positions 2-33 will be included in the output residues file.
 
 If you fail to include a --position_pairs argument, the function will assume you mean to create a *.res file with the entirety of chain <i>B</i>.
 ***

@@ -192,7 +192,6 @@ class Residue:
 			self.atom_dict[a.name] = a	
 
 		self.stubIntact = True if 'CA' in self.atom_names and 'CB' in self.atom_names else False
-					
 
 	#Returns dictionary of pairs of atoms mapped to each pair's distance
 	def distancesTo(self, other):
@@ -203,14 +202,12 @@ class Residue:
 				out[(atom_two, atom_one)] = atom_one.distanceTo(atom_two)
 		return out
 
-
 	def __hash__(self):
-		return hash((self.int_name, self.position, self.chainID, tuple(self.atoms)))
-
+		return hash(self.int_name, self.chainID, self.atom_dict['CA'].coordinates)
 
 	def __eq__(self, other):
-		return (self.int_name, self.position, self.chainID, tuple(self.atoms)) == \
-			(other.int_name, other.position, other.chainID, tuple(other.atoms))
+		return (self.int_name, self.chainID, self.atom_dict['CA'].coordinates) == \
+			(other.int_name, other.chainID, self.atom_dict['CA'].coordinates)
 
 	def __str__(self):
 		return '(' + self.string_name + ', ' + str(self.position) + ', ' + self.chainID + ')'
@@ -254,7 +251,7 @@ def get_pdb_info(pdb_path):
 	
 			if name == 'CA':
 				try:
-					curr_position = int(line[22:28].strip())
+					curr_position = line[22:28].strip()
 					curr_chainID = line[21:22].strip()
 					curr_name = 'MET' if line[17:20] == 'MSE' else line[17:20]
 					if (curr_chainID, curr_position) in res or not isAA(curr_name): continue
@@ -275,7 +272,7 @@ def get_pdb_info(pdb_path):
 
 			else:
 				try:
-					pos = int(line[22:28].strip())
+					pos = line[22:28].strip()
 					chain = line[21:22].strip()
 				except: continue
 
@@ -289,7 +286,9 @@ def get_pdb_info(pdb_path):
 					curr_atoms.append(Atom(name, x, y, z, atom_count))
 					atom_count += 1
 
-	info.append(Residue(curr_name, curr_position, curr_chainID, curr_atoms))
+	if not curr_name:
+		print curr_name
+		info.append(Residue(curr_name, curr_position, curr_chainID, curr_atoms))
 	
 	return info
 

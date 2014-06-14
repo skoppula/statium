@@ -22,7 +22,7 @@ def main(argv):
 	
 	helpdoc =   	"""usage: wrapper.py precompute (--in_pdb --in_pdb_lib --in_ip_lib) [--out_dir] [--noverbose]
 				wrapper.py renumber --in_pdb=A [--out_pdb=B --chains=C --SRN=1 --SAN=1] [--noverbose]
-				wrapper.py create_res (--in_pdb_orig --in_pdb_renum) [--out_res --chain --start --end] [--noverbose]
+				wrapper.py create_res (--in_pdb_orig=A --in_pdb_renum=B) [--out_res=C --position_pairs=D] [--noverbose]
 				wrapper.py run_statium (--in_res --in_pdb --in_pdb_lib --in_ip_lib) [--out_dir --ip_dist_cutoff --matching_res_dist_cutoffs --counts] [--noverbose]
 				wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG] [-z | --zscore] [-p | --percentile] [--histogram] [--noverbose]
 				wrapper.py get_orig_seq (IN_PDB_ORIG) [--noverbose]
@@ -34,11 +34,16 @@ def main(argv):
 				wrapper.py [-i] plot_roc_curve (IN_RES RESULTS_FILE TRUE_CLASS) [--IN_PDB_ORIG] [--CLASS_RESULTS] [--noverbose]
 				wrapper.py [-h | --help]
 			Options:
-				--in_pdb=A
-				--out_pdb=B
-				--chains=C
-				--SRN=1
-				--SAN=1
+				--in_pdb=A	Input PDB file path
+				--out_pdb=B	Output PDB file path
+				--chains=C	Chosen ligand chains
+				--SRN=1		Starting residue number
+				--SAN=1		Starting atom number
+
+				--in_pdb_orig=A	Input PDB file path (original)
+				--in_pdb_renum=B	Input PDB file path (renumbered)
+				--out_res=C	Output RES file path
+				--position_pairs=D	Positions to include in the ligand
 			"""
 	
 	options = docopt(helpdoc, argv, help = True, version = "3.0.0", options_first=False)
@@ -57,7 +62,7 @@ def main(argv):
 		res = in_pdb[:-4]+'.res'
 
 		if(verbose): print("Renumbering file " + in_pdb)
-		renumber(1, 1, in_pdb, pdb_renumbered)
+		renumber(1, 1, {'B'}, in_pdb, pdb_renumbered)
 		if(verbose): print("Finished reformatting PDB file into: " + pdb_renumbered)
 			
 		if(verbose): print("Creating .res file to store PDB's chain B positions: ")
@@ -68,15 +73,12 @@ def main(argv):
 		statium_pipeline(res, pdb_renumbered, in_pdb_lib_dir, in_ip_lib_dir, out_dir, verbose)
 		if(verbose): print("Done. STATIUM probabilities in output directory: " + out_dir);
 			
-		(sequence, length, start, end) = get_orig_seq(options['IN_PDB'])
-		print("For reference, native chain B peptide sequence is " + str(sequence) + " of length " + str(length) + " from position " + str(start) + " to " + str(end))
-
 
 	if(options['renumber']):
 		in_pdb = options['--in_pdb']
 		out_pdb = options['--out_pdb'] if options['--out_pdb'] is not None else in_pdb[:-4]+'_renumbered.pdb'
-		SRN = 1 if options['--SRN'] == None else int(options['--SRN']) #start residue number
-		SAN = 1 if options['--SAN'] == None else int(options['--SAN']) #start atom number
+		SRN = 1 if options['--SRN'] == None else int(options['--SRN']) 
+		SAN = 1 if options['--SAN'] == None else int(options['--SAN'])
 		chains =  {'B'} if options['--chains'] == None else set(options['--chains'].split(','))
 
 		if(verbose): print("Renumbering PDB file: " + in_pdb)		
@@ -87,13 +89,31 @@ def main(argv):
 	elif(options['create_res']):
 		pdb_orig = options['--in_pdb_orig']
 		pdb_renum = options['--in_pdb_renum']
-		chain = options['--chain']
-		start = options['--start']
-		end = options['--end']
 		res = pdb_orig[:-4]+'.res' if options['--out_res'] is None else options['--out_res']
 
+		if not options['--position_pairs']:
+			positions = {'B'}
+		else:
+			raw = options['--position_pairs'].split(',')
+			positions = set()
+
+			list_iter = iter(raw)
+			for i, term in enumerate(list_iter):
+				parts = term.split('-')
+				if len(parts) == 1:
+					positions.add(term)
+					chain = term[0]
+				elif len(parts) == 2:
+					chain = parts[0][0]
+					num = parts[0][1:]
+					num2 = parts[1][1:]
+					positions.add((chain, num, num2))	
+				else:
+					sys.exit('Invalid position pairs')	
+		print positions
+
 		if(verbose): print("Creating .res file using: " + pdb_orig + " and " + pdb_renum) 
-		create_res(pdb_orig, pdb_renum, res, start, end)
+		create_res(pdb_orig, pdb_renum, res, positions)
 		if(verbose): print("Done. .res file: " + res)
 
 	
