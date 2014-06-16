@@ -37,7 +37,7 @@ def statium(in_res, in_pdb, in_pdb_lib, in_ip_lib, out_dir, ip_cutoff_dist, matc
 	if verbose: print 'Done in ' + str((tic-toc)/60) + 'minutes! Output in: ' + out_dir
 
 
-def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, match_dist_cutoffs, print_counts, verbose):
+def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, match_dist_cutoffs, print_counts, verbose)
 	
 	if verbose: print 'Extracting residue position from ' + in_res + '...'
 	res_lines = filelines2list(in_res)
@@ -278,7 +278,6 @@ def calc_seq_energy (in_res_path, probs_dir, seq, in_pdb_orig=None, verbose=Fals
 	probs_files = os.listdir(probs_dir)
 	all_probs = [[], []] #[[[PROBS FOR IP1], [PROBS FOR IP2], ...], [[IP1], [IP2],...]]
 	
-	#read back from .res file where Chain B starts
 	lines = filelines2list(in_res_path)
 	residue_positions = [int(line.strip()) - 1 for line in lines]
 	
@@ -311,7 +310,7 @@ def sum_energy(residue_positions, all_probs, seq, in_pdb_orig=None):
 	for i in range(len(all_probs[0])):
 		
 		(ip_probs, ip_pos) = (all_probs[0][i], all_probs[1][i])
-		pos1 = ip_pos[1] #peptide position on chain B
+		pos1 = ip_pos[1] #peptide position on ligand
 		
 		try:
 			if seq[pos1 - residue_positions[0]] == 'X': continue
@@ -327,7 +326,7 @@ def calc_top_seqs(in_res_path, probs_dir, num_sequences, outfile):
 	probs_files = os.listdir(probs_dir)
 	all_probs = [[], []] #[[[PROBS FOR IP1], [PROBS FOR IP2], ...], [[IP1], [IP2],...]]
 	 
-	#read back from .res file where Chain B starts
+	#read back from .res file where ligand residues start
 	lines = filelines2list(in_res_path)
 	residue_positions = [int(line.strip()) - 1 for line in lines]
 	

@@ -27,26 +27,27 @@ One requirement of STATIUM as implemented here is that the input PDB has the rec
 `create_res`:<br>
 <i>Template</i> `python wrapper.py create_res (--in_pdb_orig --in_pdb_renum) [--out_res --position_pairs]`<br>
 
-<i>Example</i> `python wrapper.py create_res --in_pdb_orig=testing/1mph_AHL_orig.pdb --in_pdb_renum=testing/1mph_AHL_renum.pdb --out_res=testing/1mph_AHL.res --position_pairs=L1,L20,H2,H33`<br>
+<i>Example</i> `python wrapper.py create_res --in_pdb_orig=testing/1mph_AHL_orig.pdb --in_pdb_renum=testing/1mph_AHL_renum.pdb --out_res=testing/1mph_AHL.res --position_pairs=L1-20,H33`<br>
+<i>Example 2</i> `python wrapper.py create_res --in_pdb_orig=testing/1mph_AHL_orig.pdb --in_pdb_renum=testing/1mph_AHL_renum.pdb --out_res=testing/1mph_AHL.res --position_pairs=H`<br>
 
 <i>Specifics</i>: Takes in both the original and renumbered PDB files (see 'renumber'). It translates pairs of (chain identifier, number) uniquely demarcating a residues on the original PDB file to a number uniquely demarcating a residue in the renumbered file. These set of numbers are written to a file and used as the positions to be analyzed by the STATIUM algorithm.
 
-The --position_pairs argument specifies which the set of positions to be included as binder/ligand sequences in the STATIUM analysis. There must be an even number of comma seperated terms, which in groups of two, represent continuous sequence of residues to be included in the ligand sequence. If you want the entirety of a chain, simply put the name of chain in the list (e.g. --position_pairs=H). In the example above, residues on the L chain, position 1-20, and residues on the H chain, positions 2-33 will be included in the output residues file.
+The --position_pairs argument specifies which the set of positions to be included as binder/ligand sequences in the STATIUM analysis. The argument is a set of comma seperated terms which represent continuous sequence of residues to be included in the ligand sequence. If you want the entirety of a chain, simply put the name of chain in the list (e.g. --position_pairs=H). In the first example above, residues on the L chain, position 1-20, and a residue on the H chain, position 33 will be included in the output residues file.
 
 If you fail to include a --position_pairs argument, the function will assume you mean to create a *.res file with the entirety of chain <i>B</i>.
 ***
 `run_statium`:<br>
-<i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --in_pdb_lib --in_ip_lib) [--out_dir --dist_cutoff]`<br>
+<i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --in_pdb_lib --in_ip_lib) [--out_dir --ip_dist_cutoff --matching_res_dist_cutoffs --counts]`<br>
 
-<i>Example</i> `python wrapper.py run_statium --in_pdb=testing/1ycr_mdm2_renum.pdb --in_res=testing/1ycr_mdm2.res --in_pdb_lib=testing/culled90/ --in_ip_lib=testing/ip_90_wGLY/` <br>
+<i>Example</i> `python wrapper.py run_statium --in_pdb=testing/1mph_AHL_new.pdb --in_res=testing/1mph_AHL.res --in_pdb_lib=testing/culled90/ --in_ip_lib=testing/ip_90_wGLY/` <br>
 
-<i>Specifics</i>: Takes in a renumbered PDB file (see 'renumber'), the directory of the total protein library with all protein PDBs (--in_pdb_lib), and the directory containing a list of precomputed interacting pairs for each PDB in the protein library (--in_ip_lib).
+<i>Specifics</i>: Takes in a renumbered PDB file (see `renumber`), the directory of the total protein library with all protein PDBs (--in_pdb_lib), and the directory containing a list of precomputed interacting pairs for each PDB in the protein library (--in_ip_lib).
 
-The function creates a directory containing a set of files, one file per interacting pair. A valid 'interacting pair' is a set of pair residues (one on the main chain and one on the sidechain [in STATIUM sidechain]) that are predicted to interact as per the criteria: 
+Optional parameters include: --out_dir (the directory where STATIUM outputs its results; default value is value of --in_pdb without the .pdb extension), --counts (whether to print out STATIUM's intermediate analysis outputs; note that this takes no argument; simply including the flag issues printing!), --ip_dist_cutoff (the threshold distance in Angstroms between two atoms, below which the atom's residues are deemed 'interacting'; default is 6.0), and --matching_res_dist_cutoff (a dictionary with all twenty amino acids [in single character representation] each mapped to a cutoff below which a interacting residue pair cannot be deemed 'matching' to a library protein interacting pair. Example of using this parameter [containing the default, recommended dictionary values if you leave this parameter out]: --matching_res_dist_cutoff={'A':2, 'C':6, 'D':6, 'E':6, 'F':6, 'G':2, 'H':6, 'I':6, 'K':6, 'L':6, 'M':6, 'N':6, 'P':6, 'Q':6, 'R':6, 'S':6, 'T':6, 'V':6, 'W':6, 'Y':6, 'X':0}.
 
-The optional parameter --dist_cutoff defaults to 6 (Angstroms) and determines the pair distance cutoff at which 
+The function creates a directory containing a set of files, one file per interacting pair:
 
-Each file contains a set of probabilities, one for each amino acid identity describing how likely it is that that identity would exist at that position on the sidechain, given the fact that it is in an interacting pair with the main chain.
+Each file contains a set of twenty probabilities (one for each amino acid) describing how likely it is for that identity would exist at that position on the sidechain, given the main chain's amino acid identity at the position.
 ***
 <b>Helpful Hints</b>:
 + Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.

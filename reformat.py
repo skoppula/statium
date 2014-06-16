@@ -15,7 +15,7 @@ def renumber(start_res_num, start_atom_num, chains, in_pdb, out_pdb):
 	#Putting non-mutating chains first
 	for residue in residues:
 		if residue.chainID in chains: continue
-		residue.position = RN
+		residue.position = str(RN)
 		for atom in residue.atoms:
 			atom.num = AN
 			AN += 1
@@ -25,7 +25,7 @@ def renumber(start_res_num, start_atom_num, chains, in_pdb, out_pdb):
 	#Put mutating chains second
 	for residue in residues:
 		if residue.chainID not in chains: continue
-		residue.position = RN
+		residue.position = str(RN)
 		for atom in residue.atoms:
 			atom.num = AN
 			AN += 1
@@ -48,9 +48,9 @@ def create_res(pdb_orig_path, pdb_renum_path, out_res_path, positions):
 		if isinstance(position, tuple):
 			(chain, start, end) = position
 			i = 0
-			while orig[i].chainID != chain and orig[i].position != start:
+			while not (orig[i].chainID == chain and orig[i].position == start):
 				i += 1
-			while orig[i].chainID != chain and orig[i].position != end:
+			while not (orig[i].chainID == chain and orig[i].position == end):
 				res.add(orig[i])
 				i += 1
 			res.add(orig[i])
@@ -70,12 +70,17 @@ def create_res(pdb_orig_path, pdb_renum_path, out_res_path, positions):
 					break
 
 	for residue in res:
-		i = renum.index(residue)
-		new_res.add(i)
+		i = 0
+		for r in renum:
+			if r.atom_dict['CA'].coordinates == residue.atom_dict['CA'].coordinates and r.int_name == residue.int_name and r.chainID == residue.chainID:
+				new_res.add(r)
+				break
 
 	out =  open(out_res_path, 'w')
-	for residue in new_res:
-		out.write(residue.position + '\n')
+	positions = [int(residue.position) for residue in new_res]	
+	positions.sort()	
+	for position in positions:
+		out.write(str(position) + '\n')
 	
 	out.close()
 

@@ -203,7 +203,7 @@ class Residue:
 		return out
 
 	def __hash__(self):
-		return hash(self.int_name, self.chainID, self.atom_dict['CA'].coordinates)
+		return hash(self.string_name + self.chainID + str(self.atom_dict['CA'].coordinates))
 
 	def __eq__(self, other):
 		return (self.int_name, self.chainID, self.atom_dict['CA'].coordinates) == \
@@ -235,16 +235,17 @@ def get_pdb_info(pdb_path):
 	first_run = True
 
 	for i, line in enumerate(lines):
+
 		if line[0:4] == 'ATOM' or (line[0:6] == 'HETATM' and line[17:20] == 'MSE'):
-			name = line[13:17].strip()
+			name = line[12:16].strip()
 			if name ==  'N':
-				if lines[i+1][13:17].strip() == 'CA':
+				if lines[i+1][12:16].strip() == 'CA':
 					if not first_run: info.append(Residue(curr_name, curr_position, curr_chainID, curr_atoms))
 					first_run = False
 					curr_found_atoms.add(name)
-					x = float(line[30:38])
-					y = float(line[39:46])
-					z = float(line[47:54])			
+					x = float(line[30:38].strip())
+					y = float(line[38:46].strip())
+					z = float(line[46:54].strip())			
 					curr_atoms = [Atom(name, x, y, z, atom_count)]
 					atom_count += 1
 					continue
@@ -260,9 +261,9 @@ def get_pdb_info(pdb_path):
 				except:
 					continue
 
-				x = float(line[30:38])
-				y = float(line[39:46])
-				z = float(line[47:54])
+				x = float(line[30:38].strip())
+				y = float(line[38:46].strip())
+				z = float(line[46:54].strip())
 				name = 'CA'
 				curr_atoms .append(Atom(name, x, y, z, atom_count))
 				atom_count += 1
@@ -280,14 +281,13 @@ def get_pdb_info(pdb_path):
 				
 				if name not in curr_found_atoms or name in curr_found_atoms:# and name in curr_possible_atoms:
 					curr_found_atoms.add(name)
-					x = float(line[30:38])
-					y = float(line[39:46])
-					z = float(line[47:54])
+					x = float(line[30:38].strip())
+					y = float(line[38:46].strip())
+					z = float(line[46:54].strip())
 					curr_atoms.append(Atom(name, x, y, z, atom_count))
 					atom_count += 1
 
-	if not curr_name:
-		print curr_name
+	if curr_name:
 		info.append(Residue(curr_name, curr_position, curr_chainID, curr_atoms))
 	
 	return info
@@ -297,7 +297,7 @@ def print_pdb(residues, path):
 	for residue in residues:
 		rname = (3-len(residue.string_name))*' ' + residue.string_name
 		rchainID = residue.chainID
-		rnum = (4-len(str(residue.position)))*' ' + str(residue.position)
+		rnum = (5-len(str(residue.position)))*' ' + residue.position
 		
 		for atom in residue.atoms:
 			anum = (5-len(str(atom.num)))*' ' + str(atom.num)
@@ -305,7 +305,7 @@ def print_pdb(residues, path):
 			ax = (8-len(str(atom.x)))*' ' + str(atom.x)
 			ay = (8-len(str(atom.y)))*' ' + str(atom.y)
 			az = (8-len(str(atom.z)))*' ' + str(atom.z)
-			line = 'ATOM  ' + anum + ' ' + aname + ' ' + rname + ' ' + rchainID + rnum + ' ' + ax + ay + az + '\n'
+			line = 'ATOM  ' + anum + ' ' + aname + ' ' + rname + ' ' + rchainID + rnum + '   ' + ax + ay + az + '\n'
 			outfile.write(line)
 
 	outfile.write('TER\nEND')

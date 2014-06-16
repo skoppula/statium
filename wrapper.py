@@ -106,11 +106,11 @@ def main(argv):
 				elif len(parts) == 2:
 					chain = parts[0][0]
 					num = parts[0][1:]
-					num2 = parts[1][1:]
+					num2 = parts[1]
 					positions.add((chain, num, num2))	
 				else:
 					sys.exit('Invalid position pairs')	
-		print positions
+
 
 		if(verbose): print("Creating .res file using: " + pdb_orig + " and " + pdb_renum) 
 		create_res(pdb_orig, pdb_renum, res, positions)
