@@ -1,4 +1,5 @@
 import os
+import sys
 import math
 import heapq
 import itertools
@@ -37,7 +38,7 @@ def statium(in_res, in_pdb, in_pdb_lib, in_ip_lib, out_dir, ip_cutoff_dist, matc
 	if verbose: print 'Done in ' + str((tic-toc)/60) + 'minutes! Output in: ' + out_dir
 
 
-def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, match_dist_cutoffs, print_counts, verbose)
+def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, match_dist_cutoffs, print_counts, verbose):
 	
 	if verbose: print 'Extracting residue position from ' + in_res + '...'
 	res_lines = filelines2list(in_res)
@@ -45,27 +46,33 @@ def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, matc
 	
 	if verbose: print 'Extracting information from ' + in_pdb + '...'
 	pdbI = get_pdb_info(in_pdb)
-	pdbSize = len(pdb)	
+	pdbSize = len(pdbI)	
 
-	if verbose: print 'Computing inter-atomic distances...'
+	if verbose: print 'Computing inter-atomic distances...\n'
 	distance_matrix = get_distance_matrix(pdbI)
 	
-	if verbose: print 'Finding interacting pairs...'
+	if verbose: print '\n\nFinding interacting pairs...'
 	use_indices = set() 
-	for i in xrange(len(pdbI)):
-		for j in xrange(i+1, len(pdbI)):
-			if (i in residues ^ j in residues) and check_cutoff(distance_matrix[i][j], ip_dist_cutoff):
-				use_indices.append((i, j))
+	for i in xrange(pdbSize):
+		for j in xrange(i+1, pdbSize):
+			if ((i in residues) ^ (j in residues)) and check_cutoff(distance_matrix[i][j-i-1], ip_dist_cutoff):
+				use_indices.add((i, j))
 	num_ips = len(use_indices)
 	
 	if verbose: print 'Storing distance information for each interacting pair...'
 	distances = dict() 
 	for (p1,p2) in use_indices:
+		print p1,p2
 		if pdbI[p2].stubIntact:
-			p2_base_chain = [pdbI[p2].atom_dict('CA'), pdbI[p2].atom_dict['CB']]
-			distance[(p1,p2)] = filter_sc_dists(pdbI[p1].atoms, base_chain, distance_matrix[p1][p2]) 
+			p2_base_chain = [pdbI[p2].atom_dict['CA'], pdbI[p2].atom_dict['CB']]
+			distances[(p1,p2)] = filter_sc_dists(pdbI[p1].atoms, p2_base_chain, distance_matrix[p1][p2-p1-1]) 
+		elif pdbI[p2].string_name = 'GLY':
+			pdbI[p2].correct()
+			p2_base_chain = [pdbI[p2].atom_dict['CA'], pdbI[p2].atom_dict['CB']]
+			distances[(p1,p2)] = filter_sc_dists(pdbI[p1].atoms, p2_base_chain, distance_matrix[p1][p2-p1-1]) 
 		else:
-			distance[(p1,p2)] = None
+			print 'Position %d does not have a valid stub' % p2
+			sys.exit(1)
 
 	#stores total number of each residue identity across IP
 	totals = [0 for i in range(20)] 
@@ -74,11 +81,11 @@ def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, matc
 	
 	for (i, lib_pdb_path) in enumerate(lib_pdbs):	
 
-		if(verbose): print "Processing library .pdb: " + pdb_path + "\t (" + str(i) + " out of " + str(len(lib_pdbs)) + ")"
-		lib_ip_path = os.path.join(in_ip_lib, os.path.split(pdb_path)[1].split('.')[0] + '.ip')
+		if(verbose): print "Processing library .pdb: " + lib_pdb_path + "\t (" + str(i) + " out of " + str(len(lib_pdbs)) + ")"
+		lib_ip_path = os.path.join(in_ip_lib, os.path.split(lib_pdb_path)[1].split('.')[0] + '.ip')
 		lib_pdb = get_pdb_info(lib_pdb_path)	
 		lib_ips = get_IPs(lib_ip_path)
-		lib_distance_matrix = get_distance_matrix_ips(lib_pdb_info, lib_ips)
+		lib_distance_matrix = get_distance_matrix_ip(lib_pdb, lib_ips)
 
 		for (lib_pos1, lib_pos2) in lib_ips:
 
@@ -91,18 +98,21 @@ def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, matc
 			totals[lib_AA2] += 1
 			
 			for (j, (pos1, pos2)) in enumerate(use_indices):
+				d = distances[(pos1,pos2)]
+				if d is None: continue
 				AA1 = pdbI[pos1].int_name 
-
 				if lib_pdb[lib_pos2].stubIntact and lib_AA1==AA1:
-					p2_base_chain = [lib_pdb[lib_pos2].atom_dict('CA'), lib_pdb[lib_pos2].atom_dict['CB']] 
+					p2_base_chain = [lib_pdb[lib_pos2].atom_dict['CA'], lib_pdb[lib_pos2].atom_dict['CB']] 
 					lib_dist = filter_sc_dists(lib_pdb[lib_pos1].atoms, p2_base_chain, lib_distance_matrix[lib_pos1][lib_pos2], "forward")
-					if matching_sidechain_pair(distances[j], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
+					print distances[(pos1,pos2)], '1'
+					if matching_sidechain_pair(distances[(pos1,pos2)], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
 						counts[j][lib_AA2] += 1
 						
 				if lib_pdb[lib_pos1].stubIntact and lib_AA2==AA1:
-					p1_base_chain = [lib_pdb[lib_pos1].atom_dict('CA'), lib_pdb[lib_pos1].atom_dict['CB']] 
-					lib_dist = filter_sc_dists(['CA', 'CB'], lib_pdb[lib_pos2].atoms, lib_distance_matrix[lib_pos1][lib_pos2], "backward") 
-					if matching_sidechain_pair(distances[j], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
+					p1_base_chain = [lib_pdb[lib_pos1].atom_dict['CA'], lib_pdb[lib_pos1].atom_dict['CB']] 
+					lib_dist = filter_sc_dists(p1_base_chain, lib_pdb[lib_pos2].atoms, lib_distance_matrix[lib_pos1][lib_pos2], "backward") 
+					print distances[(pos1,pos2)]
+					if matching_sidechain_pair(distances[(pos1,pos2)], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
 						counts[j][lib_AA1] += 1
 	
 	if(verbose): print('Finished processing library .pdb files.')
@@ -162,11 +172,14 @@ def matching_sidechain_pair(dists1, dists2, cutoff):
 
 def get_distance_matrix(pdb):
 	N = len(pdb)
-	distance_matrix = [[None for i in range(N)] for j in range(i+1,N)]
-	
+	distance_matrix = [[0]*(N-i-1) for i in xrange(N)]
+	print 'Out of %d residues finished:' % N
 	for i in xrange(N):
-		for j in xrange(i + 1, N):
-			distance_matrix[i][j] = pdb[i].distancesTo(pdb[j])
+		print(i),
+		sys.stdout.flush()
+		for j in xrange(i+1, N):
+			distance_matrix[i][j-i-1] = pdb[i].distancesTo(pdb[j])
+	
 	return distance_matrix
 
 
@@ -196,7 +209,7 @@ def extractIP(line):
 #New version: returns a dictionary, subset of the dictionary at
 #		location in distances matrix defined by an interacting pair (R1, R2)
 #	 	a subset defined by (R1's atoms,CA or CB):distance
-def filter_sidechain_dists(atomsA, atomsB, interatomic_distances, direction = 'forward'):
+def filter_sc_dists(atomsA, atomsB, interatomic_distances, direction = 'forward'):
 	out = dict()
 	if direction == 'forward':
 		pairs = list(itertools.product(atomsA, atomsB))
@@ -205,20 +218,12 @@ def filter_sidechain_dists(atomsA, atomsB, interatomic_distances, direction = 'f
 	return {pair: interatomic_distances for pair in pairs}
 	
 
-def check_cutoff(residue_pair, cutoff):
-	return any([dist < cutoff for dist in pair.values()])
+def check_cutoff(residue_pairs, cutoff):
+	return any([dist < cutoff for dist in residue_pairs.values()])
 
 #Returns a NxN matrix of dictionaries
 #	where N = number of residues in 
 #	See Residue.distancesTo for more info
-def compute_distance_matrix(pdb):
-	N = len(pdb)
-	distance_matrix = [[None for i in range(N)] for j in range(i+1,N)]
-	
-	for i in xrange(N):
-		for j in xrange(i + 1, N):
-			distance_matrix[i][j] = pdb[i].distancesTo(pdb[j])
-	return distance_matrix
 
 
 def generate_random_distribution (in_res, in_probs_dir, num_seqs=100000):

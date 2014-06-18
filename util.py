@@ -170,6 +170,19 @@ class Atom:
 		return '(' + self.name + ', ' + str(self.num) + ',' + str(self.coordinates) + ')'
 
 
+def magnitude(dx, dy, dz):
+	return math.sqrt(dx**2+dy**2+dz**2)
+
+def quadsolve(a, b, c):
+	disc = math.sqrt(b*b-4*a*c)
+	return ((-b + disc)/(2*a), (-b+disc)/(2*a))
+
+def cross(a, b):
+	return (a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0])
+
+def dot(a, b):
+	return sum(p*q for p,q in zip(a, b))
+
 
 class Residue:
 	#string_name is the three letter amino acid identifier
@@ -211,6 +224,56 @@ class Residue:
 
 	def __str__(self):
 		return '(' + self.string_name + ', ' + str(self.position) + ', ' + self.chainID + ')'
+
+	def correct(self):
+		if 'CA' not in self.atom_names:
+			print 'Cannot correct residue %d with no alpha carbon.' % self.position
+			return False
+		else:
+			ca = self.atom_dict['CA']
+			n = self.atom_dict['N']
+			c = self.atom_dict['C']
+			cos_angle = math.cos(109.5)
+			can_vector = (n.x-ca.x, n.y-ca.y, n.z-ca.z)
+			(can.x, can.y, can.z) = can_vector
+			cac_vector = (c.x-ca.x, c.y-ca.y, c.z-ca.z)
+			(cac.x, cac.y, cac.z) = cac_vector
+
+			n = magnitude(can_vector)
+			m = magnitude(cac_vector)
+
+			k1 = m*m - m*n*cac.x/can.x
+			k2 = cac.y - cac.x*can.y/can.x
+			k3 = cac.z - cac.x*can.z/can.x
+			k13 = k1/k2
+			k23 = k2/k3
+			
+			kappa = m**2*(1 - n**2/can.x**2)
+			alpha = (1 + can.y**2/can.x**2)
+			beta = (1 + can.z**2/can.x**2)
+			gamma  = 2*can.y/can.x**2
+			delta  = 2*can.y*m*n/can.x**2
+			epsilon  = 2*can.z*m*n/can.x**2
+
+			a = alpha + beta*k23**2 - gamma*k23
+			b = -beta*k13*k23 + gamma*k13 + delta - epsilon*k23
+			c = beta*k13**2 + epsilon*k13 - kappa
+
+			y = solve(a,b,c)
+			z = (k13-k23*y[0], k13-k23*y[1])
+			x = (m*n/can.x - can.y/can.x*y[0] - can.z/can.x*z[0], m*n/can.x - can.y/can.x*y[1] - can.z/can.x*z[1])
+
+			cb = (x[0], y[0], z[0])
+			cacb_vector = (cb[0]-ca.x, cb[1]-ca.y, cb[2]-ca.z)
+			cross = cross_product(ccab_vector, can_vector)
+			dot = dot_product(cross, cac_vector)/(magnitude(cross)*m)
+			
+			atom = Atom('CB', x[0], y[0], z[0]) if dot > 0 else Atom('CB', x[1], y[1], z[1])
+			self.atom_dict['CB'] = atom
+			self.atoms.append(atom)
+			print 'Corrected residue %d by adding CB' % self.position
+			return True
+		
 		
 #NEW VERSION:
 #       Outputs list of Residues()
