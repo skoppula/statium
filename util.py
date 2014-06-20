@@ -140,14 +140,6 @@ def get_sidechain_atoms(a):
 
 
 class Atom:
-	def __init__(self, name, x, y, z):
-		self.name = name
-		self.x = x
-		self.y = y
-		self.z = z
-		self.num = 0
-		self.coordinates = (self.x, self.y, self.z)
-
 	def __init__(self, name, x, y, z, num):
 		self.name = name
 		self.x = x
@@ -170,8 +162,8 @@ class Atom:
 		return '(' + self.name + ', ' + str(self.num) + ',' + str(self.coordinates) + ')'
 
 
-def magnitude(dx, dy, dz):
-	return math.sqrt(dx**2+dy**2+dz**2)
+def magnitude(x, y, z):
+	return math.sqrt(x**2+y**2+z**2)
 
 def quadsolve(a, b, c):
 	disc = math.sqrt(b*b-4*a*c)
@@ -182,7 +174,6 @@ def cross(a, b):
 
 def dot(a, b):
 	return sum(p*q for p,q in zip(a, b))
-
 
 class Residue:
 	#string_name is the three letter amino acid identifier
@@ -230,56 +221,48 @@ class Residue:
 			print 'Cannot correct residue %d with no alpha carbon.' % self.position
 			return False
 		else:
-			ca = self.atom_dict['CA']
-			n = self.atom_dict['N']
-			c = self.atom_dict['C']
-			cos_angle = math.cos(109.5)
-			can_vector = (n.x-ca.x, n.y-ca.y, n.z-ca.z)
-			(can.x, can.y, can.z) = can_vector
-			cac_vector = (c.x-ca.x, c.y-ca.y, c.z-ca.z)
-			(cac.x, cac.y, cac.z) = cac_vector
-
-			n = magnitude(can_vector)
-			m = magnitude(cac_vector)
-
-			k1 = m*m - m*n*cac.x/can.x
-			k2 = cac.y - cac.x*can.y/can.x
-			k3 = cac.z - cac.x*can.z/can.x
-			k13 = k1/k2
-			k23 = k2/k3
-			
-			kappa = m**2*(1 - n**2/can.x**2)
-			alpha = (1 + can.y**2/can.x**2)
-			beta = (1 + can.z**2/can.x**2)
-			gamma  = 2*can.y/can.x**2
-			delta  = 2*can.y*m*n/can.x**2
-			epsilon  = 2*can.z*m*n/can.x**2
-
-			a = alpha + beta*k23**2 - gamma*k23
-			b = -beta*k13*k23 + gamma*k13 + delta - epsilon*k23
-			c = beta*k13**2 + epsilon*k13 - kappa
-
-			y = solve(a,b,c)
-			z = (k13-k23*y[0], k13-k23*y[1])
-			x = (m*n/can.x - can.y/can.x*y[0] - can.z/can.x*z[0], m*n/can.x - can.y/can.x*y[1] - can.z/can.x*z[1])
-
-			cb = (x[0], y[0], z[0])
-			cacb_vector = (cb[0]-ca.x, cb[1]-ca.y, cb[2]-ca.z)
-			cross = cross_product(ccab_vector, can_vector)
-			dot = dot_product(cross, cac_vector)/(magnitude(cross)*m)
-			
-			atom = Atom('CB', x[0], y[0], z[0]) if dot > 0 else Atom('CB', x[1], y[1], z[1])
-			self.atom_dict['CB'] = atom
-			self.atoms.append(atom)
-			print 'Corrected residue %d by adding CB' % self.position
-			return True
+			#uses vector analysis to place CB in correct tetrahedral place
+			#	according to coordinate geometry/SP3 CA hybridization
+		ca_n = (p1x-p2x,p1y-p2y,p1z-p2z)
+		ca_c = (p3x-p2x,p3y-p2y,p3z-p2z)
+		d_can = magnitude(*ca_n)
+		d_cac = magnitude(*ca_c)
+	
+		def equations(x):
+			c = math.cos(math.radians(109.5))
+			out = [ca_n[0]*x[0]+ca_n[1]*x[1]+ca_n[2]*x[2]-d_can*d_cac*c]
+			out.append(ca_c[0]*x[0]+ca_c[1]*x[1]+ca_c[2]*x[2]-d_cac*d_cac*c)
+			out.append(x[0]**2+x[1]**2+x[2]**2-d_can*d_cac)
+			return out
+	
+		init1 = [p2x+1,p2y,p2z]
+		init2 = [p2x-1,p2y,p2z]
+		ca_x_1 = fsolve(equations, init1)
+		ca_x_2 = fsolve(equations, init2)
+	
+		if all(ca_x_1 == ca_x_2):
+			init1 = [p2x,p2y+1,p2z]
+			init2 = [p2x,p2y-1,p2z]
+			ca_x_1 = fsolve(equations, init1)
+			ca_x_2 = fsolve(equations, init2)
+	
+		product = cross(ca_x_1, ca_n)
+		product = dot(product, ca_c)
+	
+		x_vec = ca_x_1 if product > 1 else ca_x_2
+	
+		atom = Atom('CB', p2x+x_vec[0], p2y+x_vec[1], p2z+x_vec[2], 0)
+		self.atom_dict['CB'] = atom
+		self.atoms.append(atom)
+		print 'Corrected residue %d by adding CB' % self.position
+		return True
 		
 		
 #NEW VERSION:
-#       Outputs list of Residues()
+#	   Outputs list of Residues()
 #OLD VERSION:
-#       Creates a list with information for each residue:
-#       e.g for each residue: [[1, ''], '16', [['CA', 'CB', 'OG1', 'CG2'], [[21.142, -19.229, 4.185], [21.957, -18.596, 5.322], [23.023, 17.818, 4.773], [22.547, -19.67, 6.206]]]]
+#	   Creates a list with information for each residue:
+#	   e.g for each residue: [[1, ''], '16', [['CA', 'CB', 'OG1', 'CG2'], [[21.142, -19.229, 4.185], [21.957, -18.596, 5.322], [23.023, 17.818, 4.773], [22.547, -19.67, 6.206]]]]
 def get_pdb_info(pdb_path):
 
 	info = list()
