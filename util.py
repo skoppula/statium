@@ -223,39 +223,43 @@ class Residue:
 		else:
 			#uses vector analysis to place CB in correct tetrahedral place
 			#	according to coordinate geometry/SP3 CA hybridization
-		ca_n = (p1x-p2x,p1y-p2y,p1z-p2z)
-		ca_c = (p3x-p2x,p3y-p2y,p3z-p2z)
-		d_can = magnitude(*ca_n)
-		d_cac = magnitude(*ca_c)
+			self.atom_dict['N'] = (p1x, p1y, p1z)
+			self.atom_dict['CA'] = (p2x, p2y, p2z)
+			self.atom_dict['CB'] = (p3x, p3y, p3z)
+
+			ca_n = (p1x-p2x,p1y-p2y,p1z-p2z)
+			ca_c = (p3x-p2x,p3y-p2y,p3z-p2z)
+			d_can = magnitude(*ca_n)
+			d_cac = magnitude(*ca_c)
 	
-		def equations(x):
-			c = math.cos(math.radians(109.5))
-			out = [ca_n[0]*x[0]+ca_n[1]*x[1]+ca_n[2]*x[2]-d_can*d_cac*c]
-			out.append(ca_c[0]*x[0]+ca_c[1]*x[1]+ca_c[2]*x[2]-d_cac*d_cac*c)
-			out.append(x[0]**2+x[1]**2+x[2]**2-d_can*d_cac)
-			return out
+			def equations(x):
+				c = math.cos(math.radians(109.5))
+				out = [ca_n[0]*x[0]+ca_n[1]*x[1]+ca_n[2]*x[2]-d_can*d_cac*c]
+				out.append(ca_c[0]*x[0]+ca_c[1]*x[1]+ca_c[2]*x[2]-d_cac*d_cac*c)
+				out.append(x[0]**2+x[1]**2+x[2]**2-d_can*d_cac)
+				return out
 	
-		init1 = [p2x+1,p2y,p2z]
-		init2 = [p2x-1,p2y,p2z]
-		ca_x_1 = fsolve(equations, init1)
-		ca_x_2 = fsolve(equations, init2)
-	
-		if all(ca_x_1 == ca_x_2):
-			init1 = [p2x,p2y+1,p2z]
-			init2 = [p2x,p2y-1,p2z]
+			init1 = [p2x+1,p2y,p2z]
+			init2 = [p2x-1,p2y,p2z]
 			ca_x_1 = fsolve(equations, init1)
 			ca_x_2 = fsolve(equations, init2)
 	
-		product = cross(ca_x_1, ca_n)
-		product = dot(product, ca_c)
+			if all(ca_x_1 == ca_x_2):
+				init1 = [p2x,p2y+1,p2z]
+				init2 = [p2x,p2y-1,p2z]
+				ca_x_1 = fsolve(equations, init1)
+				ca_x_2 = fsolve(equations, init2)
 	
-		x_vec = ca_x_1 if product > 1 else ca_x_2
+			product = cross(ca_x_1, ca_n)
+			product = dot(product, ca_c)
 	
-		atom = Atom('CB', p2x+x_vec[0], p2y+x_vec[1], p2z+x_vec[2], 0)
-		self.atom_dict['CB'] = atom
-		self.atoms.append(atom)
-		print 'Corrected residue %d by adding CB' % self.position
-		return True
+			x_vec = ca_x_1 if product > 1 else ca_x_2
+		
+			atom = Atom('CB', p2x+x_vec[0], p2y+x_vec[1], p2z+x_vec[2], 0)
+			self.atom_dict['CB'] = atom
+			self.atoms.append(atom)
+			print 'Corrected residue %d by adding CB' % self.position
+			return True
 		
 		
 #NEW VERSION:

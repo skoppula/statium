@@ -29,7 +29,7 @@ def statium(in_res, in_pdb, in_pdb_lib, in_ip_lib, out_dir, ip_cutoff_dist, matc
 	
 	if verbose: print 'Preparing directory folders...'
 	lib_pdbs = [os.path.join(in_pdb_lib, pdb) for pdb in os.listdir(in_pdb_lib)]
-	if not os.path.exists(out_dir): os.mkdir(out_dir)
+	if not os.path.exists(out_dir): os.makedirs(out_dir)
 
 	if verbose: print 'Starting STATUM analysis...' 
 	tic = timeit.default_timer()
@@ -66,7 +66,7 @@ def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, matc
 		if pdbI[p2].stubIntact:
 			p2_base_chain = [pdbI[p2].atom_dict['CA'], pdbI[p2].atom_dict['CB']]
 			distances[(p1,p2)] = filter_sc_dists(pdbI[p1].atoms, p2_base_chain, distance_matrix[p1][p2-p1-1]) 
-		elif pdbI[p2].string_name = 'GLY':
+		elif pdbI[p2].string_name == 'GLY':
 			pdbI[p2].correct()
 			p2_base_chain = [pdbI[p2].atom_dict['CA'], pdbI[p2].atom_dict['CB']]
 			distances[(p1,p2)] = filter_sc_dists(pdbI[p1].atoms, p2_base_chain, distance_matrix[p1][p2-p1-1]) 

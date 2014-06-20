@@ -39,7 +39,7 @@ If you fail to include a --position_pairs argument, the function will assume you
 `run_statium`:<br>
 <i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --in_pdb_lib --in_ip_lib) [--out_dir --ip_dist_cutoff --matching_res_dist_cutoffs --counts]`<br>
 
-<i>Example</i> `python wrapper.py run_statium --in_pdb=testing/1mph_AHL_new.pdb --in_res=testing/1mph_AHL.res --in_pdb_lib=testing/culled90/ --in_ip_lib=testing/ip_90_wGLY/` <br>
+<i>Example</i> `python wrapper.py run_statium --in_pdb=testing/sarah-test/1mhp_AHL_new.pdb --in_res=testing/sarah-test/1mhp_AHL.res --pdb_lib=data/culled_90/ --ip_lib=data/ip_90_wGLY/` <br>
 
 <i>Specifics</i>: Takes in a renumbered PDB file (see `renumber`), the directory of the total protein library with all protein PDBs (--in_pdb_lib), and the directory containing a list of precomputed interacting pairs for each PDB in the protein library (--in_ip_lib).
 
