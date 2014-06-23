@@ -27,7 +27,7 @@ from reformat import generate_random_seqs
 
 def statium(in_res, in_pdb, in_pdb_lib, in_ip_lib, out_dir, ip_cutoff_dist, match_cutoff_dists, counts, verbose):
 	
-	if verbose: print 'Preparing directory folders...'
+	if verbose: print '\nPreparing directory folders...'
 	lib_pdbs = [os.path.join(in_pdb_lib, pdb) for pdb in os.listdir(in_pdb_lib)]
 	if not os.path.exists(out_dir): os.makedirs(out_dir)
 
@@ -62,12 +62,10 @@ def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, matc
 	if verbose: print 'Storing distance information for each interacting pair...'
 	distances = dict() 
 	for (p1,p2) in use_indices:
-		print p1,p2
-		if pdbI[p2].stubIntact:
-			p2_base_chain = [pdbI[p2].atom_dict['CA'], pdbI[p2].atom_dict['CB']]
-			distances[(p1,p2)] = filter_sc_dists(pdbI[p1].atoms, p2_base_chain, distance_matrix[p1][p2-p1-1]) 
-		elif pdbI[p2].string_name == 'GLY':
+		if pdbI[p2].string_name == 'GLY':
 			pdbI[p2].correct()
+			distance_matrix[p1][p2-p1-1] = pdbI[p1].distancesTo(pdbI[p2])
+		if pdbI[p2].stubIntact:
 			p2_base_chain = [pdbI[p2].atom_dict['CA'], pdbI[p2].atom_dict['CB']]
 			distances[(p1,p2)] = filter_sc_dists(pdbI[p1].atoms, p2_base_chain, distance_matrix[p1][p2-p1-1]) 
 		else:
@@ -85,9 +83,12 @@ def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, matc
 		lib_ip_path = os.path.join(in_ip_lib, os.path.split(lib_pdb_path)[1].split('.')[0] + '.ip')
 		lib_pdb = get_pdb_info(lib_pdb_path)	
 		lib_ips = get_IPs(lib_ip_path)
+		#NOTE: JOE'S IP LIBRARY STARTS COUNTING RESIDUES AT 1 ... so when using it as index, need to subtract 1
 		lib_distance_matrix = get_distance_matrix_ip(lib_pdb, lib_ips)
 
 		for (lib_pos1, lib_pos2) in lib_ips:
+			lib_pos1 -= 1
+			lib_pos2 -= 1
 
 			if lib_pos2 - lib_pos1 <= 4: continue
 			
@@ -104,14 +105,12 @@ def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, matc
 				if lib_pdb[lib_pos2].stubIntact and lib_AA1==AA1:
 					p2_base_chain = [lib_pdb[lib_pos2].atom_dict['CA'], lib_pdb[lib_pos2].atom_dict['CB']] 
 					lib_dist = filter_sc_dists(lib_pdb[lib_pos1].atoms, p2_base_chain, lib_distance_matrix[lib_pos1][lib_pos2], "forward")
-					print distances[(pos1,pos2)], '1'
 					if matching_sidechain_pair(distances[(pos1,pos2)], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
 						counts[j][lib_AA2] += 1
 						
 				if lib_pdb[lib_pos1].stubIntact and lib_AA2==AA1:
 					p1_base_chain = [lib_pdb[lib_pos1].atom_dict['CA'], lib_pdb[lib_pos1].atom_dict['CB']] 
 					lib_dist = filter_sc_dists(p1_base_chain, lib_pdb[lib_pos2].atoms, lib_distance_matrix[lib_pos1][lib_pos2], "backward") 
-					print distances[(pos1,pos2)]
 					if matching_sidechain_pair(distances[(pos1,pos2)], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
 						counts[j][lib_AA1] += 1
 	
@@ -158,13 +157,16 @@ def determine_probs(totals, counts, out_dir, verbose):
 
 	
 def matching_sidechain_pair(dists1, dists2, cutoff):
+
+	#print dists1[dists1.keys()[0]],len(dists1[dists1.keys()[0]])
+	#print dists2[dists2.keys()[0]],len(dists2)
   
 	sd = 0.0
 	count = 0
 
 	for atom_pair1 in dists1:
 		for atom_pair2 in dists2:
-			if atom_pair1 == atom_pair2:
+			if atom_pair1[0].sameName(atom_pair2[0]) and atom_pair1[1].sameName(atom_pair2[1]):
 				sd += (dists1[atom_pair1]-dists2[atom_pair2])**2
 				count += 1
 
@@ -188,9 +190,11 @@ def get_distance_matrix(pdb):
 def get_distance_matrix_ip(pdb, ips):
 	
 	N = len(pdb)
-	distance_matrix = [[None for i in range(N)] for j in range(N)]
+	distance_matrix = [[None]*N for j in range(N)]
 	
 	for (i,j) in ips:
+		i -= 1
+		j -= 1
 		distance_matrix[i][j] = pdb[i].distancesTo(pdb[j])
 			
 	return distance_matrix
@@ -215,7 +219,7 @@ def filter_sc_dists(atomsA, atomsB, interatomic_distances, direction = 'forward'
 		pairs = list(itertools.product(atomsA, atomsB))
 	else:
 		pairs = list(itertools.product(atomsB, atomsA))
-	return {pair: interatomic_distances for pair in pairs}
+	return {pair: interatomic_distances[pair] for pair in pairs}
 	
 
 def check_cutoff(residue_pairs, cutoff):

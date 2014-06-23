@@ -1,6 +1,8 @@
 import bidict
 import random
 import math
+import warnings
+from scipy.optimize import fsolve
 
 def read_results(results_file, valueIsNum=True):
 	results = filelines2deeplist(results_file, skipComments=True, useTuples=True, skipEmptyLines=True)
@@ -161,6 +163,12 @@ class Atom:
 	def __str__(self):
 		return '(' + self.name + ', ' + str(self.num) + ',' + str(self.coordinates) + ')'
 
+	def __repr__(self):
+		return self.name + '[' + str(self.num) + ']'
+
+	def sameName(self, other):
+		return True if self.name == other.name else False
+
 
 def magnitude(x, y, z):
 	return math.sqrt(x**2+y**2+z**2)
@@ -217,15 +225,15 @@ class Residue:
 		return '(' + self.string_name + ', ' + str(self.position) + ', ' + self.chainID + ')'
 
 	def correct(self):
-		if 'CA' not in self.atom_names:
-			print 'Cannot correct residue %d with no alpha carbon.' % self.position
+		if 'CA' not in self.atom_names or 'C' not in self.atom_names or 'N' not in self.atom_names:
+			print 'Cannot correct residue %s with no alpha carbon, nitrogen, or secondary carbon.' % self.position
 			return False
 		else:
 			#uses vector analysis to place CB in correct tetrahedral place
 			#	according to coordinate geometry/SP3 CA hybridization
-			self.atom_dict['N'] = (p1x, p1y, p1z)
-			self.atom_dict['CA'] = (p2x, p2y, p2z)
-			self.atom_dict['CB'] = (p3x, p3y, p3z)
+			(p1x, p1y, p1z) = self.atom_dict['N'].coordinates
+			(p2x, p2y, p2z) = self.atom_dict['CA'].coordinates
+			(p3x, p3y, p3z) = self.atom_dict['C'].coordinates
 
 			ca_n = (p1x-p2x,p1y-p2y,p1z-p2z)
 			ca_c = (p3x-p2x,p3y-p2y,p3z-p2z)
@@ -241,14 +249,18 @@ class Residue:
 	
 			init1 = [p2x+1,p2y,p2z]
 			init2 = [p2x-1,p2y,p2z]
-			ca_x_1 = fsolve(equations, init1)
-			ca_x_2 = fsolve(equations, init2)
+			with warnings.catch_warnings():
+				warnings.simplefilter("ignore")
+				ca_x_1 = fsolve(equations, init1)
+				ca_x_2 = fsolve(equations, init2)
 	
 			if all(ca_x_1 == ca_x_2):
 				init1 = [p2x,p2y+1,p2z]
 				init2 = [p2x,p2y-1,p2z]
-				ca_x_1 = fsolve(equations, init1)
-				ca_x_2 = fsolve(equations, init2)
+				with warnings.catch_warnings():
+					warnings.simplefilter("ignore")
+					ca_x_1 = fsolve(equations, init1)
+					ca_x_2 = fsolve(equations, init2)
 	
 			product = cross(ca_x_1, ca_n)
 			product = dot(product, ca_c)
@@ -258,7 +270,8 @@ class Residue:
 			atom = Atom('CB', p2x+x_vec[0], p2y+x_vec[1], p2z+x_vec[2], 0)
 			self.atom_dict['CB'] = atom
 			self.atoms.append(atom)
-			print 'Corrected residue %d by adding CB' % self.position
+			self.stubIntact = True
+			print '\tCorrected residue %s by adding CB' % self.position
 			return True
 		
 		
