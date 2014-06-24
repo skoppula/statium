@@ -25,6 +25,14 @@ from util import get_pdb_info
 from reformat import get_orig_seq
 from reformat import generate_random_seqs
 
+def preprocess(in_dir, out_dir):
+	if(verbose): print "Processing library .pdb: " + lib_pdb_path + "\t (" + str(i) + " out of " + str(len(lib_pdbs)) + ")"
+		lib_ip_path = os.path.join(in_ip_lib, os.path.split(lib_pdb_path)[1].split('.')[0] + '.ip')
+		lib_pdb = get_pdb_info(lib_pdb_path)	
+		lib_ips = get_IPs(lib_ip_path)
+		#NOTE: JOE'S IP LIBRARY STARTS COUNTING RESIDUES AT 1 ... so when using it as index, need to subtract 1
+		lib_distance_matrix = get_distance_matrix_ip(lib_pdb, lib_ips)
+
 def statium(in_res, in_pdb, in_pdb_lib, in_ip_lib, out_dir, ip_cutoff_dist, match_cutoff_dists, counts, verbose):
 	
 	if verbose: print '\nPreparing directory folders...'
@@ -79,12 +87,7 @@ def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, matc
 	
 	for (i, lib_pdb_path) in enumerate(lib_pdbs):	
 
-		if(verbose): print "Processing library .pdb: " + lib_pdb_path + "\t (" + str(i) + " out of " + str(len(lib_pdbs)) + ")"
-		lib_ip_path = os.path.join(in_ip_lib, os.path.split(lib_pdb_path)[1].split('.')[0] + '.ip')
-		lib_pdb = get_pdb_info(lib_pdb_path)	
-		lib_ips = get_IPs(lib_ip_path)
-		#NOTE: JOE'S IP LIBRARY STARTS COUNTING RESIDUES AT 1 ... so when using it as index, need to subtract 1
-		lib_distance_matrix = get_distance_matrix_ip(lib_pdb, lib_ips)
+
 
 		for (lib_pos1, lib_pos2) in lib_ips:
 			lib_pos1 -= 1
@@ -195,7 +198,12 @@ def get_distance_matrix_ip(pdb, ips):
 	for (i,j) in ips:
 		i -= 1
 		j -= 1
-		distance_matrix[i][j] = pdb[i].distancesTo(pdb[j])
+		try:
+			distance_matrix[i][j] = pdb[i].distancesTo(pdb[j])
+		except:
+			print len(pdb)
+			print pdb
+			print i,j,N
 			
 	return distance_matrix
 	

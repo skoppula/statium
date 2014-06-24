@@ -3,6 +3,7 @@ import ast
 from docopt import docopt
 from reformat import renumber
 from reformat import create_res
+from analysis import proprocess
 from analysis import statium
 from analysis import calc_seq_energy
 from reformat import get_orig_seq
@@ -23,6 +24,7 @@ def main(argv):
 	helpdoc =   	"""usage: wrapper.py precompute (--in_pdb --in_pdb_lib --in_ip_lib) [--out_dir] [--noverbose]
 				wrapper.py renumber --in_pdb=A [--out_pdb=B --chains=C --SRN=1 --SAN=1] [--noverbose]
 				wrapper.py create_res (--in_pdb_orig=A --in_pdb_renum=B) [--out_res=C --position_pairs=D] [--noverbose]
+				wrapper.py preprocess (--in_dir=A) [-out_dir=B] [--noverbose]
 				wrapper.py run_statium (--in_res=A --in_pdb=B --pdb_lib=C --ip_lib=D) [--out=E --ip_dist_cutoff=F --matching_res_dist_cutoffs=G --counts] [--noverbose]
 				wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG] [-z | --zscore] [-p | --percentile] [--histogram] [--noverbose]
 				wrapper.py get_orig_seq (IN_PDB_ORIG) [--noverbose]
@@ -44,6 +46,9 @@ def main(argv):
 				--in_pdb_renum=B	Input PDB file path (renumbered)
 				--out_res=C	Output RES file path
 				--position_pairs=D	Positions to include in the ligand
+
+				--in_dir=A	Directory containing library PDBs
+				--out_dir=B	Output directory for JSON objects
 
 				--in_res=A	Input .res file path
 				--in_pdb=B	Input renumbered PDB path
@@ -123,6 +128,14 @@ def main(argv):
 		if(verbose): print("Creating .res file using: " + pdb_orig + " and " + pdb_renum) 
 		create_res(pdb_orig, pdb_renum, res, positions)
 		if(verbose): print("Done. .res file: " + res)
+
+	elif(options['preprocess']):
+		in_dir = options['--in_dir']
+		out_dir = options['--out_dir'] if options['--out_dir'] else in_dir + '_JSON_preprocessed'
+
+		if(verbose): print 'Preprocessing library: %s' % in_dir
+		preprocess(in_dir, out_dir)
+		if(verbose): print 'Done: %s' % out_dir
 
 	
 	elif(options['run_statium']):

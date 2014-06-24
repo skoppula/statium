@@ -224,6 +224,9 @@ class Residue:
 	def __str__(self):
 		return '(' + self.string_name + ', ' + str(self.position) + ', ' + self.chainID + ')'
 
+	def __repr__(self):
+		return self.string_name + '[' + str(self.position) + ']'
+
 	def correct(self):
 		if 'CA' not in self.atom_names or 'C' not in self.atom_names or 'N' not in self.atom_names:
 			print 'Cannot correct residue %s with no alpha carbon, nitrogen, or secondary carbon.' % self.position
@@ -302,17 +305,30 @@ def get_pdb_info(pdb_path):
 		if line[0:4] == 'ATOM' or (line[0:6] == 'HETATM' and line[17:20] == 'MSE'):
 			name = line[12:16].strip()
 			if name ==  'N':
-				if lines[i+1][12:16].strip() == 'CA':
-					if not first_run: info.append(Residue(curr_name, curr_position, curr_chainID, curr_atoms))
-					first_run = False
-					curr_found_atoms.add(name)
-					x = float(line[30:38].strip())
-					y = float(line[38:46].strip())
-					z = float(line[46:54].strip())			
-					curr_atoms = [Atom(name, x, y, z, atom_count)]
-					atom_count += 1
-					continue
-	
+				try:
+					ca_check1 = lines[i+1][12:16].strip() == 'CA' and line[22:28].strip()==lines[i+1][22:28].strip()
+					ca_check2 = lines[i+3][12:16].strip() == 'CA' and line[22:28].strip()==lines[i+3][22:28].strip()
+					if ca_check1 or ca_check2:
+						#only add to residue list if there are actual values in curr vars
+						#	and circumvent weird case where first residue has two N's
+						#	for two different conformations
+						if not first_run and curr_name:
+							info.append(Residue(curr_name, curr_position, curr_chainID, curr_atoms))
+						first_run = False
+						curr_found_atoms.add(name)
+						x = float(line[30:38].strip())
+						y = float(line[38:46].strip())
+						z = float(line[46:54].strip())			
+						curr_position = line[22:28].strip()
+						curr_chainID = line[21:22].strip()
+						curr_atoms = [Atom(name, x, y, z, atom_count)]
+						atom_count += 1
+
+						continue
+
+				except IndexError:
+					continue	
+		
 			if name == 'CA':
 				try:
 					curr_position = line[22:28].strip()
@@ -328,7 +344,7 @@ def get_pdb_info(pdb_path):
 				y = float(line[38:46].strip())
 				z = float(line[46:54].strip())
 				name = 'CA'
-				curr_atoms .append(Atom(name, x, y, z, atom_count))
+				curr_atoms.append(Atom(name, x, y, z, atom_count))
 				atom_count += 1
 
 				curr_possible_atoms = get_sidechain_atoms(AA2char(curr_name))
