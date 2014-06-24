@@ -5,6 +5,7 @@ import heapq
 import itertools
 import timeit
 import itertools
+import pickle
 from operator import itemgetter
 from util import filelines2list
 from util import list2file
@@ -25,28 +26,50 @@ from util import get_pdb_info
 from reformat import get_orig_seq
 from reformat import generate_random_seqs
 
-def preprocess(in_dir, out_dir):
-	if(verbose): print "Processing library .pdb: " + lib_pdb_path + "\t (" + str(i) + " out of " + str(len(lib_pdbs)) + ")"
-		lib_ip_path = os.path.join(in_ip_lib, os.path.split(lib_pdb_path)[1].split('.')[0] + '.ip')
-		lib_pdb = get_pdb_info(lib_pdb_path)	
-		lib_ips = get_IPs(lib_ip_path)
-		#NOTE: JOE'S IP LIBRARY STARTS COUNTING RESIDUES AT 1 ... so when using it as index, need to subtract 1
-		lib_distance_matrix = get_distance_matrix_ip(lib_pdb, lib_ips)
+def preprocess(in_dir, out_dir, ip_dist_cutoff, verbose):
+	lib_pdbs = [os.path.join(in_dir, pdb) for pdb in os.listdir(in_dir)]
 
-def statium(in_res, in_pdb, in_pdb_lib, in_ip_lib, out_dir, ip_cutoff_dist, match_cutoff_dists, counts, verbose):
+	for (i, lib_pdb_path) in enumerate(lib_pdbs):	
+		if(verbose): print "\nProcessing library .pdb: " + lib_pdb_path + "\t (" + str(i) + " out of " + str(len(lib_pdbs)) + ")"
+		lib_pdb = get_pdb_info(lib_pdb_path)	
+		pdbSize = len(lib_pdb)
+		
+		if verbose: print '\tComputing inter-atomic distances...'
+		distance_matrix = get_distance_matrix(lib_pdb)
+	
+		#NOTE (IN OLD VERSION...NOT NOW!):
+		#	JOE'S IP LIBRARY STARTS COUNTING RESIDUES AT 1
+		#	so when Joe's as index, need to subtract 1
+		if verbose: print '\n\tFinding interacting pairs...'
+		lib_ips = set() 
+		for i in xrange(pdbSize):
+			for j in xrange(i+1, pdbSize):
+				if check_cutoff(distance_matrix[i][j-i-1], ip_dist_cutoff):
+					lib_ips.add((i, j))
+
+		lib_distance_matrix = get_distance_matrix_ip(lib_pdb, lib_ips)
+		
+		if verbose: print '\tPreparing directory folders...'
+		if not os.path.exists(out_dir): os.makedirs(out_dir)
+
+		if verbose: print '\tPrinting JSON file...'
+		out_path = os.path.join(out_dir, os.path.split(lib_pdb_path)[1].split('.')[0] + '.pickle') 
+		with open(out_path,'w') as outfile:
+			pickle.dump((lib_pdb,lib_ips,lib_distance_matrix),outfile)
+
+def statium(in_res, in_pdb, in_dir, out_dir, ip_cutoff_dist, match_cutoff_dists, counts, verbose):
 	
 	if verbose: print '\nPreparing directory folders...'
-	lib_pdbs = [os.path.join(in_pdb_lib, pdb) for pdb in os.listdir(in_pdb_lib)]
 	if not os.path.exists(out_dir): os.makedirs(out_dir)
 
 	if verbose: print 'Starting STATUM analysis...' 
 	tic = timeit.default_timer()
-	sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_cutoff_dist, match_cutoff_dists, counts, verbose)
+	sidechain(in_res, in_pdb, in_dir, out_dir, ip_cutoff_dist, match_cutoff_dists, counts, verbose)
 	toc = timeit.default_timer()
 	if verbose: print 'Done in ' + str((tic-toc)/60) + 'minutes! Output in: ' + out_dir
 
 
-def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, match_dist_cutoffs, print_counts, verbose):
+def sidechain(in_res, in_pdb, in_preprocess_dir, out_dir, ip_dist_cutoff, match_dist_cutoffs, print_counts, verbose):
 	
 	if verbose: print 'Extracting residue position from ' + in_res + '...'
 	res_lines = filelines2list(in_res)
@@ -85,14 +108,12 @@ def sidechain(in_res, in_pdb, lib_pdbs, in_ip_lib, out_dir, ip_dist_cutoff, matc
 	#stores total number of 'matching sidechain'
 	counts = [[0 for j in range(20)] for i in range(num_ips)]  
 	
-	for (i, lib_pdb_path) in enumerate(lib_pdbs):	
-
-
+	lib_pdb_paths = [os.path.join(in_preprocess_dir, pdb) for pdb in os.listdir(in_preprocess_dir)]
+	for (i, lib_pdb_path) in enumerate(lib_pdb_paths):	
+		with open(lib_pdb_path, 'r') as infile:
+			(lib_pdb,lib_ips,lib_distance_matrix) = pickle.load(infile)
 
 		for (lib_pos1, lib_pos2) in lib_ips:
-			lib_pos1 -= 1
-			lib_pos2 -= 1
-
 			if lib_pos2 - lib_pos1 <= 4: continue
 			
 			(lib_AA1, lib_AA2) = (lib_pdb[lib_pos1].int_name, lib_pdb[lib_pos2].int_name)
@@ -144,7 +165,7 @@ def determine_probs(totals, counts, out_dir, verbose):
 	if not os.path.exists(out_dir):
 		os.mkdir(out_dir)
 	
-	lib_sum= float(sum(totals))
+	lib_sum = float(sum(totals))
 	lib_total_probs = [x/lib_sum for x in totals]
 	
 	for (i, pair) in enumerate(use_indices):
@@ -178,10 +199,14 @@ def matching_sidechain_pair(dists1, dists2, cutoff):
 def get_distance_matrix(pdb):
 	N = len(pdb)
 	distance_matrix = [[0]*(N-i-1) for i in xrange(N)]
-	print 'Out of %d residues finished:' % N
+	print '\tOut of %d residues finished:' % N
+	first = True
 	for i in xrange(N):
-		print(i),
-		sys.stdout.flush()
+		if i % 5 == 0:
+			if first: print '\t',
+			first = False
+			print str(i),
+			sys.stdout.flush()
 		for j in xrange(i+1, N):
 			distance_matrix[i][j-i-1] = pdb[i].distancesTo(pdb[j])
 	
@@ -196,8 +221,6 @@ def get_distance_matrix_ip(pdb, ips):
 	distance_matrix = [[None]*N for j in range(N)]
 	
 	for (i,j) in ips:
-		i -= 1
-		j -= 1
 		try:
 			distance_matrix[i][j] = pdb[i].distancesTo(pdb[j])
 		except:
@@ -207,16 +230,6 @@ def get_distance_matrix_ip(pdb, ips):
 			
 	return distance_matrix
 	
-#gets interacting pairs from .ip file
-def get_IPs(ip_file):
-	lines = filelines2list(ip_file)
-	return map(extractIP, lines)
-
-def extractIP(line):
-	items = line.strip().split()
-	(pos1, pos2) = (int(items[0]), int(items[1]))
-	return (pos1, pos2)
-
 #OLD VERSION: select_sidechain_distances
 #New version: returns a dictionary, subset of the dictionary at
 #		location in distances matrix defined by an interacting pair (R1, R2)

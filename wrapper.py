@@ -3,7 +3,7 @@ import ast
 from docopt import docopt
 from reformat import renumber
 from reformat import create_res
-from analysis import proprocess
+from analysis import preprocess
 from analysis import statium
 from analysis import calc_seq_energy
 from reformat import get_orig_seq
@@ -21,11 +21,10 @@ from util import filelines2list
 
 def main(argv):
 	
-	helpdoc =   	"""usage: wrapper.py precompute (--in_pdb --in_pdb_lib --in_ip_lib) [--out_dir] [--noverbose]
-				wrapper.py renumber --in_pdb=A [--out_pdb=B --chains=C --SRN=1 --SAN=1] [--noverbose]
+	helpdoc =   	"""usage: wrapper.py renumber (--in_pdb=A) [--out_pdb=B --chains=C --SRN=1 --SAN=1] [--noverbose]
 				wrapper.py create_res (--in_pdb_orig=A --in_pdb_renum=B) [--out_res=C --position_pairs=D] [--noverbose]
-				wrapper.py preprocess (--in_dir=A) [-out_dir=B] [--noverbose]
-				wrapper.py run_statium (--in_res=A --in_pdb=B --pdb_lib=C --ip_lib=D) [--out=E --ip_dist_cutoff=F --matching_res_dist_cutoffs=G --counts] [--noverbose]
+				wrapper.py preprocess (--in_dir=A) [--out_dir=B --ip_dist_cutoff=C] [--noverbose]
+				wrapper.py run_statium (--in_res=A --in_pdb=B --pdb_lib=C) [--out=D --ip_dist_cutoff=E --matching_res_dist_cutoffs=F --counts] [--noverbose]
 				wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG] [-z | --zscore] [-p | --percentile] [--histogram] [--noverbose]
 				wrapper.py get_orig_seq (IN_PDB_ORIG) [--noverbose]
 				wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE] [--TOTAL_PROTEIN_LIBRARY] [--noverbose]
@@ -36,6 +35,7 @@ def main(argv):
 				wrapper.py [-i] plot_roc_curve (IN_RES RESULTS_FILE TRUE_CLASS) [--IN_PDB_ORIG] [--CLASS_RESULTS] [--noverbose]
 				wrapper.py [-h | --help]
 			Options:
+
 				--in_pdb=A	Input PDB file path
 				--out_pdb=B	Output PDB file path
 				--chains=C	Chosen ligand chains
@@ -49,14 +49,14 @@ def main(argv):
 
 				--in_dir=A	Directory containing library PDBs
 				--out_dir=B	Output directory for JSON objects
+				--ip_dist_cutoff=C	Threshold for interacting pair designation
 
 				--in_res=A	Input .res file path
 				--in_pdb=B	Input renumbered PDB path
-				--pdb_lib=C	Input PDB library directory
-				--ip_lib=D	Input interacting pairs library
-				--out=E		Output directory
-				--ip_dist_cutoff	Threshold for interacting pair determination
-				--matching_res_dist_cutoffs	Thresholds for matching IP determination
+				--pdb_lib=C	Input preprocessed PDB library directory
+				--out=D		Output directory
+				--ip_dist_cutoff=E	Threshold for interacting pair designation
+				--matching_res_dist_cutoffs=F	Thresholds for matching IP designation
 			"""
 	
 	options = docopt(helpdoc, argv, help = True, version = "3.0.0", options_first=False)
@@ -64,29 +64,7 @@ def main(argv):
 	zscores = options['-z'] or options['--zscore']
 	percentiles = options['-p'] or options['--percentile']
 	histogram = options['--histogram']
-   
-	if(options['precompute']):
-
-		in_pdb = options['--in_pdb']
-		in_ip_lib_dir = options['--in_ip_lib']
-		in_pdb_lib_dir = options['--in_pdb_lib']
-		out_dir = options['--out_dir'] if options['--out_dir'] is not None else in_pdb[:-4]
-		pdb_renumbered = in_pdb[:-4]+'_renumbered.pdb'
-		res = in_pdb[:-4]+'.res'
-
-		if(verbose): print("Renumbering file " + in_pdb)
-		renumber(1, 1, {'B'}, in_pdb, pdb_renumbered)
-		if(verbose): print("Finished reformatting PDB file into: " + pdb_renumbered)
-			
-		if(verbose): print("Creating .res file to store PDB's chain B positions: ")
-		create_res(in_pdb, pdb_renumbered, res)
-		if(verbose): print("Finished creating .res file: " + res)
-
-		if(verbose): print("Running STATIUM with: " + res + " " + in_pdb + " " + in_pdb_lib_dir + " " + in_ip_lib_dir)
-		statium_pipeline(res, pdb_renumbered, in_pdb_lib_dir, in_ip_lib_dir, out_dir, verbose)
-		if(verbose): print("Done. STATIUM probabilities in output directory: " + out_dir);
-			
-
+  
 	if(options['renumber']):
 		in_pdb = options['--in_pdb']
 		out_pdb = options['--out_pdb'] if options['--out_pdb'] is not None else in_pdb[:-4]+'_renumbered.pdb'
@@ -124,7 +102,6 @@ def main(argv):
 				else:
 					sys.exit('Invalid position pairs')	
 
-
 		if(verbose): print("Creating .res file using: " + pdb_orig + " and " + pdb_renum) 
 		create_res(pdb_orig, pdb_renum, res, positions)
 		if(verbose): print("Done. .res file: " + res)
@@ -132,9 +109,10 @@ def main(argv):
 	elif(options['preprocess']):
 		in_dir = options['--in_dir']
 		out_dir = options['--out_dir'] if options['--out_dir'] else in_dir + '_JSON_preprocessed'
+		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 6.0
 
 		if(verbose): print 'Preprocessing library: %s' % in_dir
-		preprocess(in_dir, out_dir)
+		preprocess(in_dir, out_dir, ip_dist, verbose)
 		if(verbose): print 'Done: %s' % out_dir
 
 	
@@ -142,7 +120,6 @@ def main(argv):
 		res = options['--in_res']
 		pdb = options['--in_pdb']
 		pdb_lib = options['--pdb_lib']
-		ip_lib = options['--ip_lib']
 		out_dir = options['--out'] if options['--out'] is not None else res[:-4]
 		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 6.0
 		
@@ -150,8 +127,8 @@ def main(argv):
 		match_dist = ast.literal_eval(options['--matching_res_dist_cutoffs']) if options['--matching_res_dist_cutoffs'] else default
 		count = True if options['--counts'] is not None else False 
 		
-		if(verbose): print("\nRunning STATIUM with: " + pdb + " " + res + " " + pdb_lib + " " + ip_lib)
-		statium(res, pdb, pdb_lib, ip_lib, out_dir, ip_dist, match_dist, count, verbose)
+		if(verbose): print("\nRunning STATIUM with: " + pdb + " " + res + " " + pdb_lib+ " " + ip_lib)
+		statium(res, pdb, pdb_lib, out_dir, ip_dist, match_dist, count, verbose)
 		if(verbose): print("Done. STATIUM probabilities in output directory: " + out_dir)
 
 	elif(options['calc_energy']):

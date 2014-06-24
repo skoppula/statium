@@ -163,8 +163,8 @@ class Atom:
 	def __str__(self):
 		return '(' + self.name + ', ' + str(self.num) + ',' + str(self.coordinates) + ')'
 
-	def __repr__(self):
-		return self.name + '[' + str(self.num) + ']'
+#	def __repr__(self):
+#		return self.name + '[' + str(self.num) + ']'
 
 	def sameName(self, other):
 		return True if self.name == other.name else False
@@ -224,8 +224,8 @@ class Residue:
 	def __str__(self):
 		return '(' + self.string_name + ', ' + str(self.position) + ', ' + self.chainID + ')'
 
-	def __repr__(self):
-		return self.string_name + '[' + str(self.position) + ']'
+#	def __repr__(self):
+#		return self.string_name + '[' + str(self.position) + ']'
 
 	def correct(self):
 		if 'CA' not in self.atom_names or 'C' not in self.atom_names or 'N' not in self.atom_names:
