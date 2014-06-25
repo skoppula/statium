@@ -2,7 +2,6 @@ import bidict
 import random
 import math
 import warnings
-from scipy.optimize import fsolve
 
 def read_results(results_file, valueIsNum=True):
 	results = filelines2deeplist(results_file, skipComments=True, useTuples=True, skipEmptyLines=True)
@@ -228,6 +227,7 @@ class Residue:
 #		return self.string_name + '[' + str(self.position) + ']'
 
 	def correct(self):
+		from scipy.optimize import fsolve
 		if 'CA' not in self.atom_names or 'C' not in self.atom_names or 'N' not in self.atom_names:
 			print 'Cannot correct residue %s with no alpha carbon, nitrogen, or secondary carbon.' % self.position
 			return False

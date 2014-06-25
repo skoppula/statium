@@ -52,7 +52,7 @@ def preprocess(in_dir, out_dir, ip_dist_cutoff, verbose):
 		if verbose: print '\tPreparing directory folders...'
 		if not os.path.exists(out_dir): os.makedirs(out_dir)
 
-		if verbose: print '\tPrinting JSON file...'
+		if verbose: print '\tPrinting PICKLE file...'
 		out_path = os.path.join(out_dir, os.path.split(lib_pdb_path)[1].split('.')[0] + '.pickle') 
 		with open(out_path,'w') as outfile:
 			pickle.dump((lib_pdb,lib_ips,lib_distance_matrix),outfile)
