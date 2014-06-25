@@ -26,36 +26,46 @@ from util import get_pdb_info
 from reformat import get_orig_seq
 from reformat import generate_random_seqs
 
+def get_dist_matrix_and_IPs(pdb, cutoff):
+	N = len(pdb)
+	distance_matrix = [[None]*(N-i-1) for i in xrange(N)]
+	lib_ips = set()
+	first = True
+	print '\tOut of %d residues finished:' % N
+	for i in xrange(N):
+		if i % 5 == 0:
+			if first:
+				sys.stdout.write('\t')
+				first = False
+			print i,
+			sys.stdout.flush()
+		for j in xrange(i+1, N):
+			result = pdb[i].filteredDistancesTo(pdb[j], cutoff)
+			if not result:
+				lib_ips.add((i,j))
+				distance_matrix[i][j-i-1] = result
+	return (distance_matrix, lib_ips)
+
 def preprocess(in_dir, out_dir, ip_dist_cutoff, verbose):
 	lib_pdbs = [os.path.join(in_dir, pdb) for pdb in os.listdir(in_dir)]
 
 	for (i, lib_pdb_path) in enumerate(lib_pdbs):	
 		if(verbose): print "\nProcessing library .pdb: " + lib_pdb_path + "\t (" + str(i) + " out of " + str(len(lib_pdbs)) + ")"
 		lib_pdb = get_pdb_info(lib_pdb_path)	
-		pdbSize = len(lib_pdb)
 		
-		if verbose: print '\tComputing inter-atomic distances...'
-		distance_matrix = get_distance_matrix(lib_pdb)
-	
 		#NOTE (IN OLD VERSION...NOT NOW!):
 		#	JOE'S IP LIBRARY STARTS COUNTING RESIDUES AT 1
 		#	so when Joe's as index, need to subtract 1
-		if verbose: print '\n\tFinding interacting pairs...'
-		lib_ips = set() 
-		for i in xrange(pdbSize):
-			for j in xrange(i+1, pdbSize):
-				if check_cutoff(distance_matrix[i][j-i-1], ip_dist_cutoff):
-					lib_ips.add((i, j))
+		if verbose: print '\tComputing inter-atomic distances and finding interacting pairs...'
+		(lib_distance_matrix, lib_ips) = get_dist_matrix_and_IPs(lib_pdb, ip_dist_cutoff)
 
-		lib_distance_matrix = get_distance_matrix_ip(lib_pdb, lib_ips)
-		
 		if verbose: print '\tPreparing directory folders...'
 		if not os.path.exists(out_dir): os.makedirs(out_dir)
 
 		if verbose: print '\tPrinting PICKLE file...'
 		out_path = os.path.join(out_dir, os.path.split(lib_pdb_path)[1].split('.')[0] + '.pickle') 
 		with open(out_path,'w') as outfile:
-			pickle.dump((lib_pdb,lib_ips,lib_distance_matrix),outfile)
+			pickle.dump((lib_pdb,lib_ips,lib_distance_matrix), outfile)
 
 def statium(in_res, in_pdb, in_dir, out_dir, ip_cutoff_dist, match_cutoff_dists, counts, verbose):
 	
@@ -165,7 +175,9 @@ def determine_probs(totals, counts, out_dir, verbose):
 	if not os.path.exists(out_dir):
 		os.mkdir(out_dir)
 	
+	#total number of residues across all library interacting pairs
 	lib_sum = float(sum(totals))
+	#frequency of each residue in total library
 	lib_total_probs = [x/lib_sum for x in totals]
 	
 	for (i, pair) in enumerate(use_indices):
@@ -173,6 +185,7 @@ def determine_probs(totals, counts, out_dir, verbose):
 		if total > 99:
 			path = os.path.join(out_dir, str(pair[0] + 1) + '_' + str(pair[1] + 1) + '_probs.txt')
 			prob_file = open(path, 'w')
+			#probability of each residue occuring at *that* IP (i.e. / by total res's at the IP)
 			AA_probs = [(x/total if x != 0 else 1/total) for x in counts[i]]
 			for j in range(20):
 				e = -1.0 * math.log(AA_probs[j] / lib_total_probs[j])
@@ -209,7 +222,6 @@ def get_distance_matrix(pdb):
 			sys.stdout.flush()
 		for j in xrange(i+1, N):
 			distance_matrix[i][j-i-1] = pdb[i].distancesTo(pdb[j])
-	
 	return distance_matrix
 
 

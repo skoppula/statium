@@ -205,12 +205,26 @@ class Residue:
 		self.stubIntact = True if 'CA' in self.atom_names and 'CB' in self.atom_names else False
 
 	#Returns dictionary of pairs of atoms mapped to each pair's distance
+
+	def filteredDistancesTo(self, other, cutoff):
+		out = dict()
+		isIP = False
+		for atom_one in self.atoms:
+			for atom_two in other.atoms:
+				dist = atom_one.distanceTo(atom_two)
+				if dist < cutoff: isIP = True
+				out[(atom_one, atom_two)] = dist
+				out[(atom_two, atom_one)] = dist
+
+		return out if isIP else None
+
 	def distancesTo(self, other):
 		out = dict()
 		for atom_one in self.atoms:
 			for atom_two in other.atoms:
-				out[(atom_one, atom_two)] = atom_one.distanceTo(atom_two)
-				out[(atom_two, atom_one)] = atom_one.distanceTo(atom_two)
+				dist = atom_one.distanceTo(atom_two)
+				out[(atom_one, atom_two)] = dist
+				out[(atom_two, atom_one)] = dist
 		return out
 
 	def __hash__(self):

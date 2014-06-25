@@ -3,18 +3,6 @@ STATIUM is an ongoing project at the Keating Lab to quantitatively understand ho
 
 <b>Details and Documentation</b>
 ***
-`precompute`:<br>
-<i>Template</i>: `python wrapper.py precompute (--in_pdb --in_pdb_lib --in_ip_lib) [--out_dir]`<br>
-
-<i>Example</i>:  `python wrapper.py precompute --in_pdb=1ycr_mdm2.pdb --in_pdb_lib=data/culled_90/ --in_ip_lib=data/ip_90_wGLY --out_dir=testing/output`<br>
-
-<i>Specifics</i>: Runs STATIUM analysis to create weights for each possible amino acid at the protein's interacting pair positions. Note that this command is a shortcut combination of the `renumber`,`create_res`, and `run_statium` commands.
-
-The easy-to-use `precompute` function assumes that the interacting sequence that you wish to analyze is the entirety of chain <b>B</b> (in the input PDB file), with SRN and SAN as 1 (see `renumber` for more information). If you wish to change these (or other parameters), run the above sequence of four commands with appropriate parameters.
-
-The function takes as input the PDB of the to-be-analyzed complex (--in_pdb), the directory of the total protein library with all protein PDBs (--in_pdb_lib), and the directory containing a list of precomputed interacting pairs for each PDB in the protein library (--in_ip_lib).
-
-***
 `renumber`:<br>
 <i>Template</i> `python wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN --chains]`<br>
 
@@ -35,6 +23,9 @@ One requirement of STATIUM as implemented here is that the input PDB has the rec
 The --position_pairs argument specifies which the set of positions to be included as binder/ligand sequences in the STATIUM analysis. The argument is a set of comma seperated terms which represent continuous sequence of residues to be included in the ligand sequence. If you want the entirety of a chain, simply put the name of chain in the list (e.g. --position_pairs=H). In the first example above, residues on the L chain, position 1-20, and a residue on the H chain, position 33 will be included in the output residues file.
 
 If you fail to include a --position_pairs argument, the function will assume you mean to create a *.res file with the entirety of chain <i>B</i>.
+***
+`preprocess`:<br>
+<i>Template
 ***
 `run_statium`:<br>
 <i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --in_pdb_lib --in_ip_lib) [--out_dir --ip_dist_cutoff --matching_res_dist_cutoffs --counts]`<br>
