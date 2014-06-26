@@ -326,7 +326,6 @@ def get_pdb_info(pdb_path):
 						#only add to residue list if there are actual values in curr vars
 						#	and circumvent weird case where first residue has two N's
 						#	for two different conformations
-						print not first_run, isAA(curr_name), (curr_chainID, curr_position) not in res
 						if not first_run and isAA(curr_name) and (curr_chainID, curr_position) not in res:
 							info.append(Residue(curr_name, curr_position, curr_chainID, curr_atoms))
 							res.add((curr_chainID, curr_position))

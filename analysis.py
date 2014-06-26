@@ -41,7 +41,7 @@ def get_dist_matrix_and_IPs(pdb, cutoff):
 			sys.stdout.flush()
 		for j in xrange(i+1, N):
 			result = pdb[i].filteredDistancesTo(pdb[j], cutoff)
-			if not result:
+			if result is not None:
 				lib_ips.add((i,j))
 				distance_matrix[i][j-i-1] = result
 	return (distance_matrix, lib_ips)
@@ -53,9 +53,6 @@ def preprocess(in_dir, out_dir, ip_dist_cutoff, verbose):
 		if(verbose): print "\nProcessing library .pdb: " + lib_pdb_path + "\t (" + str(i) + " out of " + str(len(lib_pdbs)) + ")"
 		lib_pdb = get_pdb_info(lib_pdb_path)	
 		
-		#NOTE (IN OLD VERSION...NOT NOW!):
-		#	JOE'S IP LIBRARY STARTS COUNTING RESIDUES AT 1
-		#	so when Joe's as index, need to subtract 1
 		if verbose: print '\tComputing inter-atomic distances and finding interacting pairs...'
 		(lib_distance_matrix, lib_ips) = get_dist_matrix_and_IPs(lib_pdb, ip_dist_cutoff)
 
