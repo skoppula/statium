@@ -326,8 +326,11 @@ def get_pdb_info(pdb_path):
 						#only add to residue list if there are actual values in curr vars
 						#	and circumvent weird case where first residue has two N's
 						#	for two different conformations
-						if not first_run and curr_name:
+						print not first_run, isAA(curr_name), (curr_chainID, curr_position) not in res
+						if not first_run and isAA(curr_name) and (curr_chainID, curr_position) not in res:
 							info.append(Residue(curr_name, curr_position, curr_chainID, curr_atoms))
+							res.add((curr_chainID, curr_position))
+
 						first_run = False
 						curr_found_atoms.add(name)
 						x = float(line[30:38].strip())
@@ -348,8 +351,6 @@ def get_pdb_info(pdb_path):
 					curr_position = line[22:28].strip()
 					curr_chainID = line[21:22].strip()
 					curr_name = 'MET' if line[17:20] == 'MSE' else line[17:20]
-					if (curr_chainID, curr_position) in res or not isAA(curr_name): continue
-					res.add((curr_chainID, curr_position))
 					
 				except:
 					continue
@@ -361,7 +362,8 @@ def get_pdb_info(pdb_path):
 				curr_atoms.append(Atom(name, x, y, z, atom_count))
 				atom_count += 1
 
-				curr_possible_atoms = get_sidechain_atoms(AA2char(curr_name))
+				if isAA(curr_name):
+					curr_possible_atoms = get_sidechain_atoms(AA2char(curr_name))
 				curr_found_atoms = {'CA'}
 
 			else:
@@ -380,7 +382,7 @@ def get_pdb_info(pdb_path):
 					curr_atoms.append(Atom(name, x, y, z, atom_count))
 					atom_count += 1
 
-	if curr_name:
+	if isAA(curr_name):
 		info.append(Residue(curr_name, curr_position, curr_chainID, curr_atoms))
 	
 	return info
