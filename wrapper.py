@@ -23,7 +23,7 @@ def main(argv):
 	
 	helpdoc =   	"""usage: wrapper.py renumber (--in_pdb=A) [--out_pdb=B --chains=C --SRN=1 --SAN=1] [--noverbose]
 				wrapper.py create_res (--in_pdb_orig=A --in_pdb_renum=B) [--out_res=C --position_pairs=D] [--noverbose]
-				wrapper.py preprocess (--in_dir=A) [--out_dir=B --ip_dist_cutoff=C] [--noverbose]
+				wrapper.py preprocess (--in_dir=A) [--out_dir=B --ip_dist_cutoff=C] [--noverbose] [-r]
 				wrapper.py run_statium (--in_res=A --in_pdb=B --pdb_lib=C) [--out=D --ip_dist_cutoff=E --matching_res_dist_cutoffs=F --counts] [--noverbose]
 				wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG] [-z | --zscore] [-p | --percentile] [--histogram] [--noverbose]
 				wrapper.py get_orig_seq (IN_PDB_ORIG) [--noverbose]
@@ -110,9 +110,10 @@ def main(argv):
 		in_dir = options['--in_dir']
 		out_dir = options['--out_dir'] if options['--out_dir'] else in_dir + '_JSON_preprocessed'
 		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 6.0
+		restart = options['-r']
 
 		if(verbose): print 'Preprocessing library: %s' % in_dir
-		preprocess(in_dir, out_dir, ip_dist, verbose)
+		preprocess(in_dir, out_dir, ip_dist, restart, verbose)
 		if(verbose): print 'Done: %s' % out_dir
 
 	

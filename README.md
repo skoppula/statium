@@ -20,15 +20,17 @@ One requirement of STATIUM as implemented here is that the input PDB has the rec
 
 <i>Specifics</i>: Takes in both the original and renumbered PDB files (see 'renumber'). It translates pairs of (chain identifier, number) uniquely demarcating a residues on the original PDB file to a number uniquely demarcating a residue in the renumbered file. These set of numbers are written to a file and used as the positions to be analyzed by the STATIUM algorithm.
 
-The --position_pairs argument specifies which the set of positions to be included as binder/ligand sequences in the STATIUM analysis. The argument is a set of comma seperated terms which represent continuous sequence of residues to be included in the ligand sequence. If you want the entirety of a chain, simply put the name of chain in the list (e.g. --position_pairs=H). In the first example above, residues on the L chain, position 1-20, and a residue on the H chain, position 33 will be included in the output residues file.
+The --position_pairs argument specifies which the set of positions to be included as binder/ligand sequences in the STATIUM analysis. The argument is a set of comma seperated terms which represent continuous sequence of residues to be included in the ligand sequence (inclusive). If you want the entirety of a chain, simply put the name of chain in the list (e.g. --position_pairs=H). In the first example above, residues on the L chain, position 1-20, and a residue on the H chain, position 33 will be included in the output residues file.
 
 If you fail to include a --position_pairs argument, the function will assume you mean to create a *.res file with the entirety of chain <i>B</i>.
 ***
 `preprocess`:<br>
-<i>Template</i> `python wrapper.py preprocess (--in_dir) [--out_dir --ip_dist_cutoff]
-<i>Example</i> `python wrapper.py preprocess --in_dir=data/culled_90 --out_dir=data/preprocessed_culled_90 --ip_dist_cutoff=5`
+<i>Template</i> `python wrapper.py preprocess (--in_dir) [--out_dir --ip_dist_cutoff]`<br>
+<i>Example</i> `python wrapper.py preprocess -r --in_dir=data/culled_90 --out_dir=data/preprocessed_culled_90 --ip_dist_cutoff=5`<br>
 
 <i>Specifics</i> Takes in a directory of library PDBs and outputs a directory of Python *.pickle files, one for each PDB. Each pickle file contains (1) a list of Residue objects parsed from the PDB file, (2) a matrix of inter-residue distances, and (3) a list of all interacting pairs of residues. Two residues are considered interacting if any of their atoms are within the IP cutoff distance (--ip_dist_cutoff). The default IP cutoff distance is 5 Angstroms.
+
+The `-r` (restart) flag rewrite the pickle files previously created in the output directory. Not including it skips preprocessing PDB's whose pickle is already in the output directory. 
 ***
 `run_statium`:<br>
 <i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --pdb_lib) [--out_dir --ip_dist_cutoff --matching_res_dist_cutoffs --counts]`<br>
@@ -43,14 +45,22 @@ The function creates a directory containing a set of files, one file per interac
 
 Each file contains a set of twenty probabilities (one for each amino acid) describing how likely it is for that identity would exist at that position on the sidechain, given the main chain's amino acid identity at the position.
 ***
+`energy`:<br>
+<i>Template</i> `python wrapper.py energy (--in_res --in_probs) [-f] (--in_seqs) [--out] [-z | --zscores] [-p | --percentiles] [-v | --verbose] [-d | --draw_histogram]`<br>
+<i>Example One</i> `python wrapper.py --in_res=testing/sarah-test/1mhp_AHL.res --in_probs=testing/sarah-testing/1mhp_AHL_probs --in_seqs=AAAGGGM,LLAA`<br>
+<i>Example Two</i> `python wrapper.py --in_res=testing/sarah-test/1mhp_AHL.res --in_probs=testing/sarah-testing/1mhp_AHL_probs -f --in_seqs=testing/sarah-testing/seqs.txt`<br>
+
+<i>Specifics</i>: Calculates STATIUM's binding score for a given sequence of amino acids in the positions listed in the input *.res file (see `create_res`). The `--in_probs` input is the STATIUM probabilities directory computed in `run_statium`. The presence of `-f` indicates that `--in_seqs` is a file (else just [possibly a set of] sequences, corresponding to the chains/position-pairs used to create the *.res file). For example, you might have a --in_seqs=AAA,L if your `--position_pairs` argument in `create_res` was 10-12,13. A file would contain similarly formatted argument, one sequence (set) on each line.
+
+`--out` specifies an output file. If this is option is left out, results will be printed to the console.
+***
 <b>Helpful Hints</b>:
 + Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.
 + Arguments wrapped in parenthesis () are required; arguments wrapped in square brackets [] are optional.
 ***
-<b>Thanks for using STATIUM!</b>:
+<b>Thanks for using STATIUM! Feel free to contact skoppula@mit.edu with issues.</b>:
 <br>
 
-			   statium_wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG=None] [-z | --zscores] [-p | --percentiles] [-v | --verbose] [-d | --draw_histogram]
 			   statium_wrapper.py get_orig_seq (IN_PDB_ORIG) [-v | --verbose]
 			   statium_wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE=None] [--TOTAL_PROTEIN_LIBRARY=None] [-v | --verbose]
 			   statium_wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [-v | --verbose]
@@ -67,15 +77,6 @@ Each file contains a set of twenty probabilities (one for each amino acid) descr
 	python statium_wrapper.py -fv generate_random_seqs 11 10 random_seqs.txt --TOTAL_PROTEIN_LIBRARY=data/all_protein_sequences.txt
 	
 	python statium_wrapper.py -v calc_top_seqs testing/1ycr_mdm2.res testing/1ycr_mdm2_output_probs/ 10
-	
-	python statium_wrapper.py calc_energy testing/1ycr_mdm2.res testing/1ycr_mdm2_output_probs/ ETFSDLWKLLP
-	python statium_wrapper.py calc_energy -fv testing/1ycr_mdm2.res testing/1ycr_mdm2_output_probs/ testing/1ycr_mdm2_sequences.txt testing/1ycr_mdm2_seq_energies.txt
-	
-	#-d flag draws histogram (requires a z (z-score) or p (percentile) flag simultaneously)
-	python statium_wrapper.py calc_energy -fv testing/1ycr_mdm2.res testing/1ycr_mdm2_output_probs/ testing/1ycr_mdm2_sequences.txt testing/1ycr_mdm2_seq_energies.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb
-	python statium_wrapper.py calc_energy -fzpv testing/1ycr_mdm2.res testing/1ycr_mdm2_output_probs/ testing/1ycr_mdm2_sequences.txt testing/1ycr_mdm2_seq_zscores_percentiles.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb
-	python statium_wrapper.py calc_energy -fzv testing/1ycr_mdm2.res testing/1ycr_mdm2_output_probs/ testing/1ycr_mdm2_sequences.txt testing/1ycr_mdm2_seq_zscores.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb
-	python statium_wrapper.py calc_energy -fzvd testing/1ycr_mdm2.res testing/1ycr_mdm2_output_probs/ testing/1ycr_mdm2_sequences.txt testing/1ycr_mdm2_seq_zscores.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb
 	
 	
 	python statium_wrapper.py -v classify testing/1ycr_mdm2_seq_zscores.txt testing/1ycr_mdm2_classify_results_0.05.txt ALPHA_THRESHOLD=0.05

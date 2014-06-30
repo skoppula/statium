@@ -46,10 +46,16 @@ def get_dist_matrix_and_IPs(pdb, cutoff):
 				distance_matrix[i][j-i-1] = result
 	return (distance_matrix, lib_ips)
 
-def preprocess(in_dir, out_dir, ip_dist_cutoff, verbose):
+def preprocess(in_dir, out_dir, ip_dist_cutoff, restart, verbose):
 	lib_pdbs = [os.path.join(in_dir, pdb) for pdb in os.listdir(in_dir)]
 
-	for (i, lib_pdb_path) in enumerate(lib_pdbs):	
+	for (i, lib_pdb_path) in enumerate(lib_pdbs):
+
+		out_path = os.path.join(out_dir, os.path.split(lib_pdb_path)[1].split('.')[0] + '.pickle') 
+                if os.path.exists(out_path) and not restart:
+                        if(verbose): print 'Skipping ' + out_path + '. Already in directory.'
+                        continue
+ 
 		if(verbose): print "\nProcessing library .pdb: " + lib_pdb_path + "\t (" + str(i) + " out of " + str(len(lib_pdbs)) + ")"
 		lib_pdb = get_pdb_info(lib_pdb_path)	
 		
@@ -60,7 +66,6 @@ def preprocess(in_dir, out_dir, ip_dist_cutoff, verbose):
 		if not os.path.exists(out_dir): os.makedirs(out_dir)
 
 		if verbose: print '\tPrinting PICKLE file...'
-		out_path = os.path.join(out_dir, os.path.split(lib_pdb_path)[1].split('.')[0] + '.pickle') 
 		with open(out_path,'w') as outfile:
 			pickle.dump((lib_pdb,lib_ips,lib_distance_matrix), outfile)
 
