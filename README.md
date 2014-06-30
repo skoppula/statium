@@ -25,14 +25,17 @@ The --position_pairs argument specifies which the set of positions to be include
 If you fail to include a --position_pairs argument, the function will assume you mean to create a *.res file with the entirety of chain <i>B</i>.
 ***
 `preprocess`:<br>
-<i>Template
+<i>Template</i> `python wrapper.py preprocess (--in_dir) [--out_dir --ip_dist_cutoff]
+<i>Example</i> `python wrapper.py preprocess --in_dir=data/culled_90 --out_dir=data/preprocessed_culled_90 --ip_dist_cutoff=5`
+
+<i>Specifics</i> Takes in a directory of library PDBs and outputs a directory of Python *.pickle files, one for each PDB. Each pickle file contains (1) a list of Residue objects parsed from the PDB file, (2) a matrix of inter-residue distances, and (3) a list of all interacting pairs of residues. Two residues are considered interacting if any of their atoms are within the IP cutoff distance (--ip_dist_cutoff). The default IP cutoff distance is 5 Angstroms.
 ***
 `run_statium`:<br>
-<i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --in_pdb_lib --in_ip_lib) [--out_dir --ip_dist_cutoff --matching_res_dist_cutoffs --counts]`<br>
+<i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --pdb_lib) [--out_dir --ip_dist_cutoff --matching_res_dist_cutoffs --counts]`<br>
 
 <i>Example</i> `python wrapper.py run_statium --in_pdb=testing/sarah-test/1mhp_AHL_new.pdb --in_res=testing/sarah-test/1mhp_AHL.res --pdb_lib=data/culled_90/ --ip_lib=data/ip_90_wGLY/` <br>
 
-<i>Specifics</i>: Takes in a renumbered PDB file (see `renumber`), the directory of the total protein library with all protein PDBs (--in_pdb_lib), and the directory containing a list of precomputed interacting pairs for each PDB in the protein library (--in_ip_lib).
+<i>Specifics</i>: Takes in a renumbered PDB file (see `renumber`), the directory of the preprocessed protein library containing each PDB's *.pickle file (--pdb_lib).
 
 Optional parameters include: --out_dir (the directory where STATIUM outputs its results; default value is value of --in_pdb without the .pdb extension), --counts (whether to print out STATIUM's intermediate analysis outputs; note that this takes no argument; simply including the flag issues printing!), --ip_dist_cutoff (the threshold distance in Angstroms between two atoms, below which the atom's residues are deemed 'interacting'; default is 6.0), and --matching_res_dist_cutoff (a dictionary with all twenty amino acids [in single character representation] each mapped to a cutoff below which a interacting residue pair cannot be deemed 'matching' to a library protein interacting pair. Example of using this parameter [containing the default, recommended dictionary values if you leave this parameter out]: --matching_res_dist_cutoff={'A':2, 'C':6, 'D':6, 'E':6, 'F':6, 'G':2, 'H':6, 'I':6, 'K':6, 'L':6, 'M':6, 'N':6, 'P':6, 'Q':6, 'R':6, 'S':6, 'T':6, 'V':6, 'W':6, 'Y':6, 'X':0}.
 
