@@ -52,11 +52,12 @@ Each file contains a set of twenty probabilities (one for each amino acid) descr
 
 <i>Specifics</i>: Calculates STATIUM's binding score for a given sequence of amino acids in the positions listed in the input *.res file (see `create_res`). The `--in_probs` input is the STATIUM probabilities directory computed in `run_statium`. The presence of `-f` indicates that `--in_seqs` is a file (else just [possibly a set of] sequences, corresponding to the chains/position-pairs used to create the *.res file). For example, you might have a --in_seqs=AAA,L if your `--position_pairs` argument in `create_res` was 10-12,13. A file would contain similarly formatted argument, one sequence (set) on each line.
 
-`--out` specifies an output file. If this is option is left out, results will be printed to the console.
+`--out` specifies an output file. If this is option is left out, results will be printed to the console. The presence of the z-score flags finds the z-scores of the input sequences' energy on a distribution of random sequences. 
 ***
 <b>Helpful Hints</b>:
 + Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.
 + Arguments wrapped in parenthesis () are required; arguments wrapped in square brackets [] are optional.
++ `python wrapper.py -h` or `python wrapper.py --help` brings up an in-console summary of program arguments.
 ***
 <b>Thanks for using STATIUM! Feel free to contact skoppula@mit.edu with issues.</b>:
 <br>
@@ -68,7 +69,6 @@ Each file contains a set of twenty probabilities (one for each amino acid) descr
 			   statium_wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG=None] [-v | --verbose]
 			   statium_wrapper.py [-i] calc_auroc (IN_RES RESULTS_FILE TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG=None] [--CLASS_RESULTS=None] [-v | --verbose]
 			   statium_wrapper.py [-i] plot_roc_curve (IN_RES RESULTS_FILE TRUE_CLASS) [--IN_PDB_ORIG=None] [--CLASS_RESULTS=None] [-v | --verbose]
-			   statium_wrapper.py [-h | --help]
 
 	python statium_wrapper.py get_orig_seq testing/1ycr_mdm2_orig.pdb
 	

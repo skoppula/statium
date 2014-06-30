@@ -26,6 +26,7 @@ from util import get_pdb_info
 from reformat import get_orig_seq
 from reformat import generate_random_seqs
 
+
 def get_dist_matrix_and_IPs(pdb, cutoff):
 	N = len(pdb)
 	distance_matrix = [[None]*(N-i-1) for i in xrange(N)]
@@ -45,6 +46,7 @@ def get_dist_matrix_and_IPs(pdb, cutoff):
 				lib_ips.add((i,j))
 				distance_matrix[i][j-i-1] = result
 	return (distance_matrix, lib_ips)
+
 
 def preprocess(in_dir, out_dir, ip_dist_cutoff, restart, verbose):
 	lib_pdbs = [os.path.join(in_dir, pdb) for pdb in os.listdir(in_dir)]
@@ -69,6 +71,28 @@ def preprocess(in_dir, out_dir, ip_dist_cutoff, restart, verbose):
 		with open(out_path,'w') as outfile:
 			pickle.dump((lib_pdb,lib_ips,lib_distance_matrix), outfile)
 
+def get_dist_matrix_and_IPs_template(pdb, residues, cutoff):
+	N = len(pdb)
+	distance_matrix = [[None]*(N-i-1) for i in xrange(N)]
+	ips = set()
+	first = True
+	print '\tOut of %d residues finished:' % N
+	for i in xrange(N):
+		if i % 5 == 0:
+			if first:
+				sys.stdout.write('\t')
+				first = False
+			print i,
+			sys.stdout.flush()
+		for j in xrange(i+1, N):
+			if ((i in residues) ^ (j in residues)):
+				result = pdb[i].filteredDistancesTo(pdb[j], cutoff)
+				if result is not None:
+					ips.add((i,j))
+					distance_matrix[i][j-i-1] = result
+	return (distance_matrix, ips)
+
+
 def statium(in_res, in_pdb, in_dir, out_dir, ip_cutoff_dist, match_cutoff_dists, counts, verbose):
 	
 	if verbose: print '\nPreparing directory folders...'
@@ -91,15 +115,8 @@ def sidechain(in_res, in_pdb, in_preprocess_dir, out_dir, ip_dist_cutoff, match_
 	pdbI = get_pdb_info(in_pdb)
 	pdbSize = len(pdbI)	
 
-	if verbose: print 'Computing inter-atomic distances...\n'
-	distance_matrix = get_distance_matrix(pdbI)
-	
-	if verbose: print '\n\nFinding interacting pairs...'
-	use_indices = set() 
-	for i in xrange(pdbSize):
-		for j in xrange(i+1, pdbSize):
-			if ((i in residues) ^ (j in residues)) and check_cutoff(distance_matrix[i][j-i-1], ip_dist_cutoff):
-				use_indices.add((i, j))
+	if verbose: print 'Computing inter-atomic distances and finding interacting pairs...\n'
+	(distance_matrix, use_indices) = get_dist_matrix_and_IPs_template(pdbI, residues, ip_dist_cutoff)
 	num_ips = len(use_indices)
 	
 	if verbose: print 'Storing distance information for each interacting pair...'
@@ -171,6 +188,7 @@ def sidechain(in_res, in_pdb, in_preprocess_dir, out_dir, ip_dist_cutoff, match_
 	if(verbose): print("Computing probabilities from counts...")
 	determine_probs(totals, counts, out_dir, verbose)
 
+
 def determine_probs(totals, counts, out_dir, verbose):
 	
 	#create the output directory
@@ -197,9 +215,6 @@ def determine_probs(totals, counts, out_dir, verbose):
 	
 def matching_sidechain_pair(dists1, dists2, cutoff):
 
-	#print dists1[dists1.keys()[0]],len(dists1[dists1.keys()[0]])
-	#print dists2[dists2.keys()[0]],len(dists2)
-  
 	sd = 0.0
 	count = 0
 
@@ -210,21 +225,6 @@ def matching_sidechain_pair(dists1, dists2, cutoff):
 				count += 1
 
 	return math.sqrt(sd / count) < cutoff
-
-def get_distance_matrix(pdb):
-	N = len(pdb)
-	distance_matrix = [[0]*(N-i-1) for i in xrange(N)]
-	print '\tOut of %d residues finished:' % N
-	first = True
-	for i in xrange(N):
-		if i % 5 == 0:
-			if first: print '\t',
-			first = False
-			print str(i),
-			sys.stdout.flush()
-		for j in xrange(i+1, N):
-			distance_matrix[i][j-i-1] = pdb[i].distancesTo(pdb[j])
-	return distance_matrix
 
 
 #returns a more sparse distance matrix, filled on at IP positions
@@ -243,6 +243,7 @@ def get_distance_matrix_ip(pdb, ips):
 			print i,j,N
 			
 	return distance_matrix
+
 	
 #OLD VERSION: select_sidechain_distances
 #New version: returns a dictionary, subset of the dictionary at
@@ -259,10 +260,6 @@ def filter_sc_dists(atomsA, atomsB, interatomic_distances, direction = 'forward'
 
 def check_cutoff(residue_pairs, cutoff):
 	return any([dist < cutoff for dist in residue_pairs.values()])
-
-#Returns a NxN matrix of dictionaries
-#	where N = number of residues in 
-#	See Residue.distancesTo for more info
 
 
 def generate_random_distribution (in_res, in_probs_dir, num_seqs=100000):
