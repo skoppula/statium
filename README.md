@@ -45,6 +45,12 @@ The function creates a directory containing a set of files, one file per interac
 
 Each file contains a set of twenty probabilities (one for each amino acid) describing how likely it is for that identity would exist at that position on the sidechain, given the main chain's amino acid identity at the position.
 ***
+`random`:<br>
+<i>Template</i>`python wrapper.py random (--seq_length --num_seqs) [--out]`<br>
+<i>Example</i>`python wrapper.py random --seq_length=8 --num_seqs=10 --out=testing/random-sequences.txt`<br>
+
+<i>Specifics</i>Generates `--num_seqs` random sequences of '--seq_length' length. If you include a `--out=***` option, the random sequences will be printed to the specified file. Sequences are randomly drawn from the collection of all known protein sequences contained in `data/all_protein_sequences.txt'. If you choose to modify this (e.g. adjust it so that certain amino acids occur with certain frequencies, ensure that only amino acid in their character representation are present).
+***
 `energy`:<br>
 <i>Template</i> `python wrapper.py energy (--in_res --in_probs) [-f] (--in_seqs) [--out] [-z | --zscores] [-p | --percentiles] [-v | --verbose] [-d | --draw_histogram]`<br>
 <i>Example One</i> `python wrapper.py --in_res=testing/sarah-test/1mhp_AHL.res --in_probs=testing/sarah-testing/1mhp_AHL_probs --in_seqs=AAAGGGM,LLAA`<br>

@@ -1,5 +1,4 @@
-import sys
-import ast
+import sys import ast
 from docopt import docopt
 from reformat import renumber
 from reformat import create_res
@@ -7,7 +6,6 @@ from analysis import preprocess
 from analysis import statium
 from analysis import calc_seq_energy
 from reformat import get_orig_seq
-from reformat import generate_random_seqs
 from analysis import generate_random_distribution
 from analysis import calc_seq_zscore
 from analysis import calc_seq_percentile
@@ -16,6 +14,7 @@ from analysis import classify
 from analysis import get_confusion_matrix
 from analysis import calc_auroc
 from analysis import plot_roc_curve
+from util import generate_random_seqs
 from util import list2file
 from util import filelines2list
 
@@ -26,8 +25,8 @@ def main(argv):
 				wrapper.py preprocess (--in_dir=A) [--out_dir=B --ip_dist_cutoff=C] [--noverbose] [-r]
 				wrapper.py run_statium (--in_res=A --in_pdb=B --pdb_lib=C) [--out=D --ip_dist_cutoff=E --matching_res_dist_cutoffs=F --counts] [--noverbose]
 				wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG] [-z | --zscore] [-p | --percentile] [--histogram] [--noverbose]
+				wrapper.py random (--seq_length --num_seqs) [--out] 
 				wrapper.py get_orig_seq (IN_PDB_ORIG) [--noverbose]
-				wrapper.py [-f] generate_random_seqs (SEQ_LENGTH NUM_SEQS) [--OUT_FILE] [--TOTAL_PROTEIN_LIBRARY] [--noverbose]
 				wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [--noverbose]
 				wrapper.py classify (RESULTS_FILE) [OUT_FILE] [ALPHA_THRESHOLD] [--noverbose]
 				wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG] [--noverbose]
@@ -57,6 +56,11 @@ def main(argv):
 				--out=D		Output directory
 				--ip_dist_cutoff=E	Threshold for interacting pair designation
 				--matching_res_dist_cutoffs=F	Thresholds for matching IP designation
+
+				--seq_length	Length of the random sequences
+				--num_seqs	Number of random sequences
+				--out		Output file
+
 			"""
 	
 	options = docopt(helpdoc, argv, help = True, version = "3.0.0", options_first=False)
@@ -65,7 +69,7 @@ def main(argv):
 	percentiles = options['-p'] or options['--percentile']
 	histogram = options['--histogram']
   
-	if(options['renumber']):
+	if options['renumber']:
 		in_pdb = options['--in_pdb']
 		out_pdb = options['--out_pdb'] if options['--out_pdb'] is not None else in_pdb[:-4]+'_renumbered.pdb'
 		SRN = 1 if options['--SRN'] == None else int(options['--SRN']) 
@@ -77,7 +81,7 @@ def main(argv):
 		if(verbose): print("Done. Renumbered file: " + out_pdb)
 	
 		
-	elif(options['create_res']):
+	elif options['create_res']:
 		pdb_orig = options['--in_pdb_orig']
 		pdb_renum = options['--in_pdb_renum']
 		res = pdb_orig[:-4]+'.res' if options['--out_res'] is None else options['--out_res']
@@ -106,7 +110,7 @@ def main(argv):
 		create_res(pdb_orig, pdb_renum, res, positions)
 		if(verbose): print("Done. .res file: " + res)
 
-	elif(options['preprocess']):
+	elif options['preprocess']:
 		in_dir = options['--in_dir']
 		out_dir = options['--out_dir'] if options['--out_dir'] else in_dir + '_JSON_preprocessed'
 		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 6.0
@@ -117,7 +121,7 @@ def main(argv):
 		if(verbose): print 'Done: %s' % out_dir
 
 	
-	elif(options['run_statium']):
+	elif options['run_statium']:
 		res = options['--in_res']
 		pdb = options['--in_pdb']
 		pdb_lib = options['--pdb_lib']
@@ -132,7 +136,7 @@ def main(argv):
 		statium(res, pdb, pdb_lib, out_dir, ip_dist, match_dist, count, verbose)
 		if(verbose): print("Done. STATIUM probabilities in output directory: " + out_dir)
 
-	elif(options['calc_energy']):
+	elif options['calc_energy']:
 		
 		in_res = options['IN_RES']
 		probs_dir = options['PROBS_DIR']
@@ -190,24 +194,26 @@ def main(argv):
 
 
 	#Get the original AA sequence of chain B, along with stats like the length and position of that chain
-	elif(options['get_orig_seq']):
+	elif options['get_orig_seq']:
 		(sequence, length, start, end) = get_orig_seq(options['IN_PDB_ORIG'])
 		print("Native chain B peptide sequence is " + str(sequence) + " of length " + str(length) + " from position " + str(start) + " to " + str(end))
 	
 	
-	#Generate n random sequences of length j, possibly in outfile o if -f flag present
-	elif(options['generate_random_seqs']):
+	elif options['generate_random_seqs']:
+
+		num_seqs = int(options['--num_seqs'])
+		seq_length = int(options['--seq_length'])
+		out = options['--out']
 		
-		if(verbose): print("Generating " + options['NUM_SEQS'] + " random sequences of length " + options['SEQ_LENGTH'])
-		sequences = generate_random_seqs(int(options['SEQ_LENGTH']), int(options['NUM_SEQS']), options['--TOTAL_PROTEIN_LIBRARY'])
+		if(verbose): print("Generating " + num_seqs + " random sequences of length " + seq_length)
+		sequences = generate_random_seqs(num_seqs, seq_length)
 		
-		if(not options['-f']):
+		if out is None:
 			for sequence in sequences:
 				print(sequence)
 		else:
-			outfile = 'random_seqs.txt' if (options['--OUT_FILE'] == None) else options['--OUT_FILE']
-			list2file(sequences, outfile)
-			if(verbose): print("Random sequences written to " + outfile)
+			list2file(sequences, out)
+			if(verbose): print("Random sequences written to " + out)
    
 	elif(options['calc_top_seqs']):
 		if(verbose): print('Calculating ' + options['N'] + ' sequences with lowest energy.')

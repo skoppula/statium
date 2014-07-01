@@ -3,6 +3,28 @@ import random
 import math
 import warnings
 
+def generate_random_seqs(seq_length, num_seqs, library_path): 
+	library_path = 'data/all_protein_sequences.txt'
+	
+	size = 0
+	try:
+		with open (library_path, "r") as myfile:
+			data = myfile.read().replace('\n', '')
+			pattern = re.compile(r'\s+')
+			data = re.sub(pattern, '', data)
+			size = len(data)
+	except IOError:
+		print 'Could not find file ' + library_path + '. Using random AA generation'
+		
+	sequences = []
+	for _ in range(num_seqs):
+		start = random.randint(0, size - seq_length)
+		sequence = data[start:(start+seq_length)]
+		sequences.append(sequence)
+	
+	return sequences
+
+
 def read_results(results_file, valueIsNum=True):
 	results = filelines2deeplist(results_file, skipComments=True, useTuples=True, skipEmptyLines=True)
 	results_dict = dict()

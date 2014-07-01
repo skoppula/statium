@@ -278,6 +278,7 @@ def generate_random_distribution (in_res, in_probs_dir, num_seqs=100000):
 		
 	return (sequence_length, sequences, energies, avg, sd)
 
+
 def calc_seq_zscore(mean, std, energy):
 	zscore = (energy - mean)/std
 	return zscore
