@@ -2,10 +2,10 @@ import sys import ast
 from docopt import docopt
 from reformat import renumber
 from reformat import create_res
+from reformat import get_orig_seq
 from analysis import preprocess
 from analysis import statium
 from analysis import calc_seq_energy
-from reformat import get_orig_seq
 from analysis import generate_random_distribution
 from analysis import calc_seq_zscore
 from analysis import calc_seq_percentile
@@ -195,9 +195,10 @@ def main(argv):
 
 	#Get the original AA sequence of chain B, along with stats like the length and position of that chain
 	elif options['get_orig_seq']:
-		(sequence, length, start, end) = get_orig_seq(options['IN_PDB_ORIG'])
-		print("Native chain B peptide sequence is " + str(sequence) + " of length " + str(length) + " from position " + str(start) + " to " + str(end))
-	
+		res = options['--in_res']
+		orig_pdb = options['--in_pdb_orig']
+		renum_pdb = options['--in_pdb_renum']
+		get_orig_seq(res, orig_pdb, renum_pdb)
 	
 	elif options['generate_random_seqs']:
 

@@ -85,37 +85,23 @@ def create_res(pdb_orig_path, pdb_renum_path, out_res_path, positions):
 	out.close()
 
 
-#Get the original AA sequence of chain B, along with stats like the length and position of that chain
-def get_orig_seq(in_pdb_path_orig):
-	
-	infile =  open(in_pdb_path_orig, 'r')
-	lines = infile.readlines()
-	
-	bchain_started = False
-	start, end = 0, 0
-	num_residues = 0
-	residues = []
-	sequence = ''
-	
-	for line in lines:
-		line = line.strip()
-		line = (line + ' '*16 + '\n') if (len(line) < 61) else (line + '\n')
-	 
-		if(line[0:4] == 'ATOM' or (line[0:6] == 'HETATM' and line[17:20] == 'MSE') or line[0:3] == 'TER'):
-			
-			if(line[21]=='B' and not bchain_started):
-				bchain_started = True
-				start = int(line[22:27])
-				residues.append(start)
-				sequence += AA2char(line[17:20])
-			
-			elif(line[0:3] == 'TER' and bchain_started):
-				end = int(line[22:27])
-				num_residues = end - start + 1
-				return (sequence, num_residues, start, end)
+def get_orig_seq(res_path, orig_pdb_path, renum_pdb_path):
+	if verbose: print 'Extracting residue position from ' + in_res + '...'
+	res_lines = filelines2list(in_res)
+	residues = [int(line.strip()) - 1 for line in res_lines]
 
-			elif(line[21]=='B' and (int(line[22:27]) not in residues)):
-				residues.append(int(line[22:27]))
-				sequence += AA2char(line[17:20])
+	orig =  get_pdb_info(pdb_orig_path)
+	renum =  get_pdb_info(pdb_renum_path)
+	to_print = set()
+
+	for residue in residues:
+		renum_aa = renum[residue]
+		for orig_aa in orig:
+			if renum_aa == orig_aa:
+				to_print.add(orig_aa)
+
+	for residue in to_print:
+		print residue.string_name + ' ' + residue.chainID + ' ' + residue.position
+				
 
 

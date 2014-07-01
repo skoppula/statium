@@ -51,6 +51,13 @@ Each file contains a set of twenty probabilities (one for each amino acid) descr
 
 <i>Specifics</i>Generates `--num_seqs` random sequences of '--seq_length' length. If you include a `--out=***` option, the random sequences will be printed to the specified file. Sequences are randomly drawn from the collection of all known protein sequences contained in `data/all_protein_sequences.txt'. If you choose to modify this (e.g. adjust it so that certain amino acids occur with certain frequencies, ensure that only amino acid in their character representation are present).
 ***
+`get_orig_seq`:<br>
+<i>Template</i>`python wrapper.py get_orig_seq (--in_res --in_pdb_orig --in_pdb_renum)`
+<i>Example</i> `python wrapper.py get_orig_seq ---in_res=testing/1mph_AHL.res -in_pdb_orig=testing/1mph_AHL_orig.pdb --in_pdb_renum=testing/1mph_AHL_renum.pdb 
+
+Reverse of the `renumber` function. From *.res file and the renumbered and original PDBs (see `renumber`) outputs the list of residues with original chain and position information.
+
+***
 `energy`:<br>
 <i>Template</i> `python wrapper.py energy (--in_res --in_probs) [-f] (--in_seqs) [--out] [-z | --zscores] [-p | --percentiles] [-v | --verbose] [-d | --draw_histogram]`<br>
 <i>Example One</i> `python wrapper.py --in_res=testing/sarah-test/1mhp_AHL.res --in_probs=testing/sarah-testing/1mhp_AHL_probs --in_seqs=AAAGGGM,LLAA`<br>
