@@ -24,9 +24,10 @@ def main(argv):
 				wrapper.py create_res (--in_pdb_orig=A --in_pdb_renum=B) [--out_res=C --position_pairs=D] [--noverbose]
 				wrapper.py preprocess (--in_dir=A) [--out_dir=B --ip_dist_cutoff=C] [--noverbose] [-r]
 				wrapper.py run_statium (--in_res=A --in_pdb=B --pdb_lib=C) [--out=D --ip_dist_cutoff=E --matching_res_dist_cutoffs=F --counts] [--noverbose]
-				wrapper.py [-f] calc_energy (IN_RES PROBS_DIR SEQ_OR_FILE) [OUT_FILE] [--IN_PDB_ORIG] [-z | --zscore] [-p | --percentile] [--histogram] [--noverbose]
-				wrapper.py random (--seq_length --num_seqs) [--out] 
-				wrapper.py get_orig_seq (IN_PDB_ORIG) [--noverbose]
+				wrapper.py [-f] calc_energy (--in_res=A --in_probs=B --in_seqs=C) [--out=D] [-z | --zscore] [-p | --percentile] [--histogram=E] [--noverbose]
+				wrapper.py random (--seq_length=A --num_seqs=B) [--out=C] [--noverbose]
+				wrapper.py get_orig_seq (--in_res=A --in_pdb_orig=B --in_pdb_renum=C) [--noverbose]
+
 				wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [--noverbose]
 				wrapper.py classify (RESULTS_FILE) [OUT_FILE] [ALPHA_THRESHOLD] [--noverbose]
 				wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG] [--noverbose]
@@ -57,18 +58,24 @@ def main(argv):
 				--ip_dist_cutoff=E	Threshold for interacting pair designation
 				--matching_res_dist_cutoffs=F	Thresholds for matching IP designation
 
-				--seq_length	Length of the random sequences
-				--num_seqs	Number of random sequences
-				--out		Output file
+				--in_res=A	Input .res file path
+				--in_probs=B	Input STATIUM probabilities directory
+				--in_seqs=C	Sequence patter or path to a file of sequence patterns to be scored
+				--out=D		File path to output score (if -f flag is present)
+				--histogram=E	File path to output histogram (absence outputs nothing)
 
+				--seq_length=A	Length of the random sequences
+				--num_seqs=B	Number of random sequences
+				--out=C		Output file path
+
+				--in_res=A	Input .res file path
+				--in_pdb_orig=B	Input PDB file path (original)
+				--in_pdb_renum-C	Input PDB file path (renumbered)
 			"""
 	
 	options = docopt(helpdoc, argv, help = True, version = "3.0.0", options_first=False)
 	verbose = not options['--noverbose']
-	zscores = options['-z'] or options['--zscore']
-	percentiles = options['-p'] or options['--percentile']
-	histogram = options['--histogram']
-  
+ 
 	if options['renumber']:
 		in_pdb = options['--in_pdb']
 		out_pdb = options['--out_pdb'] if options['--out_pdb'] is not None else in_pdb[:-4]+'_renumbered.pdb'
@@ -76,9 +83,9 @@ def main(argv):
 		SAN = 1 if options['--SAN'] == None else int(options['--SAN'])
 		chains =  {'B'} if options['--chains'] == None else set(options['--chains'].split(','))
 
-		if(verbose): print("Renumbering PDB file: " + in_pdb)		
+		if verbose: print "Renumbering PDB file: " + in_pdb
 		renumber(SRN, SAN, chains, in_pdb, out_pdb)
-		if(verbose): print("Done. Renumbered file: " + out_pdb)
+		if verbose: print "Done. Renumbered file: " + out_pdb
 	
 		
 	elif options['create_res']:
@@ -106,9 +113,9 @@ def main(argv):
 				else:
 					sys.exit('Invalid position pairs')	
 
-		if(verbose): print("Creating .res file using: " + pdb_orig + " and " + pdb_renum) 
+		if verbose: print "Creating .res file using: " + pdb_orig + " and " + pdb_renum
 		create_res(pdb_orig, pdb_renum, res, positions)
-		if(verbose): print("Done. .res file: " + res)
+		if verbose: print "Done. .res file: " + res
 
 	elif options['preprocess']:
 		in_dir = options['--in_dir']
@@ -116,9 +123,9 @@ def main(argv):
 		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 6.0
 		restart = options['-r']
 
-		if(verbose): print 'Preprocessing library: %s' % in_dir
+		if verbose: print 'Preprocessing library: %s' % in_dir
 		preprocess(in_dir, out_dir, ip_dist, restart, verbose)
-		if(verbose): print 'Done: %s' % out_dir
+		if verbose: print 'Done: %s' % out_dir
 
 	
 	elif options['run_statium']:
@@ -132,24 +139,28 @@ def main(argv):
 		match_dist = ast.literal_eval(options['--matching_res_dist_cutoffs']) if options['--matching_res_dist_cutoffs'] else default
 		count = True if options['--counts'] is not None else False 
 		
-		if(verbose): print("\nRunning STATIUM with: " + pdb + " " + res + " " + pdb_lib+ " " + ip_lib)
+		if verbose: print("\nRunning STATIUM with: " + pdb + " " + res + " " + pdb_lib+ " " + ip_lib)
 		statium(res, pdb, pdb_lib, out_dir, ip_dist, match_dist, count, verbose)
-		if(verbose): print("Done. STATIUM probabilities in output directory: " + out_dir)
+		if verbose: print("Done. STATIUM probabilities in output directory: " + out_dir)
 
 	elif options['calc_energy']:
+		zscores = options['-z'] or options['--zscore']
+		percentiles = options['-p'] or options['--percentile']
+		histogram = options['--histogram']
+ 
+		in_res = options['--in_res']
+		probs_dir = options['--in_probs']
+		isfile = options['-f']
+		in_seqs = options['--in_seqs']
+		out = options['--out']
 		
-		in_res = options['IN_RES']
-		probs_dir = options['PROBS_DIR']
-		seq_or_file = options['SEQ_OR_FILE']
-		outfile = options['OUT_FILE']
+		if verbose: print "Writing to file: " + isfile + ". Calculating z-score: " + zscores
 		
-		if(verbose): print("Writing to file: ", options['-f'], ". Calculating z-score: ", options['-z'], ". Calculating percentile: ", options['-p'])
-		
-		if(zscores or percentiles):
-			if(verbose): print('Generating random distribution of energies...')
+		ic zscores or percentiles:
+			if verbose: print 'Generating random distribution of energies...'
 			distribution = generate_random_distribution(in_res, probs_dir)
-			if(histogram):
-				if(verbose): print('Drawing histogram...')
+			if histogram:
+				if verbose: print 'Drawing histogram...'
 				import matplotlib.pyplot as plt
 				import numpy as np
 
@@ -157,15 +168,16 @@ def main(argv):
 				width = 0.7 * (bins[1] - bins[0])
 				center = (bins[:-1] + bins[1:]) / 2
 				plt.bar(center, hist, align='center', width=width)
-				plt.show()
-			if(verbose): print('Done generating random distribution.')
+				plt.savefig(histogram)
+
+			if verbose: print 'Done generating random distribution.'
 					
-		if(options['-f']):
+		if options['-f']:
 			lines = filelines2list(seq_or_file)
 			out_lines = []
 			
 			for line in lines:
-				if(line != '' and line[0] != '#'):
+				if line != '' and line[0] != '#':
 					(energy, seq) = calc_seq_energy(in_res, probs_dir, line, options['--IN_PDB_ORIG'])
 					line = seq + "\t" + str(energy)
 					
