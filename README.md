@@ -95,7 +95,7 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 + Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.
 + Arguments wrapped in parenthesis () are required; arguments wrapped in square brackets [] are optional.
 + `python wrapper.py -h` or `python wrapper.py --help` brings up an in-console summary of program arguments. <br>
-+ Make sure that all sequences you query are in the right frame as the residue positions specified in the *.res file! You can insert X in the beginning of a sequence to shift it to the correct frame.
++ Make sure that all sequences you query are in the right frame as the residue positions specified in the *.res file! You can insert X in the beginning of a sequence to shift it to the correct frame. <br>
 ***
 
 <br>
