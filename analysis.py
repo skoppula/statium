@@ -265,7 +265,7 @@ def generate_random_distribution (in_res, in_probs_dir, num_seqs=100000):
 def calc_seq_energy (in_res_path, probs_dir, seq):
 
 	#Handle two cases: e.g. AAAX,LLL and LXAAM
-	seq = seq.split(',')
+	seq = ''.join(seq.split(','))
 	
 	#loading in probability into all_probs
 	prob_files = os.listdir(probs_dir)
@@ -274,7 +274,7 @@ def calc_seq_energy (in_res_path, probs_dir, seq):
 	for f in prob_files:
 		file_path = os.path.join(probs_dir, f)
 		lines = filelines2deeplist(file_path)
-		probs = [float(prob) for prob in lines]
+		probs = [float(prob.split('\t')[0]) for prob in lines]
 		ip_res1 = int(f.split('_')[0]) 
 		ip_res2 = int(f.split('_')[1])
 		all_probs[(ip_res1,ip_res2)] = probs
