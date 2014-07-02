@@ -50,7 +50,7 @@ Each file contains a set of twenty probabilities (one for each amino acid) descr
 <i>Template</i> `python wrapper.py random (--seq_length --num_seqs) [--out]`<br>
 <i>Example</i>`python wrapper.py random --seq_length=8 --num_seqs=10 --out=testing/random-sequences.txt`<br>
 
-<i>Specifics</i>Generates `--num_seqs` random sequences of '--seq_length' length. If you include a `--out=X` option, the random sequences will be printed to the specified file. Sequences are randomly drawn from the collection of all known protein sequences contained in `data/all_protein_sequences.txt'. If you choose to modify this (e.g. adjust it so that certain amino acids occur with certain frequencies, ensure that only amino acid in their character representation are present).
+<i>Specifics</i>: Generates `--num_seqs` random sequences of '--seq_length' length. If you include a `--out=X` option, the random sequences will be printed to the specified file. Sequences are randomly drawn from the collection of all known protein sequences contained in `data/all_protein_sequences.txt'. If you choose to modify this (e.g. adjust it so that certain amino acids occur with certain frequencies, ensure that only amino acid in their character representation are present).
 ***
 `get_orig_seq`:<br>
 <i>Template</i> `python wrapper.py get_orig_seq (--in_res --in_pdb_orig --in_pdb_renum)`
@@ -95,6 +95,7 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 + Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.
 + Arguments wrapped in parenthesis () are required; arguments wrapped in square brackets [] are optional.
 + `python wrapper.py -h` or `python wrapper.py --help` brings up an in-console summary of program arguments. <br>
++ Make sure that all sequences you query are in the right frame as the residue positions specified in the *.res file! You can insert X in the beginning of a sequence to shift it to the correct frame.
 <br>
 <b>Thanks for using STATIUM! Feel free to contact skoppula@mit.edu with issues.</b>
 <br>
