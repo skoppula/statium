@@ -88,7 +88,7 @@ def create_res(pdb_orig_path, pdb_renum_path, out_res_path, positions):
 def get_orig_seq(res_path, orig_pdb_path, renum_pdb_path):
 	if verbose: print 'Extracting residue position from ' + in_res + '...'
 	res_lines = filelines2list(in_res)
-	residues = [int(line.strip()) - 1 for line in res_lines]
+	residues = [int(line.strip()) for line in res_lines]
 
 	orig =  get_pdb_info(pdb_orig_path)
 	renum =  get_pdb_info(pdb_renum_path)

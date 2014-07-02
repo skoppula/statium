@@ -3,7 +3,7 @@ import random
 import math
 import warnings
 
-def generate_random_seqs(seq_length, num_seqs, library_path): 
+def generate_random_seq(seq_length, library_path): 
 	library_path = 'data/all_protein_sequences.txt'
 	
 	size = 0
@@ -16,13 +16,15 @@ def generate_random_seqs(seq_length, num_seqs, library_path):
 	except IOError:
 		print 'Could not find file ' + library_path + '. Using random AA generation'
 		
-	sequences = []
-	for _ in range(num_seqs):
-		start = random.randint(0, size - seq_length)
-		sequence = data[start:(start+seq_length)]
-		sequences.append(sequence)
+	start = random.randint(0, size - seq_length)
+	sequence = data[start:(start+seq_length)]
 	
-	return sequences
+	return sequence
+
+
+def calc_seq_zscore(mean, std, energy):
+	zscore = (energy - mean)/std
+	return zscore
 
 
 def read_results(results_file, valueIsNum=True):

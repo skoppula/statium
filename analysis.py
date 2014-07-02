@@ -7,22 +7,8 @@ import timeit
 import itertools
 import pickle
 from operator import itemgetter
-from util import filelines2list
-from util import list2file
-from util import isAA
-from util import AA2char
-from util import AAchar2int
-from util import AAint2char
-from util import get_sidechain_atoms
-from util import filelines2deeplist
-from util import binary_placement
-from util import mean
-from util import std
-from util import nCr
-from util import read_results
-from util import Residue
-from util import Atom
-from util import get_pdb_info
+from collections import OrderedDict
+from util import *
 from reformat import get_orig_seq
 from reformat import generate_random_seqs
 
@@ -109,7 +95,7 @@ def sidechain(in_res, in_pdb, in_preprocess_dir, out_dir, ip_dist_cutoff, match_
 	
 	if verbose: print 'Extracting residue position from ' + in_res + '...'
 	res_lines = filelines2list(in_res)
-	residues = [int(line.strip()) - 1 for line in res_lines]
+	residues = [int(line.strip()) for line in res_lines]
 	
 	if verbose: print 'Extracting information from ' + in_pdb + '...'
 	pdbI = get_pdb_info(in_pdb)
@@ -265,104 +251,51 @@ def check_cutoff(residue_pairs, cutoff):
 def generate_random_distribution (in_res, in_probs_dir, num_seqs=100000):
 	
 	sequence_length = len(filelines2list(in_res))
-	sequences = generate_random_seqs(sequence_length, num_seqs)
-	
-	if(num_seqs > 5000):
-		energies = list(zip(*calc_seq_energy(in_res, in_probs_dir, sequences, verbose=True))[0])
-	else:
-		energies = list(zip(*calc_seq_energy(in_res, in_probs_dir, sequences, verbose=False))[0])
+
+	print 'Calculating distribution of energies for %d random sequences...', num_seqs
+	energies = [calc_seq_energy(in_res, in_probs_dir, generate_random_seq(sequence_length)) for _ in num_seqs]
 		
 	energies.sort()
 	avg = mean(energies)
 	sd = std(energies)
 		
-	return (sequence_length, sequences, energies, avg, sd)
+	return (sequence_length, energies, avg, sd)
 
 
-def calc_seq_zscore(mean, std, energy):
-	zscore = (energy - mean)/std
-	return zscore
+def calc_seq_energy (in_res_path, probs_dir, seq):
 
-#binary search on sorted energies list
-def calc_seq_percentile(energies, energy):
-	i = binary_placement(energies, energy)
-	percentile = i*100/len(energies)
-	return percentile
-
-def fix_sequence_line(seq, desired_seq_length, in_pdb_orig=None, warning=False):
-	parts = seq.split()
-	
-	if(len(seq) != desired_seq_length and len(parts) == 1 and warning):
-		print('NOTE: IRREGULAR SEQUENCE LENGTH WITHOUT A START POSITION FOR ' + seq)
-	
-	elif(len(parts) > 1):
-		if(in_pdb_orig == None):
-			print('Using syntax \'' + seq + '\' needs valid file --IN_PDB_ORIG.')
-			return parts[1]
-		
-		start_seq = int(parts[0])
-		start_reference = get_orig_seq(in_pdb_orig)[2]
-		
-		if(start_seq < start_reference): #the input sequence starts earlier than chain B sequence
-				seq = parts[1][(start_reference - start_seq):]
-							  
-				if(seq == ''):
-					print('UNRELATED SEQUENCE INPUT: ' + seq)
-						
-		elif(start_seq > start_reference): #input sequence starts later than chain B sequence
-				seq = 'X'*(start_seq - start_reference) + parts[1]
-					
-	return seq
-
-def calc_seq_energy (in_res_path, probs_dir, seq, in_pdb_orig=None, verbose=False):
+	#Handle two cases: e.g. AAAX,LLL and LXAAM
+	seq = seq.split(',')
 	
 	#loading in probability into all_probs
-	probs_files = os.listdir(probs_dir)
-	all_probs = [[], []] #[[[PROBS FOR IP1], [PROBS FOR IP2], ...], [[IP1], [IP2],...]]
+	prob_files = os.listdir(probs_dir)
+	all_probs = OrderedDict()
 	
-	lines = filelines2list(in_res_path)
-	residue_positions = [int(line.strip()) - 1 for line in lines]
-	
-	for file in probs_files:
-		file_path = os.path.join(probs_dir, file)
+	for f in prob_files:
+		file_path = os.path.join(probs_dir, f)
 		lines = filelines2deeplist(file_path)
+		probs = [float(prob) for prob in lines]
+		ip_res1 = int(f.split('_')[0]) 
+		ip_res2 = int(f.split('_')[1])
+		all_probs[(ip_res1,ip_res2)] = probs
 
-		probs = [float(x[1]) for x in lines]
-		all_probs[0].append(probs)
-		all_probs[1].append([int(file.split('_')[0]) - 1, int(file.split('_')[1]) - 1])
+	energy = 0
+	lines = filelines2list(in_res_path)
+	residues = [int(line.strip()) for line in lines]
+
+	curr = all_probs[0][1]
+	aa_pos = 0
+	for ip, probs in all_probs.items():
+		if curr != ip[1]:
+			curr = ip[1]
+			aa_pos += 1
+
+		AA = seq[aa_counter]
+		if ip[1] in residues and AA != 'X':
+			energy += (0 if AA == 'G' else probs[AAchar2int(AA)])
 	
-	if(isinstance(seq, str)):
-		return sum_energy(residue_positions, all_probs, seq, in_pdb_orig)
+	return energy
 	
-	elif(isinstance(seq, list)):
-		out = []
-		for (i,x) in enumerate(seq):
-			if(verbose and i%1000 == 1):
-				print('Calculating energy of ' + str(i) + 'th random sequence for the distribution...')
-			out.append(sum_energy(residue_positions, all_probs, x, in_pdb_orig))
-		
-		return out
-	
-def sum_energy(residue_positions, all_probs, seq, in_pdb_orig=None):
-	
-	#deal with irregularly sized sequences
-	seq = fix_sequence_line(seq, len(residue_positions), in_pdb_orig)
-	
-	energy = 0.0
-	for i in range(len(all_probs[0])):
-		
-		(ip_probs, ip_pos) = (all_probs[0][i], all_probs[1][i])
-		pos1 = ip_pos[1] #peptide position on ligand
-		
-		try:
-			if seq[pos1 - residue_positions[0]] == 'X': continue
-			if pos1 in residue_positions:
-				AA = AAchar2int(seq[pos1 - residue_positions[0]])
-		except: continue
-		
-		energy += (ip_probs[AA] if  AAint2char(AA) != 'G' else 0.0)
-			
-	return (energy, seq)
 
 def calc_top_seqs(in_res_path, probs_dir, num_sequences, outfile):
 	probs_files = os.listdir(probs_dir)

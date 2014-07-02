@@ -66,7 +66,7 @@ Reverse of the `renumber` function. From *.res file and the renumbered and origi
 
 `--out` specifies an output file. If this is option is left out, results will be printed to the console. The presence of the z-score flags finds the z-scores of the input sequences' energy on a distribution of random sequences. The presence of the `--histogram=X` saves a histogram of the random distribution of scores generated for use in z-score and percentile calculations.
 
-If you wish to adjust the number of random sequences in the distribution, you can modify the `generate_random_distribution` function.
+If you wish to adjust the number of random sequences in the distribution, you can modify the `generate_random_distribution` function. Currently, 100,000 random-sequence scores are used to create the distribution.
 ***
 <b>Helpful Hints</b>:
 + Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.

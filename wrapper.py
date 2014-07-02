@@ -24,7 +24,7 @@ def main(argv):
 				wrapper.py create_res (--in_pdb_orig=A --in_pdb_renum=B) [--out_res=C --position_pairs=D] [--noverbose]
 				wrapper.py preprocess (--in_dir=A) [--out_dir=B --ip_dist_cutoff=C] [--noverbose] [-r]
 				wrapper.py run_statium (--in_res=A --in_pdb=B --pdb_lib=C) [--out=D --ip_dist_cutoff=E --matching_res_dist_cutoffs=F --counts] [--noverbose]
-				wrapper.py [-f] calc_energy (--in_res=A --in_probs=B --in_seqs=C) [--out=D] [-z | --zscore] [-p | --percentile] [--histogram=E] [--noverbose]
+				wrapper.py [-f] energy (--in_res=A --in_probs=B --in_seqs=C) [--out=D] [-z | --zscore] [--histogram=E] [--noverbose]
 				wrapper.py random (--seq_length=A --num_seqs=B) [--out=C] [--noverbose]
 				wrapper.py get_orig_seq (--in_res=A --in_pdb_orig=B --in_pdb_renum=C) [--noverbose]
 
@@ -143,9 +143,8 @@ def main(argv):
 		statium(res, pdb, pdb_lib, out_dir, ip_dist, match_dist, count, verbose)
 		if verbose: print("Done. STATIUM probabilities in output directory: " + out_dir)
 
-	elif options['calc_energy']:
+	elif options['energy']:
 		zscores = options['-z'] or options['--zscore']
-		percentiles = options['-p'] or options['--percentile']
 		histogram = options['--histogram']
  
 		in_res = options['--in_res']
@@ -156,7 +155,7 @@ def main(argv):
 		
 		if verbose: print "Writing to file: " + isfile + ". Calculating z-score: " + zscores
 		
-		ic zscores or percentiles:
+		if zscores or percentiles:
 			if verbose: print 'Generating random distribution of energies...'
 			distribution = generate_random_distribution(in_res, probs_dir)
 			if histogram:
@@ -172,20 +171,18 @@ def main(argv):
 
 			if verbose: print 'Done generating random distribution.'
 					
-		if options['-f']:
-			lines = filelines2list(seq_or_file)
+		if isfile:
+			if verbose: print 'Reading sequences from file...'
+			lines = filelines2list(in_seqs)
 			out_lines = []
 			
 			for line in lines:
 				if line != '' and line[0] != '#':
-					(energy, seq) = calc_seq_energy(in_res, probs_dir, line, options['--IN_PDB_ORIG'])
-					line = seq + "\t" + str(energy)
+					energy, seq = calc_seq_energy(in_res, probs_dir, line.strip())
+					out = seq + "\t" + str(energy)
 					
 					if(zscores):
-						line += "\t" + str(calc_seq_zscore(distribution[3], distribution[4], energy))
-					
-					if(percentiles):
-						line += "\t" + str(calc_seq_percentile(distribution[2], energy))
+						out += "\t" + str(calc_seq_zscore(distribution[3], distribution[4], energy))
 					
 				out_lines.append(line)
 					
@@ -218,8 +215,8 @@ def main(argv):
 		seq_length = int(options['--seq_length'])
 		out = options['--out']
 		
-		if(verbose): print("Generating " + num_seqs + " random sequences of length " + seq_length)
-		sequences = generate_random_seqs(num_seqs, seq_length)
+		if verbose: print("Generating " + num_seqs + " random sequences of length " + seq_length)
+		sequences = [generate_random_seq(seq_length) for _ in range(num_seqs)]
 		
 		if out is None:
 			for sequence in sequences:
