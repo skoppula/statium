@@ -64,29 +64,6 @@ def filelines2list(infile):
 	return t
 
 
-#uses binary search to determine where element e ranks in a sorted list
-def binary_placement(elements, e):
-	left, right = 0, len(elements)-1
-	mid = (left+right)/2
-	
-	if(elements[left] == e):
-		return left
-	elif(elements[right] == e):
-		return right
-	
-	while(right-left > 1):
-		if(e == elements[mid]):
-			return mid
-		elif(e > elements[mid]):
-			left = mid
-		else:
-			right = mid
-			
-		mid = (left+right)/2
-	
-	return mid
-
-
 def mean(s):
 	return sum(s) * 1.0/len(s)
 

@@ -8,13 +8,12 @@ from analysis import statium
 from analysis import calc_seq_energy
 from analysis import generate_random_distribution
 from analysis import calc_top_seqs
-from analysis import classify
-from analysis import get_confusion_matrix
 from util import calc_seq_zscore
 from util import generate_random_seqs
 from util import list2file
 from util import filelines2list
 from verify import roc
+from verify import print_merged
 
 def main(argv):
 	
@@ -27,10 +26,7 @@ def main(argv):
 				wrapper.py get_orig_seq (--in_res=A --in_pdb_orig=B --in_pdb_renum=C) [--noverbose]
 				wrapper.py calc_top_seqs (--in_res=A --probs_dir=B --N=C) [--out=D] [--noverbose]
 				wrapper.py roc (--scores=A --true=B) [--curve=C --auroc=D] [-noverbose]
-
-				wrapper.py classify (RESULTS_FILE) [OUT_FILE] [ALPHA_THRESHOLD] [--noverbose]
-				wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG] [--noverbose]
-				wrapper.py [-i] plot_roc_curve (IN_RES RESULTS_FILE TRUE_CLASS) [--IN_PDB_ORIG] [--CLASS_RESULTS] [--noverbose]
+				wrapper.py print_merged (--scores=A --true=B) [--out] [--noverbose]
 				wrapper.py [-h | --help]
 			Options:
 
@@ -78,6 +74,10 @@ def main(argv):
 				--true=B	Sequences' true binding classification file path
 				--auroc=C	File path to output auroc
 				--curve=D	File path to output ROC curve
+
+				--scores=A	Sequences w/ energy file path
+				--true=B	Sequences' true binding classification file path
+				--out		Output file path
 			"""
 	
 	options = docopt(helpdoc, argv, help = True, version = "3.0.0", options_first=False)
@@ -240,24 +240,6 @@ i
 			list2file(out, out_path)
 		else:
 			print sequences
-	
-	elif(options['classify']):
-		threshold = 0.05 if options['ALPHA_THRESHOLD'] == None else float(options['ALPHA_THRESHOLD'].split('=')[1])
-		if(verbose): print('Classifying ' + options['RESULTS_FILE'] + ' with dummy (i.e. not considered right now in analysis) threshold ' + str(threshold))
-		outfile = 'classify_results_' + options['RESULTS_FILE'] + '_' + str(options['N']) + '.txt' if (options['OUT_FILE'] == None) else options['OUT_FILE']
-		classify(options['RESULTS_FILE'], outfile, threshold)
-		if(verbose): print('Done. Results in ' + outfile)
-	
-	elif(options['get_confusion_matrix']):
-		if(verbose): print('Calculating confusion matrix for ' + options['CLASS_RESULTS'] + ' with true classifications in ' + options['TRUE_CLASS'])
-		(TP, FP, TN, FN) = get_confusion_matrix(options['IN_RES'], options['CLASS_RESULTS'], options['TRUE_CLASS'], options['--IN_PDB_ORIG'])
-		outfile = options['CLASS_RESULTS'] + '_confusion_matrix.txt' if (options['OUT_FILE'] == None) else options['OUT_FILE']
-		out_str = 'TP: ' + str(TP) + '\t FN: ' + str(FN) + '\nFP: ' + str(FP) + '\tTN: ' + str(TN)
-		out = [out_str]
-		list2file(out, outfile)
-		print(out_str)
-		if(verbose): print('Confusion matrix written out to ' + outfile)
-	
 	elif options['roc']:
 		scores = options['--scores']
 		true = options['--true']
@@ -265,6 +247,12 @@ i
 		curve = options['--curve']
 		if verbose: print 'Calculating AUROC for ' + scores + ' with true classifications in ' + true
 		roc(scores, true, auroc, curve)
+
+	elif options['print_merged']:
+		scores = options['--scores']
+		true = options['--true']
+		out = options['--out'] if options['--out'] is not None else 'merged.txt'
+		print_merged(scores, true, out)
 	
 if __name__ == "__main__":
 	main(sys.argv[1:])

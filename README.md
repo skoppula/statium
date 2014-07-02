@@ -83,6 +83,13 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 
 <i>Specifics</i>: Given a file (output of `energy`) with containing ligand sequences and their energies (`--scores`), a file with those sequences' true binding classification as strong, weak, or inconclusive (`--true`), outputs the corresponding ROC curve (if `--curve` is listed with an output file path) and/or the AUROC (if `--auroc` is listed with an output file path).<br>
 
+<i>Dependencies</i>: `matplotlib` for plotting ROC curves
+***
+`print_merged`<br>
+<i>Template</i> `python wrapper.py print_merged (--scores --true) [--out]'<br>
+<i>Example</i> 'python wrapper.py print_merged --scores=testing/energies.txt --true=testing/true-classifcation.txt --out=testing/scores-and-true.txt`<br>
+
+<i>Specifics</i>: Combines STATIUM scores and true binding classification files into one output file, with each line containing a sequence, its score, and true classification. Sequences in the scores file but not in the classification file will not appear in the file. Conversely, scores in the classification but not in the scores file will be listed as with score infinity.
 ***
 <b>Helpful Hints</b>:
 + Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.
@@ -91,16 +98,3 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 ***
 <b>Thanks for using STATIUM! Feel free to contact skoppula@mit.edu with issues.</b>:
 <br>
-
-			   statium_wrapper.py classify (RESULTS_FILE) [OUT_FILE] [ALPHA_THRESHOLD] [-v | --verbose]
-			   statium_wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG=None] [-v | --verbose]
-
-	
-	python statium_wrapper.py -v classify testing/1ycr_mdm2_seq_zscores.txt testing/1ycr_mdm2_classify_results_0.05.txt ALPHA_THRESHOLD=0.05
-	python statium_wrapper.py -v get_confusion_matrix testing/1ycr_mdm2.res testing/1ycr_mdm2_classify_results_0.05.txt testing/1ycr_mdm2_seqs_true_classification.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb
-	
-	
-
-import this function and call with appropriate arguments to combine sequence energy and true classification into readable file
-summarize(in_energy_file_path, in_true_class_file_path, in_res_path, in_pdb_orig, out_file = '1ycr_mdm2_summarize.txt')
-	
