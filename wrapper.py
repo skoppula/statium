@@ -26,6 +26,7 @@ def main(argv):
 				wrapper.py [-f] energy (--in_res=A --in_probs=B --in_seqs=C) [--out=D] [-z | --zscore] [--histogram=E] [--noverbose]
 				wrapper.py random (--seq_length=A --num_seqs=B) [--out=C] [--noverbose]
 				wrapper.py get_orig_seq (--in_res=A --in_pdb_orig=B --in_pdb_renum=C) [--noverbose]
+				wrapper.py calc_top_seqs (--in_res=A --probs_dir=B --N=C) [--out=D]
 
 				wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [--noverbose]
 				wrapper.py classify (RESULTS_FILE) [OUT_FILE] [ALPHA_THRESHOLD] [--noverbose]
@@ -70,6 +71,11 @@ def main(argv):
 				--in_res=A	Input .res file path
 				--in_pdb_orig=B	Input PDB file path (original)
 				--in_pdb_renum-C	Input PDB file path (renumbered)
+
+
+				--probs_dir=A	Input STATIUM probabilities directory
+				--N		Number of sequences to be found
+				--out		Output file path
 			"""
 	
 	options = docopt(helpdoc, argv, help = True, version = "3.0.0", options_first=False)
@@ -220,11 +226,19 @@ def main(argv):
 			list2file(sequences, out)
 			if(verbose): print("Random sequences written to " + out)
    
-	elif(options['calc_top_seqs']):
-		if(verbose): print('Calculating ' + options['N'] + ' sequences with lowest energy.')
-		outfile = 'top_' + str(options['N']) + '_sequences.txt' if (options['OUT_FILE'] == None) else options['OUT_FILE']
-		calc_top_seqs(options['IN_RES'], options['PROBS_DIR'], int(options['N']), outfile)
-		if(verbose): print("Done. Results written to " + outfile)
+	elif options['calc_top_seqs']:
+		in_res = options['--in_res']
+		probs_dir = options['--probs_dir']
+		N = int(options['--N'])
+i
+		if verbose: print 'Calculating ' + N + ' sequences with lowest energy.'
+		results = calc_top_seqs(in_res, probs_dir, N)
+		if probs_dir:
+			out = [seq + '\t' + str(energy) + '\n' for seq, energy in results]
+			out_path = 'top_' + str(N) + '_sequences.txt' if probs_dir == None else probs_dir
+			list2file(out, out_path)
+		else:
+			print sequences
 	
 	elif(options['classify']):
 		threshold = 0.05 if options['ALPHA_THRESHOLD'] == None else float(options['ALPHA_THRESHOLD'].split('=')[1])

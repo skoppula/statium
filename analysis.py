@@ -296,42 +296,44 @@ def calc_seq_energy (in_res_path, probs_dir, seq):
 	
 	return energy
 	
-
+#Note: need res file, because not all residues 
 def calc_top_seqs(in_res_path, probs_dir, num_sequences, outfile):
-	probs_files = os.listdir(probs_dir)
-	all_probs = [[], []] #[[[PROBS FOR IP1], [PROBS FOR IP2], ...], [[IP1], [IP2],...]]
 	 
 	#read back from .res file where ligand residues start
 	lines = filelines2list(in_res_path)
-	residue_positions = [int(line.strip()) - 1 for line in lines]
+	residues = [int(line.strip()) for line in lines]
 	
-	for file in probs_files:
-		file_path = os.path.join(probs_dir, file)
+   	#loading in probability into all_probs
+	prob_files = os.listdir(probs_dir)
+	all_probs = OrderedDict()
+	
+	for f in prob_files:
+		file_path = os.path.join(probs_dir, f)
 		lines = filelines2deeplist(file_path)
+		probs = [float(prob.split('\t')[0]) for prob in lines]
+		ip_res1 = int(f.split('_')[0]) 
+		ip_res2 = int(f.split('_')[1])
+		all_probs[(ip_res1,ip_res2)] = probs
 
-		probs = [float(x[1]) for x in lines]
-		all_probs[0].append(probs)
-		all_probs[1].append([int(file.split('_')[0]) - 1, int(file.split('_')[1]) - 1])
-   
 	#the following now fills ordered_probs
-	ordered_probs = [] #[[sorted list of AA probabilities for a specific residue position: (0.3, 'A'), (0.5, 'C'),...], [like before for residue pos 2], etc...]
+	#[[sorted list of AA probs for a residue position: (0.5, 'A'), (0.3, 'C'),...], [like before for residue pos 2], etc...]
+	ordered_probs = [] 
 	AAs = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
-	for residue in residue_positions:
-		indices = [idx for idx in range(len(all_probs[1])) if residue in all_probs[1][idx]]
-		probs = [all_probs[0][i] for i in indices]
+	for residue in residues:
+		probs = [prob for ip, prob in all_probs.items() if residue in ip else None]
 		probs_sum = map(sum, zip(*probs))
 		sorted_probs = sorted(zip(probs_sum, AAs), key=lambda pair: pair[0])
 		ordered_probs.append(sorted_probs)
 	
 	#enumerate all the balls in urns possibilities
 	#note that to maintain the max-heap property in Python's heapq implementation (which only does min-heap), we multiple by -1 before adding to heap
-	num_urns = len(residue_positions)
+	num_urns = len(residues)
 	heap = []
 	
 	seq = ''
 	energy = 0
-	for i, c in enumerate(residue_positions):
-		if(ordered_probs[i]):
+	for i, c in enumerate(residues):
+		if ordered_probs[i]:
 			aa = ordered_probs[i][0][1]
 			seq += aa
 			energy += (0.0 if aa == 'G' else ordered_probs[i][0][0])
@@ -341,7 +343,7 @@ def calc_top_seqs(in_res_path, probs_dir, num_sequences, outfile):
 	
 	max_num_balls = 0
 	total = 0
-	while(total < num_sequences):
+	while total < num_sequences:
 		max_num_balls += 1
 		total += nCr((max_num_balls+num_urns-1), (max_num_balls))
 	
@@ -380,9 +382,9 @@ def calc_top_seqs(in_res_path, probs_dir, num_sequences, outfile):
 				heapq.heappushpop(heap, (-1*energy, seq))
 	
 	heap = sorted(heap, reverse=True)
-	results = [list(t) for t in zip(*heap)]
-	out = [results[1][i] + '\t' + str(-1*energy) for i, energy in enumerate(results[0])]
-	list2file(out, outfile)
+	out = [(seq, energy*-1) for energy, seq in heap]
+	return out
+
 
 #based on a X/100 threshold, classifies top X% as strong binders, bottom X% as weak binders. Uses results file and last column of values in results file 
 #SHOULD IDEALLY USE INVERSE NORM, NOW JUST HARDCODING IN THRESHOLD Z-SCORES FOR ALPHA=0.05

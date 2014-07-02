@@ -46,13 +46,13 @@ The function creates a directory containing a set of files, one file per interac
 Each file contains a set of twenty probabilities (one for each amino acid) describing how likely it is for that identity would exist at that position on the sidechain, given the main chain's amino acid identity at the position.
 ***
 `random`:<br>
-<i>Template</i>`python wrapper.py random (--seq_length --num_seqs) [--out]`<br>
+<i>Template</i> `python wrapper.py random (--seq_length --num_seqs) [--out]`<br>
 <i>Example</i>`python wrapper.py random --seq_length=8 --num_seqs=10 --out=testing/random-sequences.txt`<br>
 
 <i>Specifics</i>Generates `--num_seqs` random sequences of '--seq_length' length. If you include a `--out=X` option, the random sequences will be printed to the specified file. Sequences are randomly drawn from the collection of all known protein sequences contained in `data/all_protein_sequences.txt'. If you choose to modify this (e.g. adjust it so that certain amino acids occur with certain frequencies, ensure that only amino acid in their character representation are present).
 ***
 `get_orig_seq`:<br>
-<i>Template</i>`python wrapper.py get_orig_seq (--in_res --in_pdb_orig --in_pdb_renum)`
+<i>Template</i> `python wrapper.py get_orig_seq (--in_res --in_pdb_orig --in_pdb_renum)`
 <i>Example</i> `python wrapper.py get_orig_seq ---in_res=testing/1mph_AHL.res -in_pdb_orig=testing/1mph_AHL_orig.pdb --in_pdb_renum=testing/1mph_AHL_renum.pdb 
 
 Reverse of the `renumber` function. From *.res file and the renumbered and original PDBs (see `renumber`) outputs the list of residues with original chain and position information.
@@ -68,6 +68,12 @@ Reverse of the `renumber` function. From *.res file and the renumbered and origi
 
 If you wish to adjust the number of random sequences in the distribution, you can modify the `generate_random_distribution` function. Currently, 100,000 random-sequence scores are used to create the distribution.
 ***
+`calc_top_seqs`<br>
+<i>Template</i> `python wrapper.py calc_top_seqs (--in_res --probs_dir --N) [--out]`
+<i>Example</i> `python wrapper.py calc_top_seqs --probs_dir=testing/sarah-test/1mph_AHL_probs --out=testing/sarah-test/top_100_seqs.txt --N=100`
+
+<i>Specifics</i>: Calculates the top `N` sequences with the lowest STATIUM energies (best predicted binders). `--probs_dir` is the output of the `run-statium` function and `--in_res` the *.res file produced by `create_res`.
+***
 <b>Helpful Hints</b>:
 + Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.
 + Arguments wrapped in parenthesis () are required; arguments wrapped in square brackets [] are optional.
@@ -76,14 +82,11 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 <b>Thanks for using STATIUM! Feel free to contact skoppula@mit.edu with issues.</b>:
 <br>
 
-			   statium_wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [-v | --verbose]
 			   statium_wrapper.py classify (RESULTS_FILE) [OUT_FILE] [ALPHA_THRESHOLD] [-v | --verbose]
 			   statium_wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG=None] [-v | --verbose]
 			   statium_wrapper.py [-i] calc_auroc (IN_RES RESULTS_FILE TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG=None] [--CLASS_RESULTS=None] [-v | --verbose]
 			   statium_wrapper.py [-i] plot_roc_curve (IN_RES RESULTS_FILE TRUE_CLASS) [--IN_PDB_ORIG=None] [--CLASS_RESULTS=None] [-v | --verbose]
 
-	python statium_wrapper.py -v calc_top_seqs testing/1ycr_mdm2.res testing/1ycr_mdm2_output_probs/ 10
-	
 	
 	python statium_wrapper.py -v classify testing/1ycr_mdm2_seq_zscores.txt testing/1ycr_mdm2_classify_results_0.05.txt ALPHA_THRESHOLD=0.05
 	python statium_wrapper.py -v get_confusion_matrix testing/1ycr_mdm2.res testing/1ycr_mdm2_classify_results_0.05.txt testing/1ycr_mdm2_seqs_true_classification.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb
