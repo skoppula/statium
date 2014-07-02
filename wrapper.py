@@ -10,12 +10,11 @@ from analysis import generate_random_distribution
 from analysis import calc_top_seqs
 from analysis import classify
 from analysis import get_confusion_matrix
-from analysis import calc_auroc
-from analysis import plot_roc_curve
 from util import calc_seq_zscore
 from util import generate_random_seqs
 from util import list2file
 from util import filelines2list
+from verify import roc
 
 def main(argv):
 	
@@ -26,12 +25,11 @@ def main(argv):
 				wrapper.py [-f] energy (--in_res=A --in_probs=B --in_seqs=C) [--out=D] [-z | --zscore] [--histogram=E] [--noverbose]
 				wrapper.py random (--seq_length=A --num_seqs=B) [--out=C] [--noverbose]
 				wrapper.py get_orig_seq (--in_res=A --in_pdb_orig=B --in_pdb_renum=C) [--noverbose]
-				wrapper.py calc_top_seqs (--in_res=A --probs_dir=B --N=C) [--out=D]
+				wrapper.py calc_top_seqs (--in_res=A --probs_dir=B --N=C) [--out=D] [--noverbose]
+				wrapper.py roc (--scores=A --true=B) [--curve=C --auroc=D] [-noverbose]
 
-				wrapper.py calc_top_seqs (IN_RES PROBS_DIR N) [OUT_FILE] [--noverbose]
 				wrapper.py classify (RESULTS_FILE) [OUT_FILE] [ALPHA_THRESHOLD] [--noverbose]
 				wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG] [--noverbose]
-				wrapper.py [-i] calc_auroc (IN_RES RESULTS_FILE TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG] [--CLASS_RESULTS] [--noverbose]
 				wrapper.py [-i] plot_roc_curve (IN_RES RESULTS_FILE TRUE_CLASS) [--IN_PDB_ORIG] [--CLASS_RESULTS] [--noverbose]
 				wrapper.py [-h | --help]
 			Options:
@@ -72,10 +70,14 @@ def main(argv):
 				--in_pdb_orig=B	Input PDB file path (original)
 				--in_pdb_renum-C	Input PDB file path (renumbered)
 
-
 				--probs_dir=A	Input STATIUM probabilities directory
 				--N		Number of sequences to be found
 				--out		Output file path
+
+				--scores=A	Sequences w/ energy file path
+				--true=B	Sequences' true binding classification file path
+				--auroc=C	File path to output auroc
+				--curve=D	File path to output ROC curve
 			"""
 	
 	options = docopt(helpdoc, argv, help = True, version = "3.0.0", options_first=False)
@@ -211,7 +213,6 @@ def main(argv):
 		get_orig_seq(res, orig_pdb, renum_pdb)
 	
 	elif options['generate_random_seqs']:
-
 		num_seqs = int(options['--num_seqs'])
 		seq_length = int(options['--seq_length'])
 		out = options['--out']
@@ -257,36 +258,13 @@ i
 		print(out_str)
 		if(verbose): print('Confusion matrix written out to ' + outfile)
 	
-	#by default, analysis includes tentative inconclusives. the -i flag removes them from analysis 
-	elif(options['calc_auroc']):
-		if(verbose): print('Calculating AUROC for ' + options['RESULTS_FILE'] + ' with true classifications in ' + options['TRUE_CLASS'])
-		
-		class_results = options['--CLASS_RESULTS']
-		if(verbose):
-			if(options['-i']):
-				print('Discarding tentative \'inconclusive sequences\' in ROC analysis')
-			else:
-				print('Including tentative \'inconclusive sequences\' in ROC analysis')
-		
-			  
-		auroc = calc_auroc(options['IN_RES'], options['RESULTS_FILE'], options['TRUE_CLASS'], class_results, options['--IN_PDB_ORIG'])
-		outfile = options['CLASS_RESULTS'] + '_auroc.txt' if (options['OUT_FILE'] == None) else options['OUT_FILE']
-		list2file([str(auroc)], outfile)
-		print(auroc)
-		if(verbose): print('AUROC written out to ' + outfile)
-		
-	elif(options['plot_roc_curve']):
-		if(verbose): print('Plotting ROC curve for ' + options['RESULTS_FILE'] + ' with true classifications in ' + options['TRUE_CLASS'])
-		if(verbose):
-			if(options['-i']):
-				print('Discarding tentative \'inconclusive sequences\' in ROC analysis')
-				class_results = options['--CLASS_RESULTS']
-			else:
-				print('Including tentative \'inconclusive sequences\' in ROC analysis')
-				class_results = None
-				
-		plot_roc_curve(options['IN_RES'], options['RESULTS_FILE'], options['TRUE_CLASS'], class_results, options['--IN_PDB_ORIG'])
-		if(verbose): print('Done.')
+	elif options['roc']:
+		scores = options['--scores']
+		true = options['--true']
+		auroc = options['--auroc']
+		curve = options['--curve']
+		if verbose: print 'Calculating AUROC for ' + scores + ' with true classifications in ' + true
+		roc(scores, true, auroc, curve)
 	
 if __name__ == "__main__":
 	main(sys.argv[1:])

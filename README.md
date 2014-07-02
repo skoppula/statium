@@ -35,7 +35,7 @@ The `-r` (restart) flag rewrite the pickle files previously created in the outpu
 `run_statium`:<br>
 <i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --pdb_lib) [--out_dir --ip_dist_cutoff --matching_res_dist_cutoffs --counts]`<br>
 
-<i>Example</i> `python wrapper.py run_statium --in_pdb=testing/sarah-test/1mhp_AHL_new.pdb --in_res=testing/sarah-test/1mhp_AHL.res --pdb_lib=data/culled_90/ --ip_lib=data/ip_90_wGLY/` <br>
+<i>Example</i> `python wrapper.py run_statium --in_pdb=testing/1mhp_AHL_new.pdb --in_res=testing/1mhp_AHL.res --pdb_lib=data/culled_90/ --ip_lib=data/ip_90_wGLY/` <br>
 
 <i>Specifics</i>: Takes in a renumbered PDB file (see `renumber`), the directory of the preprocessed protein library containing each PDB's *.pickle file (--pdb_lib).
 
@@ -43,7 +43,9 @@ Optional parameters include: --out_dir (the directory where STATIUM outputs its 
 
 The function creates a directory containing a set of files, one file per interacting pair:
 
-Each file contains a set of twenty probabilities (one for each amino acid) describing how likely it is for that identity would exist at that position on the sidechain, given the main chain's amino acid identity at the position.
+Each file contains a set of twenty probabilities (one for each amino acid) describing how likely it is for that identity would exist at that position on the sidechain, given the main chain's amino acid identity at the position.<br>
+
+<i>Dependencies</i>: `fsolve` from `scipy.optimize` if there are glycine residues in any of the interacting pair positions
 ***
 `random`:<br>
 <i>Template</i> `python wrapper.py random (--seq_length --num_seqs) [--out]`<br>
@@ -59,20 +61,29 @@ Reverse of the `renumber` function. From *.res file and the renumbered and origi
 ***
 `energy`:<br>
 <i>Template</i> `python wrapper.py energy (--in_res --in_probs) [-f] (--in_seqs) [--out] [-z | --zscores] [-p | --percentiles] [-v | --verbose] [--histogram]`<br>
-<i>Example One</i> `python wrapper.py --in_res=testing/sarah-test/1mhp_AHL.res --in_probs=testing/sarah-testing/1mhp_AHL_probs --in_seqs=AAAGGGM,LLAA -z --histogram='hist.jpg'`<br>
-<i>Example Two</i> `python wrapper.py --in_res=testing/sarah-test/1mhp_AHL.res --in_probs=testing/sarah-testing/1mhp_AHL_probs -f --in_seqs=testing/sarah-testing/seqs.txt`<br>
+<i>Example One</i> `python wrapper.py --in_res=testing/1mhp_AHL.res --in_probs=testing/1mhp_AHL_probs --in_seqs=AAAGGGM,LLAA -z --histogram='hist.jpg'`<br>
+<i>Example Two</i> `python wrapper.py --in_res=testing/1mhp_AHL.res --in_probs=testing/1mhp_AHL_probs -f --in_seqs=testing/seqs.txt`<br>
 
 <i>Specifics</i>: Calculates STATIUM's binding score for a given sequence of amino acids in the positions listed in the input *.res file (see `create_res`). The `--in_probs` input is the STATIUM probabilities directory computed in `run_statium`. The presence of `-f` indicates that `--in_seqs` is a file (else just [possibly a set of] sequences, corresponding to the chains/position-pairs used to create the *.res file). For example, you might have a --in_seqs=AAA,L if your `--position_pairs` argument in `create_res` was 10-12,13. A file would contain similarly formatted argument, one sequence (set) on each line.
 
 `--out` specifies an output file. If this is option is left out, results will be printed to the console. The presence of the z-score flags finds the z-scores of the input sequences' energy on a distribution of random sequences. The presence of the `--histogram=X` saves a histogram of the random distribution of scores generated for use in z-score and percentile calculations.
 
 If you wish to adjust the number of random sequences in the distribution, you can modify the `generate_random_distribution` function. Currently, 100,000 random-sequence scores are used to create the distribution.
+
+<i>Dependencies</i>: `matplotlib.pyplot` and `numpy` in order to use `--histogram`
 ***
 `calc_top_seqs`<br>
 <i>Template</i> `python wrapper.py calc_top_seqs (--in_res --probs_dir --N) [--out]`
-<i>Example</i> `python wrapper.py calc_top_seqs --probs_dir=testing/sarah-test/1mph_AHL_probs --out=testing/sarah-test/top_100_seqs.txt --N=100`
+<i>Example</i> `python wrapper.py calc_top_seqs --probs_dir=testing/1mph_AHL_probs --out=testing/top_100_seqs.txt --N=100`
 
 <i>Specifics</i>: Calculates the top `N` sequences with the lowest STATIUM energies (best predicted binders). `--probs_dir` is the output of the `run-statium` function and `--in_res` the *.res file produced by `create_res`.
+***
+`roc`<br>
+<i>Template</i> `python wrapper.py roc (--scores --true) [--curve --auroc]`<br>
+<i>Example</i> `python wrapper.py roc --scores=testing/energies.txt --true=testing/true-classification.txt --auroc=testing/auroc.txt --curve=testing/roc-curve.png`<br>
+
+<i>Specifics</i>: Given a file (output of `energy`) with containing ligand sequences and their energies (`--scores`), a file with those sequences' true binding classification as strong, weak, or inconclusive (`--true`), outputs the corresponding ROC curve (if `--curve` is listed with an output file path) and/or the AUROC (if `--auroc` is listed with an output file path).<br>
+
 ***
 <b>Helpful Hints</b>:
 + Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.
@@ -85,7 +96,6 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 			   statium_wrapper.py classify (RESULTS_FILE) [OUT_FILE] [ALPHA_THRESHOLD] [-v | --verbose]
 			   statium_wrapper.py get_confusion_matrix (IN_RES CLASS_RESULTS TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG=None] [-v | --verbose]
 			   statium_wrapper.py [-i] calc_auroc (IN_RES RESULTS_FILE TRUE_CLASS) [OUT_FILE] [--IN_PDB_ORIG=None] [--CLASS_RESULTS=None] [-v | --verbose]
-			   statium_wrapper.py [-i] plot_roc_curve (IN_RES RESULTS_FILE TRUE_CLASS) [--IN_PDB_ORIG=None] [--CLASS_RESULTS=None] [-v | --verbose]
 
 	
 	python statium_wrapper.py -v classify testing/1ycr_mdm2_seq_zscores.txt testing/1ycr_mdm2_classify_results_0.05.txt ALPHA_THRESHOLD=0.05
@@ -97,11 +107,7 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 	python statium_wrapper.py -iv calc_auroc testing/1ycr_mdm2.res testing/1ycr_mdm2_seq_zscores.txt testing/1ycr_mdm2_seqs_true_classification.txt testing/1ycr_mdm2_auroc_zscores_no_inconclusives.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb --CLASS_RESULTS=testing/1ycr_mdm2_classify_results_0.05.txt
 	python statium_wrapper.py -iv calc_auroc testing/1ycr_mdm2.res testing/1ycr_mdm2_seq_energies.txt testing/1ycr_mdm2_seqs_true_classification.txt testing/1ycr_mdm2_auroc_energies_no_inconclusives.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb --CLASS_RESULTS=testing/1ycr_mdm2_classify_results_0.05.txt
 	
-	python statium_wrapper.py -v plot_roc_curve testing/1ycr_mdm2.res testing/1ycr_mdm2_seq_zscores.txt testing/1ycr_mdm2_seqs_true_classification.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb
-	python statium_wrapper.py -v plot_roc_curve testing/1ycr_mdm2.res testing/1ycr_mdm2_seq_energies.txt testing/1ycr_mdm2_seqs_true_classification.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb
 	
-	python statium_wrapper.py -iv plot_roc_curve testing/1ycr_mdm2.res testing/1ycr_mdm2_seq_zscores.txt testing/1ycr_mdm2_seqs_true_classification.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb --CLASS_RESULTS=testing/1ycr_mdm2_classify_results_0.05.txt
-	python statium_wrapper.py -iv plot_roc_curve testing/1ycr_mdm2.res testing/1ycr_mdm2_seq_energies.txt testing/1ycr_mdm2_seqs_true_classification.txt --IN_PDB_ORIG=testing/1ycr_mdm2_orig.pdb --CLASS_RESULTS=testing/1ycr_mdm2_classify_results_0.05.txt
 
 import this function and call with appropriate arguments to combine sequence energy and true classification into readable file
 summarize(in_energy_file_path, in_true_class_file_path, in_res_path, in_pdb_orig, out_file = '1ycr_mdm2_summarize.txt')

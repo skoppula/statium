@@ -269,7 +269,7 @@ def calc_seq_energy (in_res_path, probs_dir, seq):
 	
 	#loading in probability into all_probs
 	prob_files = os.listdir(probs_dir)
-	all_probs = OrderedDict()
+	all_probs = dict()
 	
 	for f in prob_files:
 		file_path = os.path.join(probs_dir, f)
@@ -283,17 +283,13 @@ def calc_seq_energy (in_res_path, probs_dir, seq):
 	lines = filelines2list(in_res_path)
 	residues = [int(line.strip()) for line in lines]
 
-	curr = all_probs[0][1]
-	aa_pos = 0
-	for ip, probs in all_probs.items():
-		if curr != ip[1]:
-			curr = ip[1]
-			aa_pos += 1
-
-		AA = seq[aa_counter]
-		if ip[1] in residues and AA != 'X':
-			energy += (0 if AA == 'G' else probs[AAchar2int(AA)])
-	
+	for i, residue in enumerate(residues):
+		filtered = {ip: probs for ip, probs in all_probs.items() if ip[1] == residue}
+		AA = seq[i]
+		if AA == 'X' or AA == 'G' or filtered == {}: continue
+		for ip, probs in filtered.items():
+			energy += probs[AAchar2int(AA)]
+			
 	return energy
 	
 #Note: need res file, because not all residues 
