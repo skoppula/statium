@@ -1,5 +1,5 @@
 <b>STATIUM: smart scoring. promising proteins.</b><br>
-STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository implements a still-under-development algorithm we call STATIUM that scores how well two or more proteins bind at their interacting positions.
+STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository contains our implentation of this structure-based statistical-potential algorithm that scores how well two or more proteins bind at their interacting positions.
 
 <b>Details and Documentation</b>
 ***
