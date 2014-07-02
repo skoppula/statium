@@ -94,7 +94,7 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 <b>Helpful Hints</b>:
 + Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.
 + Arguments wrapped in parenthesis () are required; arguments wrapped in square brackets [] are optional.
-+ `python wrapper.py -h` or `python wrapper.py --help` brings up an in-console summary of program arguments. 
++ `python wrapper.py -h` or `python wrapper.py --help` brings up an in-console summary of program arguments. <br>
 ***
 <b>Thanks for using STATIUM! Feel free to contact skoppula@mit.edu with issues.</b>:
 <br>
