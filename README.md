@@ -2,6 +2,7 @@
 STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository implements a still-under-development algorithm we call STATIUM that scores how well two or more proteins bind at their interacting positions.
 
 <b>Details and Documentation</b>
+***
 `renumber`:<br>
 <i>Template</i> `python wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN --chains]`<br>
 
