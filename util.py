@@ -27,39 +27,25 @@ def calc_seq_zscore(mean, std, energy):
 	return zscore
 
 
-def read_results(results_file, valueIsNum=True):
-	results = filelines2deeplist(results_file, skipComments=True, useTuples=True, skipEmptyLines=True)
-	results_dict = dict()
-	for result in results:
-		#remember seq stored in results file is already 'fixed' so we don't need to fix sequence it again
-		if(valueIsNum):
-			results_dict[result[0]] = float(result[-1])
-		else:
-			results_dict[result[0]] = result[-1]
-	
-	return results_dict
-
-
 def list2file(t, infile):
-	file = open(infile, 'w')
-	for element in t:
-		file.write(element + "\n")
-	file.close()
+	with open(infile, 'w') as f:
+		for element in t:
+			f.write(element + "\n")
 
 
 def filelines2deeplist(infile, skipComments=False, useTuples=False, skipEmptyLines=False):
-  
 	t = []
 	file = open(infile, 'r')
-	lines = file.readlines()
+	with open(infile, 'r') as f:
+		lines = f.read().split('\n')
 	
 	for line in lines:
-		if(skipComments and line[0] == '#'):
+		if skipComments and line[0] == '#':
 			continue
 		items = line.strip().split()
-		if(skipEmptyLines and not items):
+		if skipEmptyLines and not items:
 			continue
-		if(useTuples):
+		if useTuples:
 			items = tuple(items)
 		t.append(items)
 

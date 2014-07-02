@@ -246,7 +246,32 @@ class ROCData(object):
 		pylab.title(title)
 		
 		pylab.show()
+	
+	def plot_and_save(self,out_path,title='',include_baseline=False,equal_aspect=True):
+		""" Method that generates a plot of the ROC curve 
+			Parameters:
+				title: Title of the chart
+				include_baseline: Add the baseline plot line if it's True
+				equal_aspect: Aspects to be equal for all plot
+		"""
 		
+		pylab.clf()
+		pylab.plot([x[0] for x in self.derived_points], [y[1] for y in self.derived_points], self.linestyle)
+		if include_baseline:
+			pylab.plot([0.0,1.0], [0.0,1.0],'k-.')
+		pylab.ylim((0,1))
+		pylab.xlim((0,1))
+		pylab.xticks(pylab.arange(0,1.1,.1))
+		pylab.yticks(pylab.arange(0,1.1,.1))
+		pylab.grid(True)
+		if equal_aspect:
+			cax = pylab.gca()
+			cax.set_aspect('equal')
+		pylab.xlabel('1 - Specificity')
+		pylab.ylabel('Sensitivity')
+		pylab.title(title)
+		
+		pylab.savefig(out_path)
 	
 	def confusion_matrix(self,threshold,do_print=False):
 		""" Returns the confusion matrix (in dictionary form) for a fiven threshold
