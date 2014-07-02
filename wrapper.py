@@ -7,13 +7,12 @@ from analysis import preprocess
 from analysis import statium
 from analysis import calc_seq_energy
 from analysis import generate_random_distribution
-from analysis import calc_seq_zscore
-from analysis import calc_seq_percentile
 from analysis import calc_top_seqs
 from analysis import classify
 from analysis import get_confusion_matrix
 from analysis import calc_auroc
 from analysis import plot_roc_curve
+from util import calc_seq_zscore
 from util import generate_random_seqs
 from util import list2file
 from util import filelines2list
@@ -178,7 +177,8 @@ def main(argv):
 			
 			for line in lines:
 				if line != '' and line[0] != '#':
-					energy, seq = calc_seq_energy(in_res, probs_dir, line.strip())
+					seq = line.strip()
+					energy = calc_seq_energy(in_res, probs_dir, seq)
 					out = seq + "\t" + str(energy)
 					
 					if(zscores):
@@ -190,17 +190,12 @@ def main(argv):
 			print('Done.')
 		
 		else:
-			(energy, seq) = calc_seq_energy(in_res, probs_dir, seq_or_file, options['--IN_PDB_ORIG'])
-			print("Sequence energy for " + seq + " is: " + str(energy))
+			energy = calc_seq_energy(in_res, probs_dir, in_seqs)
+			print("Sequence energy for " + in_seqs + " is: " + str(energy))
 			
 			if(zscores):
 				zscore = calc_seq_zscore(distribution[3], distribution[4], energy)
 				print('Z-score is ' + str(zscore))
-				
-			if(percentiles):
-				percentile = calc_seq_percentile(distribution[2], energy)
-				print('Percentile is ' + str(percentile))
-
 
 	#Get the original AA sequence of chain B, along with stats like the length and position of that chain
 	elif options['get_orig_seq']:
