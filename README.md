@@ -54,7 +54,7 @@ Each file contains a set of twenty probabilities (one for each amino acid) descr
 <i>Specifics</i>: Generates `--num_seqs` random sequences of '--seq_length' length. If you include a `--out=X` option, the random sequences will be printed to the specified file. Sequences are randomly drawn from the collection of all known protein sequences contained in `data/all_protein_sequences.txt'. If you choose to modify this (e.g. adjust it so that certain amino acids occur with certain frequencies, ensure that only amino acid in their character representation are present).
 ***
 `get_orig_seq`:<br>
-<i>Template</i> `python wrapper.py get_orig_seq (--in_res --in_pdb_orig --in_pdb_renum)`
+<i>Template</i> `python wrapper.py get_orig_seq (--in_res --in_pdb_orig --in_pdb_renum)`<br>
 <i>Example</i> `python wrapper.py get_orig_seq ---in_res=testing/1mph_AHL.res -in_pdb_orig=testing/1mph_AHL_orig.pdb --in_pdb_renum=testing/1mph_AHL_renum.pdb 
 
 Reverse of the `renumber` function. From *.res file and the renumbered and original PDBs (see `renumber`) outputs the list of residues with original chain and position information.
@@ -73,7 +73,7 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 <i>Dependencies</i>: `matplotlib.pyplot` and `numpy` in order to use `--histogram`
 ***
 `calc_top_seqs`<br>
-<i>Template</i> `python wrapper.py calc_top_seqs (--in_res --probs_dir --N) [--out]`
+<i>Template</i> `python wrapper.py calc_top_seqs (--in_res --probs_dir --N) [--out]`<br>
 <i>Example</i> `python wrapper.py calc_top_seqs --probs_dir=testing/1mph_AHL_probs --out=testing/top_100_seqs.txt --N=100`
 
 <i>Specifics</i>: Calculates the top `N` sequences with the lowest STATIUM energies (best predicted binders). `--probs_dir` is the output of the `run-statium` function and `--in_res` the *.res file produced by `create_res`.

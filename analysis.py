@@ -7,7 +7,6 @@ import timeit
 import itertools
 import pickle
 from util import *
-from reformat import generate_random_seqs
 
 
 def get_dist_matrix_and_IPs(pdb, cutoff):
@@ -313,7 +312,7 @@ def calc_top_seqs(in_res_path, probs_dir, num_sequences, outfile):
 	ordered_probs = [] 
 	AAs = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
 	for residue in residues:
-		probs = [prob for ip, prob in all_probs.items() if residue in ip else None]
+		probs = [prob for ip, prob in all_probs.items() if residue in ip]
 		probs_sum = map(sum, zip(*probs))
 		sorted_probs = sorted(zip(probs_sum, AAs), key=lambda pair: pair[0])
 		ordered_probs.append(sorted_probs)

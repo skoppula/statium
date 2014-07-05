@@ -1,4 +1,5 @@
-import sys import ast
+import sys
+import ast
 from docopt import docopt
 from reformat import renumber
 from reformat import create_res
@@ -9,7 +10,7 @@ from analysis import calc_seq_energy
 from analysis import generate_random_distribution
 from analysis import calc_top_seqs
 from util import calc_seq_zscore
-from util import generate_random_seqs
+from util import generate_random_seq
 from util import list2file
 from util import filelines2list
 from verify import roc
@@ -26,7 +27,7 @@ def main(argv):
 				wrapper.py get_orig_seq (--in_res=A --in_pdb_orig=B --in_pdb_renum=C) [--noverbose]
 				wrapper.py calc_top_seqs (--in_res=A --probs_dir=B --N=C) [--out=D] [--noverbose]
 				wrapper.py roc (--scores=A --true=B) [--curve=C --auroc=D] [-noverbose]
-				wrapper.py print_merged (--scores=A --true=B) [--out] [--noverbose]
+				wrapper.py print_merged (--scores=A --true=B) [--out=C] [--noverbose]
 				wrapper.py [-h | --help]
 			Options:
 
@@ -66,9 +67,10 @@ def main(argv):
 				--in_pdb_orig=B	Input PDB file path (original)
 				--in_pdb_renum-C	Input PDB file path (renumbered)
 
-				--probs_dir=A	Input STATIUM probabilities directory
-				--N		Number of sequences to be found
-				--out		Output file path
+				--in_res=A
+				--probs_dir=B	Input STATIUM probabilities directory
+				--N=C		Number of sequences to be found
+				--out=D		Output file path
 
 				--scores=A	Sequences w/ energy file path
 				--true=B	Sequences' true binding classification file path
@@ -77,7 +79,7 @@ def main(argv):
 
 				--scores=A	Sequences w/ energy file path
 				--true=B	Sequences' true binding classification file path
-				--out		Output file path
+				--out=C		Output file path
 			"""
 	
 	options = docopt(helpdoc, argv, help = True, version = "3.0.0", options_first=False)
@@ -127,7 +129,7 @@ def main(argv):
 	elif options['preprocess']:
 		in_dir = options['--in_dir']
 		out_dir = options['--out_dir'] if options['--out_dir'] else in_dir + '_JSON_preprocessed'
-		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 6.0
+		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 5.0
 		restart = options['-r']
 
 		if verbose: print 'Preprocessing library: %s' % in_dir
@@ -231,7 +233,7 @@ def main(argv):
 		in_res = options['--in_res']
 		probs_dir = options['--probs_dir']
 		N = int(options['--N'])
-i
+
 		if verbose: print 'Calculating ' + N + ' sequences with lowest energy.'
 		results = calc_top_seqs(in_res, probs_dir, N)
 		if probs_dir:
