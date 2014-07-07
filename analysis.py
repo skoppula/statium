@@ -109,7 +109,7 @@ def sidechain(in_res, in_pdb, in_preprocess_dir, out_dir, ip_dist_cutoff, match_
 			distance_matrix[p1][p2-p1-1] = pdbI[p1].distancesTo(pdbI[p2])
 		if pdbI[p2].stubIntact:
 			p2_base_chain = [pdbI[p2].atom_dict['CA'], pdbI[p2].atom_dict['CB']]
-			distances[(p1,p2)] = filter_sc_dists(pdbI[p1].atoms, p2_base_chain, distance_matrix[p1][p2-p1-1]) 
+			distances[(p1,p2)] = filter_sc_dists(pdbI[p1].atoms, p2_base_chain, distance_matrix[p1][p2-p1-1], 'forward') 
 		else:
 			print 'Position %d does not have a valid stub' % p2
 			sys.exit(1)
@@ -139,13 +139,13 @@ def sidechain(in_res, in_pdb, in_preprocess_dir, out_dir, ip_dist_cutoff, match_
 				AA1 = pdbI[pos1].int_name 
 				if lib_pdb[lib_pos2].stubIntact and lib_AA1==AA1:
 					p2_base_chain = [lib_pdb[lib_pos2].atom_dict['CA'], lib_pdb[lib_pos2].atom_dict['CB']] 
-					lib_dist = filter_sc_dists(lib_pdb[lib_pos1].atoms, p2_base_chain, lib_distance_matrix[lib_pos1][lib_pos2], "forward")
+					lib_dist = filter_sc_dists(lib_pdb[lib_pos1].atoms, p2_base_chain, lib_distance_matrix[lib_pos1][lib_pos2-lib_pos1-1], "forward")
 					if matching_sidechain_pair(distances[(pos1,pos2)], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
 						counts[j][lib_AA2] += 1
 						
 				if lib_pdb[lib_pos1].stubIntact and lib_AA2==AA1:
 					p1_base_chain = [lib_pdb[lib_pos1].atom_dict['CA'], lib_pdb[lib_pos1].atom_dict['CB']] 
-					lib_dist = filter_sc_dists(p1_base_chain, lib_pdb[lib_pos2].atoms, lib_distance_matrix[lib_pos1][lib_pos2], "backward") 
+					lib_dist = filter_sc_dists(p1_base_chain, lib_pdb[lib_pos2].atoms, lib_distance_matrix[lib_pos1][lib_pos2-lib_pos1-1], "backward") 
 					if matching_sidechain_pair(distances[(pos1,pos2)], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
 						counts[j][lib_AA1] += 1
 	
@@ -168,10 +168,10 @@ def sidechain(in_res, in_pdb, in_preprocess_dir, out_dir, ip_dist_cutoff, match_
 			counts_file.close()
 	
 	if(verbose): print("Computing probabilities from counts...")
-	determine_probs(totals, counts, out_dir, verbose)
+	determine_probs(use_indices, totals, counts, out_dir, verbose)
 
 
-def determine_probs(totals, counts, out_dir, verbose):
+def determine_probs(use_indices, totals, counts, out_dir, verbose):
 	
 	#create the output directory
 	if not os.path.exists(out_dir):
@@ -231,7 +231,7 @@ def get_distance_matrix_ip(pdb, ips):
 #New version: returns a dictionary, subset of the dictionary at
 #		location in distances matrix defined by an interacting pair (R1, R2)
 #	 	a subset defined by (R1's atoms,CA or CB):distance
-def filter_sc_dists(atomsA, atomsB, interatomic_distances, direction = 'forward'):
+def filter_sc_dists(atomsA, atomsB, interatomic_distances, 'forward'):
 	out = dict()
 	if direction == 'forward':
 		pairs = list(itertools.product(atomsA, atomsB))
