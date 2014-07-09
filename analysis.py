@@ -40,7 +40,7 @@ def preprocess(in_dir, out_dir, ip_dist_cutoff, restart, verbose):
                         if(verbose): print 'Skipping ' + out_path + '. Already in directory.'
                         continue
  
-		if(verbose): print "\nProcessing library .pdb: " + lib_pdb_path + "\t (" + str(i) + " out of " + str(len(lib_pdbs)) + ")"
+		if verbose: print "\nProcessing library .pdb: " + lib_pdb_path + "\t (" + str(i) + " out of " + str(len(lib_pdbs)) + ")"
 		lib_pdb = get_pdb_info(lib_pdb_path)	
 		
 		if verbose: print '\tComputing inter-atomic distances and finding interacting pairs...'
@@ -192,7 +192,7 @@ def determine_probs(use_indices, totals, counts, out_dir, verbose):
 				AA_probs = [(x/total if x != 0 else 1/total) for x in counts[i]]
 				for j in range(20):
 					e = -1.0 * math.log(AA_probs[j] / lib_total_probs[j])
-					prob_file.write(AAint2char(j) + '\t' + e + '\n')
+					prob_file.write(AAint2char(j) + '\t' + str(e) + '\n')
 	if(verbose): print("Finished calculating probabilities. Written to: " + out_dir + '_probs')
 
 	
@@ -232,7 +232,7 @@ def get_distance_matrix_ip(pdb, ips):
 #New version: returns a dictionary, subset of the dictionary at
 #		location in distances matrix defined by an interacting pair (R1, R2)
 #	 	a subset defined by (R1's atoms,CA or CB):distance
-def filter_sc_dists(atomsA, atomsB, interatomic_distances, 'forward'):
+def filter_sc_dists(atomsA, atomsB, interatomic_distances, direction):
 	out = dict()
 	if direction == 'forward':
 		pairs = list(itertools.product(atomsA, atomsB))

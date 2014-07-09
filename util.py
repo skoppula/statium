@@ -3,8 +3,7 @@ import random
 import math
 import warnings
 
-def generate_random_seq(seq_length, library_path): 
-	library_path = 'data/all_protein_sequences.txt'
+def generate_random_seq(seq_length, library_path='data/all_protein_sequences.txt'): 
 	
 	size = 0
 	try:

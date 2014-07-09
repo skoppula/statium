@@ -219,7 +219,7 @@ def main(argv):
 		seq_length = int(options['--seq_length'])
 		out = options['--out']
 		
-		if verbose: print("Generating " + num_seqs + " random sequences of length " + seq_length)
+		if verbose: print("Generating " + str(num_seqs) + " random sequences of length " + str(seq_length))
 		sequences = [generate_random_seq(seq_length) for _ in range(num_seqs)]
 		
 		if out is None:
