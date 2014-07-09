@@ -146,7 +146,7 @@ def main(argv):
 		
 		default = {'A':2, 'C':6, 'D':6, 'E':6, 'F':6, 'G':2, 'H':6, 'I':6, 'K':6, 'L':6, 'M':6, 'N':6, 'P':6, 'Q':6, 'R':6, 'S':6, 'T':6, 'V':6, 'W':6, 'Y':6, 'X':0}
 		match_dist = ast.literal_eval(options['--matching_res_dist_cutoffs']) if options['--matching_res_dist_cutoffs'] else default
-		count = True if options['--counts'] is not None else False 
+		count = options['--counts']
 		
 		if verbose: print("\nRunning STATIUM with: " + pdb + " " + res + " " + pdb_lib)
 		statium(res, pdb, pdb_lib, out_dir, ip_dist, match_dist, count, verbose)
@@ -214,7 +214,7 @@ def main(argv):
 		renum_pdb = options['--in_pdb_renum']
 		get_orig_seq(res, orig_pdb, renum_pdb)
 	
-	elif options['generate_random_seqs']:
+	elif options['random']:
 		num_seqs = int(options['--num_seqs'])
 		seq_length = int(options['--seq_length'])
 		out = options['--out']

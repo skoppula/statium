@@ -121,6 +121,7 @@ def sidechain(in_res, in_pdb, in_preprocess_dir, out_dir, ip_dist_cutoff, match_
 	
 	lib_pdb_paths = [os.path.join(in_preprocess_dir, pdb) for pdb in os.listdir(in_preprocess_dir)]
 	for (i, lib_pdb_path) in enumerate(lib_pdb_paths):	
+		if verbose: print 'Processing ' + lib_pdb_path + ' (' + str(i) + ' out of ' + str(len(lib_pdb_paths)) + ')'
 		with open(lib_pdb_path, 'r') as infile:
 			(lib_pdb,lib_ips,lib_distance_matrix) = pickle.load(infile)
 
@@ -186,12 +187,12 @@ def determine_probs(use_indices, totals, counts, out_dir, verbose):
 		total = float(sum(counts[i]))
 		if total > 99:
 			path = os.path.join(out_dir, str(pair[0] + 1) + '_' + str(pair[1] + 1) + '_probs.txt')
-			prob_file = open(path, 'w')
-			#probability of each residue occuring at *that* IP (i.e. / by total res's at the IP)
-			AA_probs = [(x/total if x != 0 else 1/total) for x in counts[i]]
-			for j in range(20):
-				e = -1.0 * math.log(AA_probs[j] / lib_total_probs[j])
-				counts_file.write(AAint2char(j) + '\t' + e + '\n')
+			with open(path, 'w') as prob_file:
+				#probability of each residue occuring at *that* IP (i.e. / by total res's at the IP)
+				AA_probs = [(x/total if x != 0 else 1/total) for x in counts[i]]
+				for j in range(20):
+					e = -1.0 * math.log(AA_probs[j] / lib_total_probs[j])
+					prob_file.write(AAint2char(j) + '\t' + e + '\n')
 	if(verbose): print("Finished calculating probabilities. Written to: " + out_dir + '_probs')
 
 	
