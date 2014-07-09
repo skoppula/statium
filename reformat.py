@@ -2,8 +2,11 @@ from util import AA2char
 from util import get_random_AA
 from util import get_pdb_info
 from util import print_pdb
+from util import filelines2list
 import re
 import random
+import sys
+
 def renumber(start_res_num, start_atom_num, chains, in_pdb, out_pdb):
    
 	RN = start_res_num 
@@ -86,22 +89,35 @@ def create_res(pdb_orig_path, pdb_renum_path, out_res_path, positions):
 
 
 def get_orig_seq(res_path, orig_pdb_path, renum_pdb_path):
-	if verbose: print 'Extracting residue position from ' + in_res + '...'
-	res_lines = filelines2list(in_res)
+	print 'Extracting residue position from ' + res_path + '...'
+	res_lines = filelines2list(res_path)
 	residues = [int(line.strip()) for line in res_lines]
 
-	orig =  get_pdb_info(pdb_orig_path)
-	renum =  get_pdb_info(pdb_renum_path)
+	orig =  get_pdb_info(orig_pdb_path)
+	renum =  get_pdb_info(renum_pdb_path)
 	to_print = set()
 
 	for residue in residues:
-		renum_aa = renum[residue]
+		renum_aa = renum[residue-1]
 		for orig_aa in orig:
 			if renum_aa == orig_aa:
 				to_print.add(orig_aa)
 
-	for residue in to_print:
-		print residue.string_name + ' ' + residue.chainID + ' ' + residue.position
+	to_print_tuples = list()
+	for res in to_print:
+		try:
+			to_print_tuples.append((res.chainID,int(res.position),res.string_name, res.char_name))
+		except:
+			to_print_tuples.append((res.chainID,res.position,res.string_name, res.char_name))
+	to_print_tuples.sort()
+
+	for t in to_print_tuples:
+		print t[2] + ' ' + t[0] + ' ' + str(t.[1])
+
+	for t in to_print_tuples:
+		sys.stdout.write(t[3])
+
+	print ''
 				
 
 

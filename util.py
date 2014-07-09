@@ -1,4 +1,5 @@
 import bidict
+import re
 import random
 import math
 import warnings
