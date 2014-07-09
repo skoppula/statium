@@ -30,7 +30,7 @@ def calc_seq_zscore(mean, std, energy):
 def list2file(t, infile):
 	with open(infile, 'w') as f:
 		for element in t:
-			f.write(element + "\n")
+			f.write(str(element + "\n")
 
 
 def filelines2deeplist(infile, skipComments=False, useTuples=False, skipEmptyLines=False):
@@ -40,10 +40,8 @@ def filelines2deeplist(infile, skipComments=False, useTuples=False, skipEmptyLin
 		lines = f.read().split('\n')
 	
 	for line in lines:
-		if skipComments and line[0] == '#':
-			continue
 		items = line.strip().split()
-		if skipEmptyLines and not items:
+		if (skipEmptyLines and not items) or (skipComments and line[0] == '#'):
 			continue
 		if useTuples:
 			items = tuple(items)

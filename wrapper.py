@@ -160,11 +160,11 @@ def main(argv):
 		probs_dir = options['--in_probs']
 		isfile = options['-f']
 		in_seqs = options['--in_seqs']
-		out = options['--out']
+		outfile = options['--out']
 		
-		if verbose: print "Writing to file: " + isfile + ". Calculating z-score: " + zscores
+		if verbose: print "Writing to file: " + str(isfile) + ". Calculating z-score: " + str(zscores)
 		
-		if zscores or percentiles:
+		if zscores:
 			if verbose: print 'Generating random distribution of energies...'
 			distribution = generate_random_distribution(in_res, probs_dir)
 			if histogram:
@@ -172,7 +172,7 @@ def main(argv):
 				import matplotlib.pyplot as plt
 				import numpy as np
 
-				hist, bins = np.histogram(distribution[2], bins=50)
+				hist, bins = np.histogram(distribution[1], bins=50)
 				width = 0.7 * (bins[1] - bins[0])
 				center = (bins[:-1] + bins[1:]) / 2
 				plt.bar(center, hist, align='center', width=width)
@@ -192,9 +192,9 @@ def main(argv):
 					out = seq + "\t" + str(energy)
 					
 					if(zscores):
-						out += "\t" + str(calc_seq_zscore(distribution[3], distribution[4], energy))
+						out += "\t" + str(calc_seq_zscore(distribution[2], distribution[3], energy))
 					
-				out_lines.append(line)
+				out_lines.append(out)
 					
 			list2file(out_lines, outfile)
 			print('Done.')
@@ -204,7 +204,7 @@ def main(argv):
 			print("Sequence energy for " + in_seqs + " is: " + str(energy))
 			
 			if(zscores):
-				zscore = calc_seq_zscore(distribution[3], distribution[4], energy)
+				zscore = calc_seq_zscore(distribution[2], distribution[3], energy)
 				print('Z-score is ' + str(zscore))
 
 	#Get the original AA sequence of chain B, along with stats like the length and position of that chain
@@ -233,15 +233,15 @@ def main(argv):
 		in_res = options['--in_res']
 		probs_dir = options['--probs_dir']
 		N = int(options['--N'])
+		out = options['--out']
 
-		if verbose: print 'Calculating ' + N + ' sequences with lowest energy.'
+		if verbose: print 'Calculating ' + str(N) + ' sequences with lowest energy.'
 		results = calc_top_seqs(in_res, probs_dir, N)
-		if probs_dir:
-			out = [seq + '\t' + str(energy) + '\n' for seq, energy in results]
-			out_path = 'top_' + str(N) + '_sequences.txt' if probs_dir == None else probs_dir
-			list2file(out, out_path)
+		if out:
+			to_print = [seq + '\t' + str(energy) + '\n' for seq, energy in results]
+			list2file(to_print, out)
 		else:
-			print sequences
+			print results
 	elif options['roc']:
 		scores = options['--scores']
 		true = options['--true']
@@ -249,12 +249,14 @@ def main(argv):
 		curve = options['--curve']
 		if verbose: print 'Calculating AUROC for ' + scores + ' with true classifications in ' + true
 		roc(scores, true, auroc, curve)
+		if verbose: print 'Done. Printed AUROC to: ' + str(auroc) + ' and ROC curve to ' + str(curve)
 
 	elif options['print_merged']:
 		scores = options['--scores']
 		true = options['--true']
 		out = options['--out'] if options['--out'] is not None else 'merged.txt'
 		print_merged(scores, true, out)
+		print 'Done. Printed to ' + out
 	
 if __name__ == "__main__":
 	main(sys.argv[1:])

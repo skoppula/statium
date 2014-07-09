@@ -7,6 +7,7 @@ import timeit
 import itertools
 import pickle
 from util import *
+from collections import OrderedDict
 
 
 def get_dist_matrix_and_IPs(pdb, cutoff):
@@ -251,7 +252,12 @@ def generate_random_distribution (in_res, in_probs_dir, num_seqs=100000):
 	sequence_length = len(filelines2list(in_res))
 
 	print 'Calculating distribution of energies for %d random sequences...', num_seqs
-	energies = [calc_seq_energy(in_res, in_probs_dir, generate_random_seq(sequence_length)) for _ in num_seqs]
+	energies = list()
+	for i in range(num_seqs):
+		if i % 100 is 0:
+			print i,
+			sys.stdout.flush()
+		energies.append(calc_seq_energy(in_res, in_probs_dir, generate_random_seq(sequence_length)))
 		
 	energies.sort()
 	avg = mean(energies)
@@ -272,7 +278,7 @@ def calc_seq_energy (in_res_path, probs_dir, seq):
 	for f in prob_files:
 		file_path = os.path.join(probs_dir, f)
 		lines = filelines2deeplist(file_path)
-		probs = [float(prob.split('\t')[0]) for prob in lines]
+		probs = [float(prob[1]) for prob in lines if prob != []]
 		ip_res1 = int(f.split('_')[0]) 
 		ip_res2 = int(f.split('_')[1])
 		all_probs[(ip_res1,ip_res2)] = probs
@@ -291,7 +297,7 @@ def calc_seq_energy (in_res_path, probs_dir, seq):
 	return energy
 	
 #Note: need res file, because not all residues 
-def calc_top_seqs(in_res_path, probs_dir, num_sequences, outfile):
+def calc_top_seqs(in_res_path, probs_dir, num_sequences):
 	 
 	#read back from .res file where ligand residues start
 	lines = filelines2list(in_res_path)
@@ -304,7 +310,7 @@ def calc_top_seqs(in_res_path, probs_dir, num_sequences, outfile):
 	for f in prob_files:
 		file_path = os.path.join(probs_dir, f)
 		lines = filelines2deeplist(file_path)
-		probs = [float(prob.split('\t')[0]) for prob in lines]
+		probs = [float(prob[1]) for prob in lines if prob != []]
 		ip_res1 = int(f.split('_')[0]) 
 		ip_res2 = int(f.split('_')[1])
 		all_probs[(ip_res1,ip_res2)] = probs

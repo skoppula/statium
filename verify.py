@@ -1,4 +1,5 @@
 from util import filelines2deeplist
+from util import list2file
 
 def roc(scores_path, true_path, auroc_path, curve_path):
 	#Read in scores data
@@ -11,9 +12,9 @@ def roc(scores_path, true_path, auroc_path, curve_path):
 
 	data = list()
 	for seq, classification in true.items():
-		if classification is 'weak':
+		if classification == 'weak':
 			class_type = 0
-		elif classification is 'strong':
+		elif classification == 'strong':
 			class_type = 1
 		else:
 			continue
@@ -30,11 +31,11 @@ def roc(scores_path, true_path, auroc_path, curve_path):
 		list2file([auroc], auroc_path)
 
 	if curve_path is not None:
-		roc.plot_and_save(curve_path, 'STATIUM-based Binding Prediction Model')
+		roc_data.plot_and_save(curve_path, 'STATIUM-based Binding Prediction Model')
 
 def print_merged(score_path, true_path, out):
 	#Read in scores data
-	lines = filelines2deeplist(scores_path, skipComments=True, skipEmptyLines=True)
+	lines = filelines2deeplist(score_path, skipComments=True, skipEmptyLines=True)
 	scores = {pair[0]:pair[1] for pair in lines}
 
 	#Read in true classification data
@@ -52,4 +53,4 @@ def print_merged(score_path, true_path, out):
 	
 	with open(out, 'w') as f:
 		for datum in data:
-			out.write(datum[0] + '\t' + datum[1] + '\t' + datum[2]+ '\n')	
+			f.write(datum[0] + '\t' + datum[1] + '\t' + datum[2]+ '\n')	
