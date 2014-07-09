@@ -193,6 +193,7 @@ def determine_probs(use_indices, totals, counts, out_dir, verbose):
 				for j in range(20):
 					e = -1.0 * math.log(AA_probs[j] / lib_total_probs[j])
 					prob_file.write(AAint2char(j) + '\t' + str(e) + '\n')
+				prob_file.close()
 	if(verbose): print("Finished calculating probabilities. Written to: " + out_dir + '_probs')
 
 	
