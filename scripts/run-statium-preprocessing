@@ -1,0 +1,1 @@
+python statium/wrapper.py preprocess --in_dir=statium/data/culled_90 --out_dir=statium/data/processed_culled_90

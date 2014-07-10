@@ -1,6 +1,9 @@
 <b>STATIUM: smart scoring. promising proteins.</b><br>
 STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository contains a friendly implemtation of the structure-based statistical-potential STATIUM algorithm that scores how well two or more proteins bind at their interacting positions.
 
+<b>Installation</b><br>
+If you are on a *nix machine with `git` installed obtaining STATIUM and all its data should be as simple as: `git clone https://github.com/skoppula/statium.git`. Then, to extract the library data: `tar -zxvf data/ip_90_wGLY.tar.gz` and `tar -zxvf data/culled_90.tar.gz`.
+
 <b>Details and Documentation</b>
 ***
 `renumber`:<br>
