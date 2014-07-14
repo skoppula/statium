@@ -9,7 +9,7 @@ If you, for example, wanted to score sequences for chain B of some protein descr
 python renumber --in_pdb=1YCR.pdb --out_pdb=1YCR_renumbered.pdb --chains=B
 python create_res --in_pdb_orig=1YCR.pdb --in_pdb_renum=1YCR_renumbered.pdb --out_res=1YCR.res --position_pairs=B
 python run_statium --in_pdb=1YCR_renumbered.pdb --in_res=1YCR.res --pdb_lib=culled_90/ --ip_lib=ip_90_wGLY/ --out_dir=1YCR/
-python energy --in_res=1YCR.res --probs_dir=1YCR 
+python energy --in_res=1YCR.res --probs_dir=1YCR --in_seqs=AMLTGTMMXX<br>
 
 <b>Details and Documentation</b>
 ***
