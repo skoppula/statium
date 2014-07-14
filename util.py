@@ -31,7 +31,7 @@ def calc_seq_zscore(mean, std, energy):
 def list2file(t, infile):
 	with open(infile, 'w') as f:
 		for element in t:
-			f.write(str(element + "\n")
+			f.write(str(element) + "\n")
 
 
 def filelines2deeplist(infile, skipComments=False, useTuples=False, skipEmptyLines=False):

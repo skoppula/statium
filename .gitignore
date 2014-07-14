@@ -1,6 +1,7 @@
 *.swp
 *.md~
 data/*
+testing/*
 !data/all_protein_sequences.txt
 !data/ip_90_wGLY.tar.gz
 *.pyc

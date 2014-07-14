@@ -261,7 +261,7 @@ def check_cutoff(residue_pairs, cutoff):
 	return any([dist < cutoff for dist in residue_pairs.values()])
 
 
-def generate_random_distribution (in_res, in_probs_dir, num_seqs=100000):
+def generate_random_distribution (in_res, in_probs_dir, num_seqs=1000):
 	
 	sequence_length = len(filelines2list(in_res))
 
@@ -303,7 +303,7 @@ def calc_seq_energy (in_res_path, probs_dir, seq):
 
 	for i, residue in enumerate(residues):
 		filtered = {ip: probs for ip, probs in all_probs.items() if ip[1] == residue}
-		AA = seq[i]
+		AA = seq[i-1]
 		if AA == 'X' or AA == 'G' or filtered == {}: continue
 		for ip, probs in filtered.items():
 			energy += probs[AAchar2int(AA)]
