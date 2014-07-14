@@ -12,7 +12,7 @@ If you, for example, wanted to score sequences for chain B of some protein descr
 4. `python energy --in_res=1YCR.res --probs_dir=1YCR --in_seqs=AMLTGTMMXX<br>`<br>
 
 ***
-<b>Details and Documentation</b>
+<b>Details and Documentation</b><br>
 `renumber`:<br>
 <i>Template</i> `python wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN --chains]`<br>
 

@@ -8,4 +8,6 @@ testing/*
 !data/culled_90_1.tar.gz
 !data/culled_90_2.tar.gz
 !data/culled_90_3.tar.gz
+!data/culled_90_4.tar.gz
+!data/culled_90_5.tar.gz
 *.pyc
