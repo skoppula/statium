@@ -3,5 +3,4 @@
 data/*
 !data/all_protein_sequences.txt
 !data/ip_90_wGLY.tar.gz
-!data/culled_90.tar.gz
 *.pyc

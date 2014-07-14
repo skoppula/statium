@@ -75,20 +75,28 @@ def get_dist_matrix_and_IPs_template(pdb, residues, cutoff):
 					distance_matrix[i][j-i-1] = result
 	return (distance_matrix, ips)
 
+def get_lib_dist_matrix(pdb, ips):
+	N = len(pdb)
+	matrix = [[None]*(N-i-1) for i in xrange(N)]
 
-def statium(in_res, in_pdb, in_dir, out_dir, ip_cutoff_dist, match_cutoff_dists, counts, verbose):
+	for (i,j) in ips:
+		matrix[i][j-i-1] = pdb[i].distanceTo(pdb[j])	
+	return matrix
+
+
+def statium(in_res, in_pdb, in_dir, in_ip, out_dir, ip_cutoff_dist, match_cutoff_dists, counts, verbose):
 	
 	if verbose: print '\nPreparing directory folders...'
 	if not os.path.exists(out_dir): os.makedirs(out_dir)
 
 	if verbose: print 'Starting STATUM analysis...' 
 	tic = timeit.default_timer()
-	sidechain(in_res, in_pdb, in_dir, out_dir, ip_cutoff_dist, match_cutoff_dists, counts, verbose)
+	sidechain(in_res, in_pdb, in_dir, in_ip, out_dir, ip_cutoff_dist, match_cutoff_dists, counts, verbose)
 	toc = timeit.default_timer()
 	if verbose: print 'Done in ' + str((tic-toc)/60) + 'minutes! Output in: ' + out_dir
 
 
-def sidechain(in_res, in_pdb, in_preprocess_dir, out_dir, ip_dist_cutoff, match_dist_cutoffs, print_counts, verbose):
+def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out_dir, ip_dist_cutoff, match_dist_cutoffs, print_counts, verbose):
 	
 	if verbose: print 'Extracting residue position from ' + in_res + '...'
 	res_lines = filelines2list(in_res)
@@ -123,8 +131,14 @@ def sidechain(in_res, in_pdb, in_preprocess_dir, out_dir, ip_dist_cutoff, match_
 	lib_pdb_paths = [os.path.join(in_preprocess_dir, pdb) for pdb in os.listdir(in_preprocess_dir)]
 	for (i, lib_pdb_path) in enumerate(lib_pdb_paths):	
 		if verbose: print 'Processing ' + lib_pdb_path + ' (' + str(i) + ' out of ' + str(len(lib_pdb_paths)) + ')'
-		with open(lib_pdb_path, 'r') as infile:
-			(lib_pdb,lib_ips,lib_distance_matrix) = pickle.load(infile)
+		if in_ip_dir:
+			lib_pdb = get_pdb_info(lib_pdb_path)
+			ip_path = os.path.join(in_ip_dir, os.path.split(lib_pdb_path)[1].split('.')[0] + '.ip')
+			lib_ips = [(pair[0],pair[1]) for pair in file2deeplist(ip_path) if pair != []]
+			lib_distance_matrix = get_lib_dist_matrix(lib_pdb, lib_ips)
+		else:
+			with open(lib_pdb_path, 'r') as infile:
+				(lib_pdb,lib_ips,lib_distance_matrix) = pickle.load(infile)
 
 		for (lib_pos1, lib_pos2) in lib_ips:
 			if lib_pos2 - lib_pos1 <= 4: continue

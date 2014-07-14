@@ -9,12 +9,13 @@ def generate_random_seq(seq_length, library_path='data/all_protein_sequences.txt
 	size = 0
 	try:
 		with open (library_path, "r") as myfile:
-			data = myfile.read().replace('\n', '')
+			data = myfile.read()
+			data = re.sub('>.+?\n', '', data)
 			pattern = re.compile(r'\s+')
 			data = re.sub(pattern, '', data)
 			size = len(data)
 	except IOError:
-		print 'Could not find file ' + library_path + '. Using random AA generation'
+		print 'Could not find file ' + library_path
 		
 	start = random.randint(0, size - seq_length)
 	sequence = data[start:(start+seq_length)]

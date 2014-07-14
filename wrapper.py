@@ -21,7 +21,7 @@ def main(argv):
 	helpdoc =   	"""usage: wrapper.py renumber (--in_pdb=A) [--out_pdb=B --chains=C --SRN=1 --SAN=1] [--noverbose]
 				wrapper.py create_res (--in_pdb_orig=A --in_pdb_renum=B) [--out_res=C --position_pairs=D] [--noverbose]
 				wrapper.py preprocess (--in_dir=A) [--out_dir=B --ip_dist_cutoff=C] [--noverbose] [-r]
-				wrapper.py run_statium (--in_res=A --in_pdb=B --pdb_lib=C) [--out=D --ip_dist_cutoff=E --matching_res_dist_cutoffs=F --counts] [--noverbose]
+				wrapper.py run_statium (--in_res=A --in_pdb=B --pdb_lib=C) [--ip_lib=D --out=E --ip_dist_cutoff=F --matching_res_dist_cutoffs=G --counts] [--noverbose]
 				wrapper.py [-f] energy (--in_res=A --in_probs=B --in_seqs=C) [--out=D] [-z | --zscore] [--histogram=E] [--noverbose]
 				wrapper.py random (--seq_length=A --num_seqs=B) [--out=C] [--noverbose]
 				wrapper.py get_orig_seq (--in_res=A --in_pdb_orig=B --in_pdb_renum=C) [--noverbose]
@@ -49,9 +49,10 @@ def main(argv):
 				--in_res=A	Input .res file path
 				--in_pdb=B	Input renumbered PDB path
 				--pdb_lib=C	Input preprocessed PDB library directory
-				--out=D		Output directory
-				--ip_dist_cutoff=E	Threshold for interacting pair designation
-				--matching_res_dist_cutoffs=F	Thresholds for matching IP designation
+				--ip_lib=D
+				--out=E		Output directory
+				--ip_dist_cutoff=F	Threshold for interacting pair designation
+				--matching_res_dist_cutoffs=G	Thresholds for matching IP designation
 
 				--in_res=A	Input .res file path
 				--in_probs=B	Input STATIUM probabilities directory
@@ -141,6 +142,7 @@ def main(argv):
 		res = options['--in_res']
 		pdb = options['--in_pdb']
 		pdb_lib = options['--pdb_lib']
+		ip_lin = options['--ip_lib']
 		out_dir = options['--out'] if options['--out'] is not None else res[:-4]
 		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 6.0
 		
@@ -148,8 +150,8 @@ def main(argv):
 		match_dist = ast.literal_eval(options['--matching_res_dist_cutoffs']) if options['--matching_res_dist_cutoffs'] else default
 		count = options['--counts']
 		
-		if verbose: print("\nRunning STATIUM with: " + pdb + " " + res + " " + pdb_lib)
-		statium(res, pdb, pdb_lib, out_dir, ip_dist, match_dist, count, verbose)
+		if verbose: print("\nRunning STATIUM with: " + pdb + " " + res + " " + pdb_lib + ' and IP lib: ' + ip_lib)
+		statium(res, pdb, pdb_lib, ip_lib, out_dir, ip_dist, match_dist, count, verbose)
 		if verbose: print("Done. STATIUM probabilities in output directory: " + out_dir)
 
 	elif options['energy']:
