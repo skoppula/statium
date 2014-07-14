@@ -3,7 +3,7 @@ STATIUM is an ongoing project at the Keating Lab to quantitatively understand ho
 
 <b>Installation</b><br>
 If you are on a 'nix machine with `git` installed obtaining STATIUM and all its data should be as simple as: `git clone https://github.com/skoppula/statium.git`. Then, to extract the library data: interacting-pair data can be extracted by `tar -zxvf data/ip_90_wGLY.tar.gz`. To extract and recombine the library PDB files, you can run `mkdir culled_90` followed by `i=0; for i in {0..9}; do tar -zxf culled_90_$i.tar.gz; mv culled_90_$i/* culled_90/; done`.
-***
+
 <b>Quickstart! (Example Workflow)</b><br>
 If you, for example, wanted to score sequences for chain B of some protein described in 1YCR.pdb, you could run:<br>
 1. `python renumber --in_pdb=1YCR.pdb --out_pdb=1YCR_renumbered.pdb --chains=B`<br>
@@ -11,8 +11,8 @@ If you, for example, wanted to score sequences for chain B of some protein descr
 3. `python run_statium --in_pdb=1YCR_renumbered.pdb --in_res=1YCR.res --pdb_lib=culled_90/ --ip_lib=ip_90_wGLY/ --out_dir=1YCR/`<br>
 4. `python energy --in_res=1YCR.res --probs_dir=1YCR --in_seqs=AMLTGTMMXX<br>`<br>
 
-<b>Details and Documentation</b>
 ***
+<b>Details and Documentation</b>
 `renumber`:<br>
 <i>Template</i> `python wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN --chains]`<br>
 
