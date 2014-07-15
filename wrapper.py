@@ -142,7 +142,7 @@ def main(argv):
 		res = options['--in_res']
 		pdb = options['--in_pdb']
 		pdb_lib = options['--pdb_lib']
-		ip_lin = options['--ip_lib']
+		ip_lib = options['--ip_lib']
 		out_dir = options['--out'] if options['--out'] is not None else res[:-4]
 		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 6.0
 		
