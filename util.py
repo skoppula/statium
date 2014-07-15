@@ -42,7 +42,7 @@ def filelines2deeplist(infile, skipComments=False, useTuples=False, skipEmptyLin
 	
 	for line in lines:
 		items = line.strip().split()
-		if (skipEmptyLines and not items) or (skipComments and line[0] == '#'):
+		if (skipEmptyLines and not items) or (skipComments and line != '' and line[0] == '#'):
 			continue
 		if useTuples:
 			items = tuple(items)
