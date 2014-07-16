@@ -2,7 +2,7 @@
 STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository contains a friendly implemtation of the structure-based statistical-potential STATIUM algorithm that scores how well two or more proteins bind at their interacting positions.
 
 <b>Installation</b><br>
-If you are on a 'nix machine with `git` installed obtaining STATIUM and all its data should be as simple as: `git clone https://github.com/skoppula/statium.git`. Then, to extract the library data: interacting-pair data can be extracted by `tar -zxvf data/ip_90_wGLY.tar.gz`. To extract and recombine the library PDB files, you can run `mkdir culled_90` followed by `i=0; for i in {0..9}; do tar -zxf culled_90_$i.tar.gz; mv culled_90_$i/* culled_90/; done`.
+If you are on a 'nix machine with `git` installed obtaining STATIUM and all its data should be as simple as: `git clone https://github.com/skoppula/statium.git`. Then, to extract the library data: interacting-pair data can be extracted by `tar -zxvf data/ip_90_wGLY.tar.gz`. To extract and recombine the library PDB files, you can run `mkdir culled_90` followed by `i=0; for i in {0..9}; do tar -zxf culled_90_$i.tar.gz; mv culled_90_$i/* culled_90/; done`. <b> Python 2.7+ </b> is recommended.
 
 <b>Quickstart! (Example Workflow)</b><br>
 If you, for example, wanted to score sequences for chain B of some protein described in 1YCR.pdb, you could run:<br>
