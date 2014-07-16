@@ -20,5 +20,5 @@ with open('ip_deviation.out', 'w') as outfile:
 			d1 = joe_ips.difference(my_ips)
 			d2 = my_ips.difference(joe_ips)
 			s = my_ips.intersection(joe_ips)
-			outfile.write(str(len(my_ips)) + ' ' + str(len(d2)) + ' ' + str(len(s)) + ' ' + str(len(d1)) + str(len(joe_ips)) + '\n')
+			outfile.write(str(len(my_ips)) + ' ' + str(len(d2)) + ' ' + str(len(s)) + ' ' + str(len(d1)) + ' ' + str(len(joe_ips)) + '\n')
 			print str(len(my_ips)) + ' ' + str(len(d2)) + ' ' + str(len(s)) + ' ' + str(len(d1)) + ' ' + str(len(joe_ips))

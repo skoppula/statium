@@ -106,9 +106,9 @@ def get_orig_seq(res_path, orig_pdb_path, renum_pdb_path):
 	to_print_tuples = list()
 	for res in to_print:
 		try:
-			to_print_tuples.append((res.chainID, int(res.position), res.string_name, res.char_name))
+			to_print_tuples.append((res.chainID,int(res.position),res.string_name, res.char_name))
 		except:
-			to_print_tuples.append((res.chainID, res.position, res.string_name, res.char_name))
+			to_print_tuples.append((res.chainID,res.position,res.string_name, res.char_name))
 	to_print_tuples.sort()
 
 	for t in to_print_tuples:

@@ -80,7 +80,7 @@ def get_lib_dist_matrix(pdb, ips):
 	matrix = [[None]*(N-i-1) for i in xrange(N)]
 
 	for (i,j) in ips:
-		matrix[i][j-i-1] = pdb[i].distanceTo(pdb[j])	
+		matrix[i][j-i-1] = pdb[i].distancesTo(pdb[j])	
 	return matrix
 
 
@@ -128,13 +128,13 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out_dir, ip_dist_cutoff, ma
 	#stores total number of 'matching sidechain'
 	counts = [[0 for j in range(20)] for i in range(num_ips)]  
 	
-	lib_pdb_paths = [os.path.join(in_preprocess_dir, pdb) for pdb in os.listdir(in_preprocess_dir)]
+	lib_pdb_paths = [os.path.join(in_pdb_dir, pdb) for pdb in os.listdir(in_pdb_dir)]
 	for (i, lib_pdb_path) in enumerate(lib_pdb_paths):	
 		if verbose: print 'Processing ' + lib_pdb_path + ' (' + str(i) + ' out of ' + str(len(lib_pdb_paths)) + ')'
 		if in_ip_dir:
 			lib_pdb = get_pdb_info(lib_pdb_path)
 			ip_path = os.path.join(in_ip_dir, os.path.split(lib_pdb_path)[1].split('.')[0] + '.ip')
-			lib_ips = [(pair[0],pair[1]) for pair in file2deeplist(ip_path) if pair != []]
+			lib_ips = [(int(pair[0]),int(pair[1])) for pair in filelines2deeplist(ip_path) if pair != []]
 			lib_distance_matrix = get_lib_dist_matrix(lib_pdb, lib_ips)
 		else:
 			with open(lib_pdb_path, 'r') as infile:

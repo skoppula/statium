@@ -150,7 +150,7 @@ def main(argv):
 		match_dist = ast.literal_eval(options['--matching_res_dist_cutoffs']) if options['--matching_res_dist_cutoffs'] else default
 		count = options['--counts']
 		
-		if verbose: print("\nRunning STATIUM with: " + pdb + " " + res + " " + pdb_lib + ' and IP lib: ' + ip_lib)
+		if verbose: print("\nRunning STATIUM with: " + pdb + " " + res + " " + pdb_lib + ' and IP lib: ' + str(ip_lib))
 		statium(res, pdb, pdb_lib, ip_lib, out_dir, ip_dist, match_dist, count, verbose)
 		if verbose: print("Done. STATIUM probabilities in output directory: " + out_dir)
 
