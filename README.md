@@ -1,18 +1,27 @@
 <b>STATIUM: smart scoring. promising proteins.</b><br>
-STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository contains a friendly implemtation of the structure-based statistical-potential STATIUM algorithm that scores how well two or more proteins bind at their interacting positions.
+STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository contains a user-friendly implementation of the structure-based statistical-potential STATIUM algorithm that scores how well two or more proteins bind at their interacting positions. <br>
+
+Specifically, STATIUM scores how well a certain sequence would bind to another main protein structure (e.g. variable residue positions of a ligand binding to a receptor). <br>
+
+There are three main parts of analysis with STATIUM<br>
+1. Potentials calculations. STATIUM first calculates energy potentials for each position in your binding sequence. For example, if [residue 23 on chain B] interacts with [position 45 on chain A], the energy of each amino acid identity being at B23 (e.g. glycine would be there with scaled probability 0.34). This is done for each calculated interaction pair. In this way, all 'potentials' are calculated. `quickrun` is the simplest command that does this. If you'd like more advanced control over your arguments, use the advanced commands with more parameters (`renumber`, `create_res`) <br>
+2. Sequence scoring. Using the above potentials, the `energy` command scores the binding potential of sequence. <br>
+3. Miscellaneous. Finding sequences with lowest STATIUM binding energy (`calc_top_seqs`). Plotting ROC curve given STATIUM energies and experimentally determined binding classifications (`roc`).
+
+For more information on the mechanics of STATIUM's analysis, see the lab's paper: http://dx.doi.org/10.1016/j.jmb.2012.05.022
 
 <b>Installation</b><br>
-If you are on a 'nix machine with `git` installed obtaining STATIUM and all its data should be as simple as: `git clone https://github.com/skoppula/statium.git`. Then, to extract the library data: interacting-pair data can be extracted by `tar -zxvf data/ip_90_wGLY.tar.gz`. To extract and recombine the library PDB files, you can run `mkdir culled_90` followed by `i=0; for i in {0..9}; do tar -zxf culled_90_$i.tar.gz; mv culled_90_$i/* culled_90/; done`. <b> Python 2.7+ </b> is recommended.
+If you are on a 'nix machine with `git` installed obtaining STATIUM and all its data should be as simple as: `git clone https://github.com/skoppula/statium.git` to obtain all necessary files and running `./install.sh`.
 
-<b>Quickstart! (Example Workflow)</b><br>
+<b>Quickstart!</b><br>
 If you, for example, wanted to score sequences for chain B of some protein described in 1YCR.pdb, you could run:<br>
-1. `python renumber --in_pdb=1YCR.pdb --out_pdb=1YCR_renumbered.pdb --chains=B`<br>
-2. `python create_res --in_pdb_orig=1YCR.pdb --in_pdb_renum=1YCR_renumbered.pdb --out_res=1YCR.res --position_pairs=B`<br>
-3. `python run_statium --in_pdb=1YCR_renumbered.pdb --in_res=1YCR.res --pdb_lib=culled_90/ --ip_lib=ip_90_wGLY/ --out_dir=1YCR/`<br>
-4. `python energy --in_res=1YCR.res --probs_dir=1YCR --in_seqs=AMLTGTMMXX<br>`<br>
+1. `python wrapper.py quickrun --in_pdb=1YCR.pdb --position_pairs=B` to calculate potentials<br>
+2. `python wrapper.py energy --in_pdb=1YCR.pdb --probs_dir=1YCR --in_seqs=AMLTGTMMXX<br>` to score a sequence<br>
 
 ***
 <b>Details and Documentation</b><br>
+<b>1. Potentials calculation</b>: <i>Quick commands</i>
+<b>1. Potentials calculation</b>: <i>Advanced commands</i>
 `renumber`:<br>
 <i>Template</i> `python wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN --chains]`<br>
 
@@ -58,18 +67,7 @@ Each file contains a set of twenty probabilities (one for each amino acid) descr
 
 <i>Dependencies</i>: `fsolve` from `scipy.optimize` if there are glycine residues in any of the interacting pair positions
 ***
-`random`:<br>
-<i>Template</i> `python wrapper.py random (--seq_length --num_seqs) [--out]`<br>
-<i>Example</i>`python wrapper.py random --seq_length=8 --num_seqs=10 --out=testing/random-sequences.txt`<br>
-
-<i>Specifics</i>: Generates `--num_seqs` random sequences of '--seq_length' length. If you include a `--out=X` option, the random sequences will be printed to the specified file. Sequences are randomly drawn from the collection of all known protein sequences contained in `data/all_protein_sequences.txt'. If you choose to modify this (e.g. adjust it so that certain amino acids occur with certain frequencies, ensure that only amino acid in their character representation are present).
-***
-`get_orig_seq`:<br>
-<i>Template</i> `python wrapper.py get_orig_seq (--in_res --in_pdb_orig --in_pdb_renum)`<br>
-<i>Example</i> `python wrapper.py get_orig_seq ---in_res=testing/1mph_AHL.res -in_pdb_orig=testing/1mph_AHL_orig.pdb --in_pdb_renum=testing/1mph_AHL_renum.pdb 
-
-Reverse of the `renumber` function. From *.res file and the renumbered and original PDBs (see `renumber`) outputs the list of residues with original chain and position information.
-***
+<b>2. Sequence scoring</b>: <i>Quick commands</i>
 `energy`:<br>
 <i>Template</i> `python wrapper.py energy (--in_res --in_probs) [-f] (--in_seqs) [--out] [-z | --zscores] [--histogram]`<br>
 <i>Example One</i> `python wrapper.py --in_res=testing/1mhp_AHL.res --in_probs=testing/1mhp_AHL_probs --in_seqs=AAAGGGM,LLAA -z --histogram='hist.jpg'`<br>
@@ -83,6 +81,7 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 
 <i>Dependencies</i>: `matplotlib.pyplot` and `numpy` in order to use `--histogram`
 ***
+<b>3. Miscellaneous</b>: <i>Quick commands</i>
 `calc_top_seqs`<br>
 <i>Template</i> `python wrapper.py calc_top_seqs (--in_res --probs_dir --N) [--out]`<br>
 <i>Example</i> `python wrapper.py calc_top_seqs --probs_dir=testing/1mph_AHL_probs --out=testing/top_100_seqs.txt --N=100`
@@ -97,13 +96,27 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 
 <i>Dependencies</i>: `matplotlib` for plotting ROC curves
 ***
+<b>3. Miscellaneous</b>: <i>Advanced commands</i>
 `print_merged`<br>
 <i>Template</i> `python wrapper.py print_merged (--scores --true) [--out]'<br>
 <i>Example</i> 'python wrapper.py print_merged --scores=testing/energies.txt --true=testing/true-classifcation.txt --out=testing/scores-and-true.txt`<br>
 
 <i>Specifics</i>: Combines STATIUM scores and true binding classification files into one output file, with each line containing a sequence, its score, and true classification. Sequences in the scores file but not in the classification file will not appear in the file. Conversely, scores in the classification but not in the scores file will be listed as with score infinity.
 ***
+`random`:<br>
+<i>Template</i> `python wrapper.py random (--seq_length --num_seqs) [--out]`<br>
+<i>Example</i>`python wrapper.py random --seq_length=8 --num_seqs=10 --out=testing/random-sequences.txt`<br>
+
+<i>Specifics</i>: Generates `--num_seqs` random sequences of '--seq_length' length. If you include a `--out=X` option, the random sequences will be printed to the specified file. Sequences are randomly drawn from the collection of all known protein sequences contained in `data/all_protein_sequences.txt'. If you choose to modify this (e.g. adjust it so that certain amino acids occur with certain frequencies, ensure that only amino acid in their character representation are present).
+***
+`get_orig_seq`:<br>
+<i>Template</i> `python wrapper.py get_orig_seq (--in_res --in_pdb_orig --in_pdb_renum)`<br>
+<i>Example</i> `python wrapper.py get_orig_seq ---in_res=testing/1mph_AHL.res -in_pdb_orig=testing/1mph_AHL_orig.pdb --in_pdb_renum=testing/1mph_AHL_renum.pdb 
+
+Reverse of the `renumber` function. From *.res file and the renumbered and original PDBs (see `renumber`) outputs the list of residues with original chain and position information.
+***
 <b>Helpful Hints</b>:
++ Python 2.7+ is required
 + Verbose output is turned on by default. To turn verbose output off, include the '-nv' or '--noverbose' flag.
 + Arguments wrapped in parenthesis () are required; arguments wrapped in square brackets [] are optional.
 + `python wrapper.py -h` or `python wrapper.py --help` brings up an in-console summary of program arguments. <br>
