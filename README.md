@@ -1,12 +1,11 @@
 <b>STATIUM: smart scoring. promising proteins.</b><br>
-STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository contains a user-friendly implementation of the structure-based statistical-potential STATIUM algorithm that scores how well two or more proteins bind at their interacting positions. <br>
+STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository contains a user-friendly implementation of the structure-based statistical-potential STATIUM algorithm that scores how well two or more proteins bind at their interacting positions. Specifically, STATIUM scores how well a certain sequence would bind to another main protein structure (e.g. variable residue positions of a ligand binding to a receptor). <br> There are three main parts of analysis with STATIUM: <br>
 
-Specifically, STATIUM scores how well a certain sequence would bind to another main protein structure (e.g. variable residue positions of a ligand binding to a receptor). <br>
+1. <b> Potentials calculations </b>. STATIUM first calculates energy potentials for each position in your binding sequence. `quickrun` is the simplest command that does this. If you'd like more advanced control over your arguments, use the advanced commands with more parameters (`renumber`, `create_res`) <br>
 
-There are three main parts of analysis with STATIUM<br>
-1. Potentials calculations. STATIUM first calculates energy potentials for each position in your binding sequence. For example, if [residue 23 on chain B] interacts with [position 45 on chain A], the energy of each amino acid identity being at B23 (e.g. glycine would be there with scaled probability 0.34). This is done for each calculated interaction pair. In this way, all 'potentials' are calculated. `quickrun` is the simplest command that does this. If you'd like more advanced control over your arguments, use the advanced commands with more parameters (`renumber`, `create_res`) <br>
-2. Sequence scoring. Using the above potentials, the `energy` command scores the binding potential of sequence. <br>
-3. Miscellaneous. Finding sequences with lowest STATIUM binding energy (`calc_top_seqs`). Plotting ROC curve given STATIUM energies and experimentally determined binding classifications (`roc`).
+2. <b>Sequence scoring </b>. Using the above potentials, the `energy` command scores the binding potential of sequence. <br>
+
+3. <b>Miscellaneous </b>. Finding sequences with lowest STATIUM binding energy (`calc_top_seqs`). Plotting ROC curve given STATIUM energies and experimentally determined binding classifications (`roc`).
 
 For more information on the mechanics of STATIUM's analysis, see the lab's paper: http://dx.doi.org/10.1016/j.jmb.2012.05.022
 
