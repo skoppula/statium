@@ -1,1 +1,1 @@
-nohup python wrapper.py quickrun --in_pdb=testing/1ycr/1ycr.pdb --pdb_lib=data/culled_90 --ip_lib=testing/ip_90_wGLY --out=testing/1ycr/1ycr.out >run-statium.out 2>&1
+nohup python wrapper.py quickrun --in_pdb=testing/1ycr/1ycr.pdb --pdb_lib=data/culled_90 --ip_lib=testing/ip_90_wGLY --out=testing/1ycr/1ycr.out >--position_pairs=B >run-statium.out 2>&1
