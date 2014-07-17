@@ -1,6 +1,7 @@
 <b>STATIUM: smart scoring. promising proteins.</b><br>
 STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository contains a user-friendly implementation of the structure-based statistical-potential STATIUM algorithm that scores how well two or more proteins bind at their interacting positions. Specifically, STATIUM scores how well a certain sequence would bind to another main protein structure (e.g. variable residue positions of a ligand binding to a receptor). There are three main parts of analysis with STATIUM: <br>
 
+***
 1. <b> Potentials calculations </b>. STATIUM first calculates energy potentials for each position in your binding sequence. `quickrun` is the simplest command that does this. If you'd like more advanced control over your arguments, use the advanced commands with more parameters (`renumber`, `create_res`, `run_statium`) <br>
 
 2. <b>Sequence scoring </b>. Using the above potentials, the `energy` command scores the binding potential of sequence. <br>
@@ -9,9 +10,11 @@ STATIUM is an ongoing project at the Keating Lab to quantitatively understand ho
 
 For more information on the mechanics of STATIUM's analysis, please refer to the paper http://dx.doi.org/10.1016/j.jmb.2012.05.022
 
+***
 <b>Installation</b><br>
 If you are on a 'nix machine with `git` installed obtaining STATIUM and all its data should be as simple as: `git clone https://github.com/skoppula/statium.git` to obtain all necessary files and running `./install.sh`.
 
+***
 <b>Quickstart!</b><br>
 If you, for example, wanted to score sequences for chain B of some protein described in 1YCR.pdb, you could run:<br>
 1. `python wrapper.py quickrun --in_pdb=1YCR.pdb --position_pairs=B` to calculate potentials<br>
@@ -37,8 +40,8 @@ Files containing these residue potentials are placed into `--out_dir` argument.
 
 <i>Specifics</i>: Takes a PDB file, strips away the meta-data, and renumbers the residues and atoms, retaining atom coordinate positions and removing the occupancy and temperature factors. Renumbering starts on the first valid line of the PDB file, at starting atom number = SAN and starting residue number = SRN. 'Valid line' is any PDB line with 'ATOM' or 'HETATM' with 'MSE' (selenomethionine).
 
-One requirement of STATIUM as implemented here is that the input PDB has the receptor sequence listed before the peptide/mutant binder sequences in the file. The `renumber` function outputs a PDB that follows this requirement by reading the chains you wish to designate as the ligand sequence from the --chains option. In the example above, the heavy and light chain that we want to mutate were pushed after chain A (*HLA to *AHL).
-***
+One requirement of STATIUM as implemented here is that the input PDB has the receptor sequence listed before the peptide/mutant binder sequences in the file. The `renumber` function outputs a PDB that follows this requirement by reading the chains you wish to designate as the ligand sequence from the --chains option. In the example above, the heavy and light chain that we want to mutate were pushed after chain A (*HLA to *AHL).<br>
+
 `create_res`:<br>
 <i>Template</i> `python wrapper.py create_res (--in_pdb_orig --in_pdb_renum) [--out_res --position_pairs]`<br>
 
@@ -49,16 +52,16 @@ One requirement of STATIUM as implemented here is that the input PDB has the rec
 
 The --position_pairs argument specifies which the set of positions to be included as binder/ligand sequences in the STATIUM analysis. The argument is a set of comma seperated terms which represent continuous sequence of residues to be included in the ligand sequence (inclusive). If you want the entirety of a chain, simply put the name of chain in the list (e.g. --position_pairs=H). In the first example above, residues on the L chain, position 1-20, and a residue on the H chain, position 33 will be included in the output residues file.
 
-If you fail to include a --position_pairs argument, the function will assume you mean to create a *.res file with the entirety of chain <i>B</i>.
-***
+If you fail to include a --position_pairs argument, the function will assume you mean to create a *.res file with the entirety of chain <i>B</i>.<br>
+
 `preprocess`:<br>
 <i>Template</i> `python wrapper.py preprocess (--in_dir) [--out_dir --ip_dist_cutoff]`<br>
 <i>Example</i> `python wrapper.py preprocess -r --in_dir=data/culled_90 --out_dir=data/preprocessed_culled_90 --ip_dist_cutoff=5`<br>
 
 <i>Specifics</i> Takes in a directory of library PDBs and outputs a directory of Python *.pickle files, one for each PDB. Each pickle file contains (1) a list of Residue objects parsed from the PDB file, (2) a matrix of inter-residue distances, and (3) a list of all interacting pairs of residues. Two residues are considered interacting if any of their atoms are within the IP cutoff distance (--ip_dist_cutoff). The default IP cutoff distance is 5 Angstroms.
 
-The `-r` (restart) flag rewrite the pickle files previously created in the output directory. Not including it skips preprocessing PDB's whose pickle is already in the output directory. 
-***
+The `-r` (restart) flag rewrite the pickle files previously created in the output directory. Not including it skips preprocessing PDB's whose pickle is already in the output directory. <br>
+
 `run_statium`:<br>
 <i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --pdb_lib) [--ip_lib --out_dir --ip_dist_cutoff --matching_res_dist_cutoffs --counts]`<br>
 
@@ -75,7 +78,7 @@ Each file contains a set of twenty probabilities (one for each amino acid) descr
 
 <i>Dependencies</i>: `fsolve` from `scipy.optimize` if there are glycine residues in any of the interacting pair positions
 ***
-<b>2. Sequence scoring</b>: <i>Quick commands</i>
+<b>2. Sequence scoring</b>: <i>Quick commands</i><br>
 `energy`:<br>
 <i>Template</i> `python wrapper.py energy (--in_res --in_probs) [-f] (--in_seqs) [--out] [-z | --zscores] [--histogram]`<br>
 <i>Example One</i> `python wrapper.py --in_res=testing/1mhp_AHL.res --in_probs=testing/1mhp_AHL_probs --in_seqs=AAAGGGM,LLAA -z --histogram='hist.jpg'`<br>
@@ -89,13 +92,13 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 
 <i>Dependencies</i>: `matplotlib.pyplot` and `numpy` in order to use `--histogram`
 ***
-<b>3. Miscellaneous</b>: <i>Quick commands</i>
+<b>3. Miscellaneous</b>: <i>Quick commands</i><br>
 `calc_top_seqs`<br>
 <i>Template</i> `python wrapper.py calc_top_seqs (--in_res --probs_dir --N) [--out]`<br>
 <i>Example</i> `python wrapper.py calc_top_seqs --probs_dir=testing/1mph_AHL_probs --out=testing/top_100_seqs.txt --N=100`
 
-<i>Specifics</i>: Calculates the top `N` sequences with the lowest STATIUM energies (best predicted binders). `--probs_dir` is the output of the `run-statium` function and `--in_res` the *.res file produced by `create_res`.
-***
+<i>Specifics</i>: Calculates the top `N` sequences with the lowest STATIUM energies (best predicted binders). `--probs_dir` is the output of the `run-statium` function and `--in_res` the *.res file produced by `create_res`.<br>
+
 `roc`<br>
 <i>Template</i> `python wrapper.py roc (--scores --true) [--curve --auroc]`<br>
 <i>Example</i> `python wrapper.py roc --scores=testing/energies.txt --true=testing/true-classification.txt --auroc=testing/auroc.txt --curve=testing/roc-curve.png`<br>
@@ -104,19 +107,19 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 
 <i>Dependencies</i>: `matplotlib` for plotting ROC curves
 ***
-<b>3. Miscellaneous</b>: <i>Advanced commands</i>
+<b>3. Miscellaneous</b>: <i>Advanced commands</i><br>
 `print_merged`<br>
 <i>Template</i> `python wrapper.py print_merged (--scores --true) [--out]'<br>
 <i>Example</i> 'python wrapper.py print_merged --scores=testing/energies.txt --true=testing/true-classifcation.txt --out=testing/scores-and-true.txt`<br>
 
-<i>Specifics</i>: Combines STATIUM scores and true binding classification files into one output file, with each line containing a sequence, its score, and true classification. Sequences in the scores file but not in the classification file will not appear in the file. Conversely, scores in the classification but not in the scores file will be listed as with score infinity.
-***
+<i>Specifics</i>: Combines STATIUM scores and true binding classification files into one output file, with each line containing a sequence, its score, and true classification. Sequences in the scores file but not in the classification file will not appear in the file. Conversely, scores in the classification but not in the scores file will be listed as with score infinity.<br>
+
 `random`:<br>
 <i>Template</i> `python wrapper.py random (--seq_length --num_seqs) [--out]`<br>
 <i>Example</i>`python wrapper.py random --seq_length=8 --num_seqs=10 --out=testing/random-sequences.txt`<br>
 
-<i>Specifics</i>: Generates `--num_seqs` random sequences of '--seq_length' length. If you include a `--out=X` option, the random sequences will be printed to the specified file. Sequences are randomly drawn from the collection of all known protein sequences contained in `data/all_protein_sequences.txt'. If you choose to modify this (e.g. adjust it so that certain amino acids occur with certain frequencies, ensure that only amino acid in their character representation are present).
-***
+<i>Specifics</i>: Generates `--num_seqs` random sequences of '--seq_length' length. If you include a `--out=X` option, the random sequences will be printed to the specified file. Sequences are randomly drawn from the collection of all known protein sequences contained in `data/all_protein_sequences.txt'. If you choose to modify this (e.g. adjust it so that certain amino acids occur with certain frequencies, ensure that only amino acid in their character representation are present).<br>
+
 `get_orig_seq`:<br>
 <i>Template</i> `python wrapper.py get_orig_seq (--in_res --in_pdb_orig --in_pdb_renum)`<br>
 <i>Example</i> `python wrapper.py get_orig_seq ---in_res=testing/1mph_AHL.res -in_pdb_orig=testing/1mph_AHL_orig.pdb --in_pdb_renum=testing/1mph_AHL_renum.pdb 
