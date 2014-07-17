@@ -33,7 +33,7 @@ Files containing these residue potentials are placed into `--out_dir` argument. 
 <i>Dependencies</i>: `fsolve` from `scipy.optimize` if there are glycine residues in any of the interacting pair positions
 ***
 <b>1. Potentials calculation</b>: <i>Advanced commands</i><br>
-`renumber`:<br>
+<b>`renumber`</b>:<br>
 <i>Template</i> `python wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN --chains]`<br>
 
 <i>Example</i> `python wrapper.py renumber --in_pdb=testing/1mph_HLA.pdb --out_pdb=testing/1mph_AHL.pdb --chains=H,L` <br>
@@ -42,7 +42,7 @@ Files containing these residue potentials are placed into `--out_dir` argument. 
 
 One requirement of STATIUM as implemented here is that the input PDB has the receptor sequence listed before the peptide/mutant binder sequences in the file. The `renumber` function outputs a PDB that follows this requirement by reading the chains you wish to designate as the ligand sequence from the --chains option. In the example above, the heavy and light chain that we want to mutate were pushed after chain A (*HLA to *AHL).<br>
 
-`create_res`:<br>
+<b>`create_res`</b>:<br>
 <i>Template</i> `python wrapper.py create_res (--in_pdb_orig --in_pdb_renum) [--out_res --position_pairs]`<br>
 
 <i>Example</i> `python wrapper.py create_res --in_pdb_orig=testing/1mph_AHL_orig.pdb --in_pdb_renum=testing/1mph_AHL_renum.pdb --out_res=testing/1mph_AHL.res --position_pairs=L1-20,H33`<br>
@@ -54,7 +54,7 @@ The --position_pairs argument specifies which the set of positions to be include
 
 If you fail to include a --position_pairs argument, the function will assume you mean to create a *.res file with the entirety of chain <i>B</i>.<br>
 
-`preprocess`:<br>
+<b>`preprocess`</b>:<br>
 <i>Template</i> `python wrapper.py preprocess (--in_dir) [--out_dir --ip_dist_cutoff]`<br>
 <i>Example</i> `python wrapper.py preprocess -r --in_dir=data/culled_90 --out_dir=data/preprocessed_culled_90 --ip_dist_cutoff=5`<br>
 
@@ -62,7 +62,7 @@ If you fail to include a --position_pairs argument, the function will assume you
 
 The `-r` (restart) flag rewrite the pickle files previously created in the output directory. Not including it skips preprocessing PDB's whose pickle is already in the output directory. <br>
 
-`run_statium`:<br>
+<b>`run_statium`</b>:<br>
 <i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --pdb_lib) [--ip_lib --out_dir --ip_dist_cutoff --matching_res_dist_cutoffs --counts]`<br>
 
 <i>Example One</i> `python wrapper.py run_statium --in_pdb=testing/1mhp_AHL_new.pdb --in_res=testing/1mhp_AHL.res --pdb_lib=data/culled_90/ --ip_lib=data/ip_90_wGLY/` <br>
@@ -79,7 +79,7 @@ Each file contains a set of twenty probabilities (one for each amino acid) descr
 <i>Dependencies</i>: `fsolve` from `scipy.optimize` if there are glycine residues in any of the interacting pair positions
 ***
 <b>2. Sequence scoring</b>: <i>Quick commands</i><br>
-`energy`:<br>
+<br>`energy`</b>:<br>
 <i>Template</i> `python wrapper.py energy (--in_res --in_probs) [-f] (--in_seqs) [--out] [-z | --zscores] [--histogram]`<br>
 <i>Example One</i> `python wrapper.py --in_res=testing/1mhp_AHL.res --in_probs=testing/1mhp_AHL_probs --in_seqs=AAAGGGM,LLAA -z --histogram='hist.jpg'`<br>
 <i>Example Two</i> `python wrapper.py --in_res=testing/1mhp_AHL.res --in_probs=testing/1mhp_AHL_probs -f --in_seqs=testing/seqs.txt`<br>
@@ -93,13 +93,13 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 <i>Dependencies</i>: `matplotlib.pyplot` and `numpy` in order to use `--histogram`
 ***
 <b>3. Miscellaneous</b>: <i>Quick commands</i><br>
-`calc_top_seqs`<br>
+<b>`calc_top_seqs`</b><br>
 <i>Template</i> `python wrapper.py calc_top_seqs (--in_res --probs_dir --N) [--out]`<br>
 <i>Example</i> `python wrapper.py calc_top_seqs --probs_dir=testing/1mph_AHL_probs --out=testing/top_100_seqs.txt --N=100`
 
 <i>Specifics</i>: Calculates the top `N` sequences with the lowest STATIUM energies (best predicted binders). `--probs_dir` is the output of the `run-statium` function and `--in_res` the *.res file produced by `create_res`.<br>
 
-`roc`<br>
+<b>`roc`</b><br>
 <i>Template</i> `python wrapper.py roc (--scores --true) [--curve --auroc]`<br>
 <i>Example</i> `python wrapper.py roc --scores=testing/energies.txt --true=testing/true-classification.txt --auroc=testing/auroc.txt --curve=testing/roc-curve.png`<br>
 
@@ -108,19 +108,19 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 <i>Dependencies</i>: `matplotlib` for plotting ROC curves<br>
 ***
 <b>3. Miscellaneous</b>: <i>Advanced commands</i><br>
-`print_merged`<br>
+<b>`print_merged`</b><br>
 <i>Template</i> `python wrapper.py print_merged (--scores --true) [--out]'<br>
 <i>Example</i> 'python wrapper.py print_merged --scores=testing/energies.txt --true=testing/true-classifcation.txt --out=testing/scores-and-true.txt`<br>
 
 <i>Specifics</i>: Combines STATIUM scores and true binding classification files into one output file, with each line containing a sequence, its score, and true classification. Sequences in the scores file but not in the classification file will not appear in the file. Conversely, scores in the classification but not in the scores file will be listed as with score infinity.<br>
 
-`random`:<br>
+<b>`random`</b>:<br>
 <i>Template</i> `python wrapper.py random (--seq_length --num_seqs) [--out]`<br>
 <i>Example</i>`python wrapper.py random --seq_length=8 --num_seqs=10 --out=testing/random-sequences.txt`<br>
 
 <i>Specifics</i>: Generates `--num_seqs` random sequences of '--seq_length' length. If you include a `--out=X` option, the random sequences will be printed to the specified file. Sequences are randomly drawn from the collection of all known protein sequences contained in `data/all_protein_sequences.txt'. If you choose to modify this (e.g. adjust it so that certain amino acids occur with certain frequencies, ensure that only amino acid in their character representation are present).<br>
 
-`get_orig_seq`:<br>
+<b>`get_orig_seq`</b>:<br>
 <i>Template</i> `python wrapper.py get_orig_seq (--in_res --in_pdb_orig --in_pdb_renum)`<br>
 <i>Example</i> `python wrapper.py get_orig_seq ---in_res=testing/1mph_AHL.res -in_pdb_orig=testing/1mph_AHL_orig.pdb --in_pdb_renum=testing/1mph_AHL_renum.pdb 
 
