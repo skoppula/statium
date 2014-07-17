@@ -31,7 +31,7 @@ Generates residue potentials required for sequence scoring. `--in_pdb` identifie
 Files containing these residue potentials are placed into `--out_dir` argument. Note that this is the same as running `renumber`, `create_res`, and `run_statium` with appropriate parameters.<br>
 
 <i>Dependencies</i>: `fsolve` from `scipy.optimize` if there are glycine residues in any of the interacting pair positions
-
+***
 <b>1. Potentials calculation</b>: <i>Advanced commands</i><br>
 `renumber`:<br>
 <i>Template</i> `python wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN --chains]`<br>
@@ -106,7 +106,7 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 <i>Specifics</i>: Given a file (output of `energy`) with containing ligand sequences and their energies (`--scores`), a file with those sequences' true binding classification as strong, weak, or inconclusive (`--true`), outputs the corresponding ROC curve (if `--curve` is listed with an output file path) and/or the AUROC (if `--auroc` is listed with an output file path).<br>
 
 <i>Dependencies</i>: `matplotlib` for plotting ROC curves<br>
-
+***
 <b>3. Miscellaneous</b>: <i>Advanced commands</i><br>
 `print_merged`<br>
 <i>Template</i> `python wrapper.py print_merged (--scores --true) [--out]'<br>
