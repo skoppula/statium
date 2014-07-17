@@ -1,7 +1,6 @@
 <b>STATIUM: smart scoring. promising proteins.</b><br>
 STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository contains a user-friendly implementation of the structure-based statistical-potential STATIUM algorithm that scores how well two or more proteins bind at their interacting positions. Specifically, STATIUM scores how well a certain sequence would bind to another main protein structure (e.g. variable residue positions of a ligand binding to a receptor). There are three main parts of analysis with STATIUM: <br>
 
-***
 1. <b> Potentials calculations </b>. STATIUM first calculates energy potentials for each position in your binding sequence. `quickrun` is the simplest command that does this. If you'd like more advanced control over your arguments, use the advanced commands with more parameters (`renumber`, `create_res`, `run_statium`) <br>
 
 2. <b>Sequence scoring </b>. Using the above potentials, the `energy` command scores the binding potential of sequence. <br>
@@ -21,7 +20,6 @@ If you, for example, wanted to score sequences for chain B of some protein descr
 2. `python wrapper.py energy --in_pdb=1YCR.pdb --probs_dir=1YCR --in_seqs=AMLTGTMMXX<br>` to score a sequence<br>
 
 ***
-<b>Details and Documentation</b><br>
 <b>1. Potentials calculation</b>: <i>Quick commands</i><br>
 `quickrun`:<br>
 <i>Template</i> `python wrapper.py quickrun (--in_pdb --position_pairs) [--out_dir]`<br>
@@ -30,7 +28,9 @@ If you, for example, wanted to score sequences for chain B of some protein descr
 
 Generates residue potentials required for sequence scoring. `--in_pdb` identifies the structure whose sequence you want to analyze. The --position_pairs argument specifies which set of positions to be included as binder/ligand sequences in the STATIUM analysis. The argument is a set of comma seperated terms which represent continuous sequence of residues to be included in the ligand sequence (inclusive). If you want the entirety of a chain, simply put the name of chain in the list (e.g. --position_pairs=H). In the first example above, residues on the L chain, position 1-20, and a residue on the H chain, position 33 will be included in the output residues file.
 
-Files containing these residue potentials are placed into `--out_dir` argument.
+Files containing these residue potentials are placed into `--out_dir` argument. Note that this is the same as running `renumber`, `create_res`, and `run_statium` with appropriate parameters.<br>
+
+<i>Dependencies</i>: `fsolve` from `scipy.optimize` if there are glycine residues in any of the interacting pair positions
 
 <b>1. Potentials calculation</b>: <i>Advanced commands</i><br>
 `renumber`:<br>
@@ -105,8 +105,8 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 
 <i>Specifics</i>: Given a file (output of `energy`) with containing ligand sequences and their energies (`--scores`), a file with those sequences' true binding classification as strong, weak, or inconclusive (`--true`), outputs the corresponding ROC curve (if `--curve` is listed with an output file path) and/or the AUROC (if `--auroc` is listed with an output file path).<br>
 
-<i>Dependencies</i>: `matplotlib` for plotting ROC curves
-***
+<i>Dependencies</i>: `matplotlib` for plotting ROC curves<br>
+
 <b>3. Miscellaneous</b>: <i>Advanced commands</i><br>
 `print_merged`<br>
 <i>Template</i> `python wrapper.py print_merged (--scores --true) [--out]'<br>
