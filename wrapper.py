@@ -40,7 +40,7 @@ def parse_position_pairs(in_str):
 
 def main(argv):
 	
-		helpdoc =   	"""usage: wrapper.py quickrun (--in_pdb=A --position_pairs=B --pdb_lib=C --ip_lib=D) [--out=E]
+	helpdoc =   	"""usage: wrapper.py quickrun (--in_pdb=A --position_pairs=B --pdb_lib=C --ip_lib=D) [--out=E]
 				wrapper.py renumber (--in_pdb=A) [--out_pdb=B --chains=C --SRN=1 --SAN=1] [--noverbose]
 				wrapper.py create_res (--in_pdb_orig=A --in_pdb_renum=B) [--out_res=C --position_pairs=D] [--noverbose]
 				wrapper.py preprocess (--in_dir=A) [--out_dir=B --ip_dist_cutoff=C] [--noverbose] [-r]
@@ -134,7 +134,7 @@ def main(argv):
 		if verbose: print "Renumbering PDB file: " + in_pdb
 		renumber(1, 1, chains, in_pdb, renum_pdb)
 		if verbose: print "Creating .res file using: " + in_pdb + " and " + renum_pdb
-		create_res(in_pdb, renum_pdb, res, position)
+		create_res(in_pdb, renum_pdb, res, positions)
 		if verbose: print "Running STATIUM with: " + renum_pdb + " " + res + " " + pdb_lib + ' and IP lib: ' + ip_lib
 		statium(res, renum_pdb, pdb_lib, ip_lib, out_dir, ip_dist, default_match_dist, False, verbose)
 		if verbose: print 'Done'
