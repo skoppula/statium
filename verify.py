@@ -54,3 +54,4 @@ def print_merged(score_path, true_path, out):
 	with open(out, 'w') as f:
 		for datum in data:
 			f.write(datum[0] + '\t' + datum[1] + '\t' + datum[2]+ '\n')	
+

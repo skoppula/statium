@@ -16,13 +16,36 @@ from util import filelines2list
 from verify import roc
 from verify import print_merged
 
+def parse_position_pairs(in_str):
+	if not in_str:
+		positions = {'B'}
+	else:
+		raw = in_str.split(',')
+		positions = set()
+
+		list_iter = iter(raw)
+		for i, term in enumerate(list_iter):
+			parts = term.split('-')
+			if len(parts) == 1:
+				positions.add(term)
+				chain = term[0]
+			elif len(parts) == 2:
+				chain = parts[0][0]
+				num = parts[0][1:]
+				num2 = parts[1]
+				positions.add((chain, num, num2))	
+			else:
+				sys.exit('Invalid position pairs')	
+	return positions
+
 def main(argv):
 	
-	helpdoc =   	"""usage: wrapper.py renumber (--in_pdb=A) [--out_pdb=B --chains=C --SRN=1 --SAN=1] [--noverbose]
+		helpdoc =   	"""usage: wrapper.py quickrun (--in_pdb=A --position_pairs=B --pdb_lib=C --ip_lib=D) [--out_dir=E]
+				wrapper.py renumber (--in_pdb=A) [--out_pdb=B --chains=C --SRN=1 --SAN=1] [--noverbose]
 				wrapper.py create_res (--in_pdb_orig=A --in_pdb_renum=B) [--out_res=C --position_pairs=D] [--noverbose]
 				wrapper.py preprocess (--in_dir=A) [--out_dir=B --ip_dist_cutoff=C] [--noverbose] [-r]
 				wrapper.py run_statium (--in_res=A --in_pdb=B --pdb_lib=C) [--ip_lib=D --out=E --ip_dist_cutoff=F --matching_res_dist_cutoffs=G --counts] [--noverbose]
-				wrapper.py [-f] energy (--in_res=A --in_probs=B --in_seqs=C) [--out=D] [-z | --zscore] [--histogram=E] [--noverbose]
+				wrapper.py [-f] energy (--in_res=A | --in_pdb=B) (--in_probs=C --in_seqs=D) [--out=E] [-z | --zscore] [--histogram=E] [--noverbose]
 				wrapper.py random (--seq_length=A --num_seqs=B) [--out=C] [--noverbose]
 				wrapper.py get_orig_seq (--in_res=A --in_pdb_orig=B --in_pdb_renum=C) [--noverbose]
 				wrapper.py calc_top_seqs (--in_res=A --probs_dir=B --N=C) [--out=D] [--noverbose]
@@ -30,6 +53,12 @@ def main(argv):
 				wrapper.py print_merged (--scores=A --true=B) [--out=C] [--noverbose]
 				wrapper.py [-h | --help]
 			Options:
+
+				--in_pdb=A	Input PDB file path
+				--position_pairs=B	Positions to include in the binding sequence
+				--pdb_lib=C	Input directory of library PDB files
+				--ip_lib=D	Input directory of library IP files
+				--out_dir=E	Output directory
 
 				--in_pdb=A	Input PDB file path
 				--out_pdb=B	Output PDB file path
@@ -40,7 +69,7 @@ def main(argv):
 				--in_pdb_orig=A	Input PDB file path (original)
 				--in_pdb_renum=B	Input PDB file path (renumbered)
 				--out_res=C	Output RES file path
-				--position_pairs=D	Positions to include in the ligand
+				--position_pairs=D	Positions to include in the binding sequence
 
 				--in_dir=A	Directory containing library PDBs
 				--out_dir=B	Output directory for JSON objects
@@ -48,17 +77,18 @@ def main(argv):
 
 				--in_res=A	Input .res file path
 				--in_pdb=B	Input renumbered PDB path
-				--pdb_lib=C	Input preprocessed PDB library directory
-				--ip_lib=D
+				--pdb_lib=C	Input directory of library PDB files
+				--ip_lib=D	Input directory of library IP files
 				--out=E		Output directory
 				--ip_dist_cutoff=F	Threshold for interacting pair designation
 				--matching_res_dist_cutoffs=G	Thresholds for matching IP designation
 
 				--in_res=A	Input .res file path
-				--in_probs=B	Input STATIUM probabilities directory
-				--in_seqs=C	Sequence patter or path to a file of sequence patterns to be scored
-				--out=D		File path to output score (if -f flag is present)
-				--histogram=E	File path to output histogram (absence outputs nothing)
+				--in_pdb=B	Input .pdb file path
+				--in_probs=C	Input STATIUM probabilities directory
+				--in_seqs=D	Sequence patter or path to a file of sequence patterns to be scored
+				--out=E		File path to output score (if -f flag is present)
+				--histogram=F	File path to output histogram (absence outputs nothing)
 
 				--seq_length=A	Length of the random sequences
 				--num_seqs=B	Number of random sequences
@@ -85,8 +115,31 @@ def main(argv):
 	
 	options = docopt(helpdoc, argv, help = True, version = "3.0.0", options_first=False)
 	verbose = not options['--noverbose']
- 
-	if options['renumber']:
+
+	if options['quickrun']:
+		in_pdb = options['--in_pdb']
+		stem = in_pdb[:-4]
+		renum_pdb = stem + '_renumbered.pdb'
+		res = stem + '.res'
+
+		pdb_lib = options['--pdb_lib']
+		ip_lib = options['--ip_lib']
+		out_dir = options['--out_dir'] if options['--out_dir'] is not None else stem
+
+		positions = parse_position_pairs(options['--position_pairs'])
+		chains = [term[0] for term in positions]
+		default_match_dist = {'A':2, 'C':6, 'D':6, 'E':6, 'F':6, 'G':2, 'H':6, 'I':6, 'K':6, 'L':6, 'M':6, 'N':6, 'P':6, 'Q':6, 'R':6, 'S':6, 'T':6, 'V':6, 'W':6, 'Y':6, 'X':0}
+		ip_dist = 6.0
+
+		if verbose: print "Renumbering PDB file: " + in_pdb
+		renumber(1, 1, chains, in_pdb, renum_pdb)
+		if verbose: print "Creating .res file using: " + in_pdb + " and " + renum_pdb
+		create_res(in_pdb, renum_pdb, res, position)
+		if verbose: print "Running STATIUM with: " + renum_pdb + " " + res + " " + pdb_lib + ' and IP lib: ' + ip_lib
+		statium(res, renum_pdb, pdb_lib, ip_lib, out_dir, ip_dist, default_match_dist, False, verbose)
+		if verbose: print 'Done'
+
+	elif options['renumber']:
 		in_pdb = options['--in_pdb']
 		out_pdb = options['--out_pdb'] if options['--out_pdb'] is not None else in_pdb[:-4]+'_renumbered.pdb'
 		SRN = 1 if options['--SRN'] == None else int(options['--SRN']) 
@@ -102,26 +155,8 @@ def main(argv):
 		pdb_orig = options['--in_pdb_orig']
 		pdb_renum = options['--in_pdb_renum']
 		res = pdb_orig[:-4]+'.res' if options['--out_res'] is None else options['--out_res']
+		position_pairs = options['--position_pairs']
 
-		if not options['--position_pairs']:
-			positions = {'B'}
-		else:
-			raw = options['--position_pairs'].split(',')
-			positions = set()
-
-			list_iter = iter(raw)
-			for i, term in enumerate(list_iter):
-				parts = term.split('-')
-				if len(parts) == 1:
-					positions.add(term)
-					chain = term[0]
-				elif len(parts) == 2:
-					chain = parts[0][0]
-					num = parts[0][1:]
-					num2 = parts[1]
-					positions.add((chain, num, num2))	
-				else:
-					sys.exit('Invalid position pairs')	
 
 		if verbose: print "Creating .res file using: " + pdb_orig + " and " + pdb_renum
 		create_res(pdb_orig, pdb_renum, res, positions)
@@ -150,9 +185,9 @@ def main(argv):
 		match_dist = ast.literal_eval(options['--matching_res_dist_cutoffs']) if options['--matching_res_dist_cutoffs'] else default
 		count = options['--counts']
 		
-		if verbose: print("\nRunning STATIUM with: " + pdb + " " + res + " " + pdb_lib + ' and IP lib: ' + str(ip_lib))
+		if verbose: print "\nRunning STATIUM with: " + pdb + " " + res + " " + pdb_lib + ' and IP lib: ' + str(ip_lib)
 		statium(res, pdb, pdb_lib, ip_lib, out_dir, ip_dist, match_dist, count, verbose)
-		if verbose: print("Done. STATIUM probabilities in output directory: " + out_dir)
+		if verbose: print "Done. STATIUM probabilities in output directory: " + out_dir
 
 	elif options['energy']:
 		zscores = options['-z'] or options['--zscore']
