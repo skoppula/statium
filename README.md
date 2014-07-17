@@ -21,7 +21,7 @@ If you, for example, wanted to score sequences for chain B of some protein descr
 
 ***
 <b>1. Potentials calculation</b>: <i>Quick commands</i><br>
-`quickrun`:<br>
+<b>`quickrun`</b>:<br>
 <i>Template</i> `python wrapper.py quickrun (--in_pdb --position_pairs) [--out_dir]`<br>
 
 <i>Example</i> `python wrapper.py quickrun --in_pdb=1mph_HLA.pdb --position_pairs=H31-56,L --out_dir=testing/1mph_HLA` <br>
