@@ -84,19 +84,16 @@ def get_lib_dist_matrix(pdb, ips):
 	return matrix
 
 
-def statium(in_res, in_pdb, in_dir, in_ip, out_dir, ip_cutoff_dist, match_cutoff_dists, counts, verbose):
+def statium(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dists, counts, verbose):
 	
-	if verbose: print '\nPreparing directory folders...'
-	if not os.path.exists(out_dir): os.makedirs(out_dir)
-
 	if verbose: print 'Starting STATUM analysis...' 
 	tic = timeit.default_timer()
-	sidechain(in_res, in_pdb, in_dir, in_ip, out_dir, ip_cutoff_dist, match_cutoff_dists, counts, verbose)
+	sidechain(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dists, counts, verbose)
 	toc = timeit.default_timer()
-	if verbose: print 'Done in ' + str((tic-toc)/60) + 'minutes! Output in: ' + out_dir
+	if verbose: print 'Done in ' + str((tic-toc)/60) + 'minutes! Output in: ' + out
 
 
-def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out_dir, ip_dist_cutoff, match_dist_cutoffs, print_counts, verbose):
+def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_dist_cutoffs, print_counts, verbose):
 	
 	if verbose: print 'Extracting residue position from ' + in_res + '...'
 	res_lines = filelines2list(in_res)
@@ -170,7 +167,7 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out_dir, ip_dist_cutoff, ma
 	if print_counts:
 		if verbose: print 'Writing raw library counts to files...'
 
-		counts_dir = out_dir[-1] + '_counts' if out_dir[-1] == '/' else out_dir + '_counts'
+		counts_dir = out + '_counts'
 		if not os.path.exists(counts_dir):
 			os.mkdir(counts_dir)
 
@@ -183,33 +180,63 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out_dir, ip_dist_cutoff, ma
 			for j in range(20): counts_file.write(AAint2char(j) + '\t' + str(counts[i][j]) + '\n')
 			counts_file.close()
 	
-	if(verbose): print("Computing probabilities from counts...")
-	determine_probs(use_indices, totals, counts, out_dir, verbose)
+	if verbose: print("Computing probabilities from counts...")
+	probs = determine_probs(use_indices, totals, counts)
+
+	if len(use_indices) != len(probs):
+		print 'Number of IPs is not consistent'
+		print use_indices
+		print probs
+		sys.exit(1)
+
+	write_output(use_indices, probs, out)	
+	if(verbose): print("Finished calculating probabilities. Written to: " + out + '_probs')
 
 
-def determine_probs(use_indices, totals, counts, out_dir, verbose):
-	
-	#create the output directory
-	if not os.path.exists(out_dir):
-		os.mkdir(out_dir)
+def write_output(use_indices, probs, out):
+	AAs = [AAint2char(i) for i in range(20)]
+	with open(out, 'w') as f:
+		s = 'IPs\t' + '\t'.join(AAs)
+		f.write(s + '\n')
+		for l, (i,j) in enumerate(use_indices):
+			s = str(i) + '-' + str(j)
+			s2 = '\t'.join([probs[l][aa] for aa in AAs])
+			f.write(s + '\t' + s2 + '\n')
+
+def read_output(in_path):
+	lines = filelines2deeplist(in_path, skipComments=True, skipEmptyLines=True)
+	AAs = [AAint2char(i) for i in range(20)]
+	probs = OrderedDict()
+	for ip_line in lines[1:]:
+		ip = tuple(ip_line[0].split('-'))
+		use_indices.append(ip)
+		aa_probs = dict()
+		for i, prob in enumerate(ip_line[1:]):
+			aa_probs[AAs[i]] = prob
+		probs[ip] = aa_probs
+
+	return probs
+
+def determine_probs(use_indices, totals, counts):
 	
 	#total number of residues across all library interacting pairs
 	lib_sum = float(sum(totals))
+
 	#frequency of each residue in total library
 	lib_total_probs = [x/lib_sum for x in totals]
+	out = list()
 	
 	for (i, pair) in enumerate(use_indices):
 		total = float(sum(counts[i]))
 		if total > 99:
-			path = os.path.join(out_dir, str(pair[0] + 1) + '_' + str(pair[1] + 1) + '_probs.txt')
-			with open(path, 'w') as prob_file:
-				#probability of each residue occuring at *that* IP (i.e. / by total res's at the IP)
-				AA_probs = [(x/total if x != 0 else 1/total) for x in counts[i]]
-				for j in range(20):
-					e = -1.0 * math.log(AA_probs[j] / lib_total_probs[j])
-					prob_file.write(AAint2char(j) + '\t' + str(e) + '\n')
-				prob_file.close()
-	if(verbose): print("Finished calculating probabilities. Written to: " + out_dir + '_probs')
+			probs = dict()
+			#probability of each residue occuring at *that* IP (i.e. / by total res's at the IP)
+			AA_probs = [(x/total if x != 0 else 1/total) for x in counts[i]]
+			for j in range(20):
+				e = -1.0 * math.log(AA_probs[j] / lib_total_probs[j])
+				probs[AAint2char(j)] = e
+			out.append(probs)
+	return out
 
 	
 def matching_sidechain_pair(dists1, dists2, cutoff):
@@ -280,23 +307,14 @@ def generate_random_distribution (in_res, in_probs_dir, num_seqs=1000):
 	return (sequence_length, energies, avg, sd)
 
 
-def calc_seq_energy (in_res_path, probs_dir, seq):
+def calc_seq_energy (in_res_path, in_probs, seq):
 
 	#Handle two cases: e.g. AAAX,LLL and LXAAM
 	seq = ''.join(seq.split(','))
 	
 	#loading in probability into all_probs
-	prob_files = os.listdir(probs_dir)
-	all_probs = dict()
+	all_probs = read_output(in_probs)
 	
-	for f in prob_files:
-		file_path = os.path.join(probs_dir, f)
-		lines = filelines2deeplist(file_path)
-		probs = [float(prob[1]) for prob in lines if prob != []]
-		ip_res1 = int(f.split('_')[0]) 
-		ip_res2 = int(f.split('_')[1])
-		all_probs[(ip_res1,ip_res2)] = probs
-
 	energy = 0
 	lines = filelines2list(in_res_path)
 	residues = [int(line.strip()) for line in lines]
@@ -311,7 +329,7 @@ def calc_seq_energy (in_res_path, probs_dir, seq):
 	return energy
 	
 #Note: need res file, because not all residues 
-def calc_top_seqs(in_res_path, probs_dir, num_sequences):
+def calc_top_seqs(in_res_path, in_probs, num_sequences):
 	 
 	#read back from .res file where ligand residues start
 	lines = filelines2list(in_res_path)
@@ -319,16 +337,8 @@ def calc_top_seqs(in_res_path, probs_dir, num_sequences):
 	
    	#loading in probability into all_probs
 	prob_files = os.listdir(probs_dir)
-	all_probs = OrderedDict()
+	all_probs = read_output(in_probs)
 	
-	for f in prob_files:
-		file_path = os.path.join(probs_dir, f)
-		lines = filelines2deeplist(file_path)
-		probs = [float(prob[1]) for prob in lines if prob != []]
-		ip_res1 = int(f.split('_')[0]) 
-		ip_res2 = int(f.split('_')[1])
-		all_probs[(ip_res1,ip_res2)] = probs
-
 	#the following now fills ordered_probs
 	#[[sorted list of AA probs for a residue position: (0.5, 'A'), (0.3, 'C'),...], [like before for residue pos 2], etc...]
 	ordered_probs = [] 

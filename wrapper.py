@@ -40,7 +40,7 @@ def parse_position_pairs(in_str):
 
 def main(argv):
 	
-		helpdoc =   	"""usage: wrapper.py quickrun (--in_pdb=A --position_pairs=B --pdb_lib=C --ip_lib=D) [--out_dir=E]
+		helpdoc =   	"""usage: wrapper.py quickrun (--in_pdb=A --position_pairs=B --pdb_lib=C --ip_lib=D) [--out=E]
 				wrapper.py renumber (--in_pdb=A) [--out_pdb=B --chains=C --SRN=1 --SAN=1] [--noverbose]
 				wrapper.py create_res (--in_pdb_orig=A --in_pdb_renum=B) [--out_res=C --position_pairs=D] [--noverbose]
 				wrapper.py preprocess (--in_dir=A) [--out_dir=B --ip_dist_cutoff=C] [--noverbose] [-r]
@@ -48,7 +48,7 @@ def main(argv):
 				wrapper.py [-f] energy (--in_res=A | --in_pdb=B) (--in_probs=C --in_seqs=D) [--out=E] [-z | --zscore] [--histogram=E] [--noverbose]
 				wrapper.py random (--seq_length=A --num_seqs=B) [--out=C] [--noverbose]
 				wrapper.py get_orig_seq (--in_res=A --in_pdb_orig=B --in_pdb_renum=C) [--noverbose]
-				wrapper.py calc_top_seqs (--in_res=A --probs_dir=B --N=C) [--out=D] [--noverbose]
+				wrapper.py calc_top_seqs (--in_res=A --in_probs=B --N=C) [--out=D] [--noverbose]
 				wrapper.py roc (--scores=A --true=B) [--curve=C --auroc=D] [-noverbose]
 				wrapper.py print_merged (--scores=A --true=B) [--out=C] [--noverbose]
 				wrapper.py [-h | --help]
@@ -58,7 +58,7 @@ def main(argv):
 				--position_pairs=B	Positions to include in the binding sequence
 				--pdb_lib=C	Input directory of library PDB files
 				--ip_lib=D	Input directory of library IP files
-				--out_dir=E	Output directory
+				--out=E	Output directory
 
 				--in_pdb=A	Input PDB file path
 				--out_pdb=B	Output PDB file path
@@ -85,7 +85,7 @@ def main(argv):
 
 				--in_res=A	Input .res file path
 				--in_pdb=B	Input .pdb file path
-				--in_probs=C	Input STATIUM probabilities directory
+				--in_probs=C	STATIUM probabilities file
 				--in_seqs=D	Sequence patter or path to a file of sequence patterns to be scored
 				--out=E		File path to output score (if -f flag is present)
 				--histogram=F	File path to output histogram (absence outputs nothing)
@@ -99,7 +99,7 @@ def main(argv):
 				--in_pdb_renum-C	Input PDB file path (renumbered)
 
 				--in_res=A
-				--probs_dir=B	Input STATIUM probabilities directory
+				--in_probs=B	STATIUM output file
 				--N=C		Number of sequences to be found
 				--out=D		Output file path
 
@@ -124,7 +124,7 @@ def main(argv):
 
 		pdb_lib = options['--pdb_lib']
 		ip_lib = options['--ip_lib']
-		out_dir = options['--out_dir'] if options['--out_dir'] is not None else stem
+		out_dir = options['--out'] if options['--out'] is not None else stem
 
 		positions = parse_position_pairs(options['--position_pairs'])
 		chains = [term[0] for term in positions]
@@ -138,6 +138,7 @@ def main(argv):
 		if verbose: print "Running STATIUM with: " + renum_pdb + " " + res + " " + pdb_lib + ' and IP lib: ' + ip_lib
 		statium(res, renum_pdb, pdb_lib, ip_lib, out_dir, ip_dist, default_match_dist, False, verbose)
 		if verbose: print 'Done'
+
 
 	elif options['renumber']:
 		in_pdb = options['--in_pdb']
@@ -178,7 +179,7 @@ def main(argv):
 		pdb = options['--in_pdb']
 		pdb_lib = options['--pdb_lib']
 		ip_lib = options['--ip_lib']
-		out_dir = options['--out'] if options['--out'] is not None else res[:-4]
+		out = options['--out'] if options['--out'] is not None else res[:-4] + '.out'
 		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 6.0
 		
 		default = {'A':2, 'C':6, 'D':6, 'E':6, 'F':6, 'G':2, 'H':6, 'I':6, 'K':6, 'L':6, 'M':6, 'N':6, 'P':6, 'Q':6, 'R':6, 'S':6, 'T':6, 'V':6, 'W':6, 'Y':6, 'X':0}
@@ -186,7 +187,7 @@ def main(argv):
 		count = options['--counts']
 		
 		if verbose: print "\nRunning STATIUM with: " + pdb + " " + res + " " + pdb_lib + ' and IP lib: ' + str(ip_lib)
-		statium(res, pdb, pdb_lib, ip_lib, out_dir, ip_dist, match_dist, count, verbose)
+		statium(res, pdb, pdb_lib, ip_lib, out, ip_dist, match_dist, count, verbose)
 		if verbose: print "Done. STATIUM probabilities in output directory: " + out_dir
 
 	elif options['energy']:
@@ -194,7 +195,7 @@ def main(argv):
 		histogram = options['--histogram']
  
 		in_res = options['--in_res']
-		probs_dir = options['--in_probs']
+		in_probs = options['--in_probs']
 		isfile = options['-f']
 		in_seqs = options['--in_seqs']
 		outfile = options['--out']
@@ -203,7 +204,7 @@ def main(argv):
 		
 		if zscores:
 			if verbose: print 'Generating random distribution of energies...'
-			distribution = generate_random_distribution(in_res, probs_dir)
+			distribution = generate_random_distribution(in_res, in_probs)
 			if histogram:
 				if verbose: print 'Drawing histogram...'
 				import matplotlib.pyplot as plt
@@ -225,7 +226,7 @@ def main(argv):
 			for line in lines:
 				if line != '' and line[0] != '#':
 					seq = line.strip()
-					energy = calc_seq_energy(in_res, probs_dir, seq)
+					energy = calc_seq_energy(in_res, in_probs, seq)
 					out = seq + "\t" + str(energy)
 					
 					if(zscores):
@@ -237,7 +238,7 @@ def main(argv):
 			print('Done.')
 		
 		else:
-			energy = calc_seq_energy(in_res, probs_dir, in_seqs)
+			energy = calc_seq_energy(in_res, in_probs, in_seqs)
 			print("Sequence energy for " + in_seqs + " is: " + str(energy))
 			
 			if(zscores):
@@ -268,17 +269,18 @@ def main(argv):
    
 	elif options['calc_top_seqs']:
 		in_res = options['--in_res']
-		probs_dir = options['--probs_dir']
+		probs_dir = options['--in_probs']
 		N = int(options['--N'])
 		out = options['--out']
 
 		if verbose: print 'Calculating ' + str(N) + ' sequences with lowest energy.'
-		results = calc_top_seqs(in_res, probs_dir, N)
+		results = calc_top_seqs(in_res, in_probs, N)
 		if out:
 			to_print = [seq + '\t' + str(energy) + '\n' for seq, energy in results]
 			list2file(to_print, out)
 		else:
 			print results
+
 	elif options['roc']:
 		scores = options['--scores']
 		true = options['--true']
