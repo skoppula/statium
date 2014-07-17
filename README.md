@@ -22,9 +22,9 @@ If you, for example, wanted to score sequences for chain B of some protein descr
 ***
 <b>1. Potentials calculation</b>: <i>Quick commands</i><br>
 <b>`quickrun`</b>:<br>
-<i>Template</i> `python wrapper.py quickrun (--in_pdb --position_pairs --pdb_lib --ip_lib) [--out_dir]`<br>
+<i>Template</i> `python wrapper.py quickrun (--in_pdb --position_pairs --pdb_lib --ip_lib) [--out]`<br>
 
-<i>Example</i> `python wrapper.py quickrun --in_pdb=1mph_HLA.pdb --position_pairs=H31-56,L --out_dir=testing/1mph_HLA` <br>
+<i>Example</i> `python wrapper.py quickrun --in_pdb=1mph_HLA.pdb --position_pairs=H31-56,L --pdb_lib=culled_90 --ip_lib=ip_90_wGLY --out_dir=testing/1mph_HLA.out` <br>
 
 Generates residue potentials required for sequence scoring. `--in_pdb` identifies the structure whose sequence you want to analyze. The --position_pairs argument specifies which set of positions to be included as binder/ligand sequences in the STATIUM analysis. The argument is a set of comma seperated terms which represent continuous sequence of residues to be included in the ligand sequence (inclusive). If you want the entirety of a chain, simply put the name of chain in the list (e.g. --position_pairs=H). In the first example above, residues on the L chain, position 1-20, and a residue on the H chain, position 33 will be included in the output residues file.
 
@@ -63,7 +63,7 @@ If you fail to include a --position_pairs argument, the function will assume you
 The `-r` (restart) flag rewrite the pickle files previously created in the output directory. Not including it skips preprocessing PDB's whose pickle is already in the output directory. <br>
 
 <b>`run_statium`</b>:<br>
-<i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --pdb_lib) [--ip_lib --out_dir --ip_dist_cutoff --matching_res_dist_cutoffs --counts]`<br>
+<i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --pdb_lib) [--ip_lib --out --ip_dist_cutoff --matching_res_dist_cutoffs --counts]`<br>
 
 <i>Example One</i> `python wrapper.py run_statium --in_pdb=testing/1mhp_AHL_new.pdb --in_res=testing/1mhp_AHL.res --pdb_lib=data/culled_90/ --ip_lib=data/ip_90_wGLY/` <br>
 <i>Example Two</i> `python wrapper.py run_statium --in_pdb=testing/1mhp_AHL_new.pdb --in_res=testing/1mhp_AHL.res --pdb_lib=data/processed_culled_90/` <br>
@@ -72,17 +72,15 @@ The `-r` (restart) flag rewrite the pickle files previously created in the outpu
 
 Optional parameters include: --out_dir (the directory where STATIUM outputs its results; default value is value of --in_pdb without the .pdb extension), --counts (whether to print out STATIUM's intermediate analysis outputs; note that this takes no argument; simply including the flag issues printing!), --ip_dist_cutoff (the threshold distance in Angstroms between two atoms, below which the atom's residues are deemed 'interacting'; default is 6.0), and --matching_res_dist_cutoff (a dictionary with all twenty amino acids [in single character representation] each mapped to a cutoff below which a interacting residue pair cannot be deemed 'matching' to a library protein interacting pair. Example of using this parameter [containing the default, recommended dictionary values if you leave this parameter out]: --matching_res_dist_cutoff={'A':2, 'C':6, 'D':6, 'E':6, 'F':6, 'G':2, 'H':6, 'I':6, 'K':6, 'L':6, 'M':6, 'N':6, 'P':6, 'Q':6, 'R':6, 'S':6, 'T':6, 'V':6, 'W':6, 'Y':6, 'X':0}.
 
-The function creates a directory containing a set of files, one file per interacting pair:
-
-Each file contains a set of twenty probabilities (one for each amino acid) describing how likely it is for that identity would exist at that position on the sidechain, given the main chain's amino acid identity at the position.<br>
+The function creates a file with twenty probabilities (one for each possible amino acid) per interacting pair, describing how likely it is for that identity would exist at that position on the sidechain, given the main chain's amino acid identity at the position.<br>
 
 <i>Dependencies</i>: `fsolve` from `scipy.optimize` if there are glycine residues in any of the interacting pair positions
 ***
 <b>2. Sequence scoring</b>: <i>Quick commands</i><br>
 <b>`energy`</b>:<br>
 <i>Template</i> `python wrapper.py energy (--in_res | --in_pdb) (--in_probs) [-f] (--in_seqs) [--out] [-z | --zscores] [--histogram]`<br>
-<i>Example One</i> `python wrapper.py --in_res=testing/1mhp_AHL.res --in_probs=testing/1mhp_AHL_probs --in_seqs=AAAGGGM,LLAA -z --histogram='hist.jpg'`<br>
-<i>Example Two</i> `python wrapper.py --in_res=testing/1mhp_AHL.res --in_probs=testing/1mhp_AHL_probs -f --in_seqs=testing/seqs.txt`<br>
+<i>Example One</i> `python wrapper.py --in_res=testing/1mhp_AHL.res --in_probs=testing/1mhp_AHL.probs --in_seqs=AAAGGGM,LLAA -z --histogram='hist.jpg'`<br>
+<i>Example Two</i> `python wrapper.py --in_res=testing/1mhp_AHL.res --in_probs=testing/1mhp_AHL.probs -f --in_seqs=testing/seqs.txt`<br>
 
 <i>Specifics</i>: Calculates STATIUM's binding score for a given sequence of amino acids in the positions listed in the input *.res file (see `create_res` or `quick_run`)*. The `--in_probs` input is the STATIUM probabilities directory computed in `run_statium`. The presence of `-f` indicates that `--in_seqs` is a file (else just [possibly a set of] sequences, corresponding to the chains/position-pairs used to create the *.res file). For example, you might have a --in_seqs=AAA,L if your `--position_pairs` argument in `create_res` was 10-12,13 (note that an in_seqs without a comma is also acceptable: e.g. AAAL). A file would contain similarly formatted argument, one sequence (set) on each line.
 
@@ -96,10 +94,10 @@ If you wish to adjust the number of random sequences in the distribution, you ca
 ***
 <b>3. Miscellaneous</b>: <i>Quick commands</i><br>
 <b>`calc_top_seqs`</b><br>
-<i>Template</i> `python wrapper.py calc_top_seqs (--in_res --probs_dir --N) [--out]`<br>
-<i>Example</i> `python wrapper.py calc_top_seqs --probs_dir=testing/1mph_AHL_probs --out=testing/top_100_seqs.txt --N=100`
+<i>Template</i> `python wrapper.py calc_top_seqs (--in_res --in_probs --N) [--out]`<br>
+<i>Example</i> `python wrapper.py calc_top_seqs --in_probs=testing/1mph_AHL_probs --out=testing/top_100_seqs.txt --N=100`
 
-<i>Specifics</i>: Calculates the top `N` sequences with the lowest STATIUM energies (best predicted binders). `--probs_dir` is the output of the `run-statium` function and `--in_res` the *.res file produced by `create_res`.<br>
+<i>Specifics</i>: Calculates the top `N` sequences with the lowest STATIUM energies (best predicted binders). `--in_probs` is the output of the `run-statium` function and `--in_res` the *.res file produced by `create_res`.<br>
 
 <b>`roc`</b><br>
 <i>Template</i> `python wrapper.py roc (--scores --true) [--curve --auroc]`<br>
