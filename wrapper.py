@@ -40,7 +40,7 @@ def parse_position_pairs(in_str):
 
 def main(argv):
 	
-	helpdoc =   	"""usage: wrapper.py quickrun (--in_pdb=A --position_pairs=B --pdb_lib=C --ip_lib=D) [--out=E]
+	helpdoc =   	"""usage: wrapper.py quickrun (--in_pdb=A --position_pairs=B --pdb_lib=C --ip_lib=D) [--out=E] [--noverbose]
 				wrapper.py renumber (--in_pdb=A) [--out_pdb=B --chains=C --SRN=1 --SAN=1] [--noverbose]
 				wrapper.py create_res (--in_pdb_orig=A --in_pdb_renum=B) [--out_res=C --position_pairs=D] [--noverbose]
 				wrapper.py preprocess (--in_dir=A) [--out_dir=B --ip_dist_cutoff=C] [--noverbose] [-r]
