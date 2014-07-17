@@ -1,13 +1,13 @@
 <b>STATIUM: smart scoring. promising proteins.</b><br>
-STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository contains a user-friendly implementation of the structure-based statistical-potential STATIUM algorithm that scores how well two or more proteins bind at their interacting positions. Specifically, STATIUM scores how well a certain sequence would bind to another main protein structure (e.g. variable residue positions of a ligand binding to a receptor). <br> There are three main parts of analysis with STATIUM: <br>
+STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository contains a user-friendly implementation of the structure-based statistical-potential STATIUM algorithm that scores how well two or more proteins bind at their interacting positions. Specifically, STATIUM scores how well a certain sequence would bind to another main protein structure (e.g. variable residue positions of a ligand binding to a receptor). There are three main parts of analysis with STATIUM: <br>
 
-1. <b> Potentials calculations </b>. STATIUM first calculates energy potentials for each position in your binding sequence. `quickrun` is the simplest command that does this. If you'd like more advanced control over your arguments, use the advanced commands with more parameters (`renumber`, `create_res`) <br>
+1. <b> Potentials calculations </b>. STATIUM first calculates energy potentials for each position in your binding sequence. `quickrun` is the simplest command that does this. If you'd like more advanced control over your arguments, use the advanced commands with more parameters (`renumber`, `create_res`, `run_statium`) <br>
 
 2. <b>Sequence scoring </b>. Using the above potentials, the `energy` command scores the binding potential of sequence. <br>
 
 3. <b>Miscellaneous </b>. Finding sequences with lowest STATIUM binding energy (`calc_top_seqs`). Plotting ROC curve given STATIUM energies and experimentally determined binding classifications (`roc`).
 
-For more information on the mechanics of STATIUM's analysis, see the lab's paper: http://dx.doi.org/10.1016/j.jmb.2012.05.022
+For more information on the mechanics of STATIUM's analysis, please refer to the paper http://dx.doi.org/10.1016/j.jmb.2012.05.022
 
 <b>Installation</b><br>
 If you are on a 'nix machine with `git` installed obtaining STATIUM and all its data should be as simple as: `git clone https://github.com/skoppula/statium.git` to obtain all necessary files and running `./install.sh`.
@@ -19,8 +19,17 @@ If you, for example, wanted to score sequences for chain B of some protein descr
 
 ***
 <b>Details and Documentation</b><br>
-<b>1. Potentials calculation</b>: <i>Quick commands</i>
-<b>1. Potentials calculation</b>: <i>Advanced commands</i>
+<b>1. Potentials calculation</b>: <i>Quick commands</i><br>
+`quickrun`:<br>
+<i>Template</i> `python wrapper.py quickrun (--in_pdb --position_pairs) [--out_dir]`<br>
+
+<i>Example</i> `python wrapper.py quickrun --in_pdb=1mph_HLA.pdb --position_pairs=H31-56,L --out_dir=testing/1mph_HLA` <br>
+
+Generates residue potentials required for sequence scoring. `--in_pdb` identifies the structure whose sequence you want to analyze. The --position_pairs argument specifies which set of positions to be included as binder/ligand sequences in the STATIUM analysis. The argument is a set of comma seperated terms which represent continuous sequence of residues to be included in the ligand sequence (inclusive). If you want the entirety of a chain, simply put the name of chain in the list (e.g. --position_pairs=H). In the first example above, residues on the L chain, position 1-20, and a residue on the H chain, position 33 will be included in the output residues file.
+
+Files containing these residue potentials are placed into `--out_dir` argument.
+
+<b>1. Potentials calculation</b>: <i>Advanced commands</i><br>
 `renumber`:<br>
 <i>Template</i> `python wrapper.py renumber (--in_pdb) [--out_pdb --SRN --SAN --chains]`<br>
 
