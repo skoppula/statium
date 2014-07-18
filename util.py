@@ -292,7 +292,7 @@ def get_pdb_info(pdb_path):
 	
 	curr_position = None
 	curr_chainID = None
-	curr_name = None
+	curr_res_name = None
 	curr_atoms = list()
 	curr_possible_atoms = set()
 	curr_found_atoms = set()
@@ -303,72 +303,42 @@ def get_pdb_info(pdb_path):
 	for i, line in enumerate(lines):
 
 		if line[0:4] == 'ATOM' or (line[0:6] == 'HETATM' and line[17:20] == 'MSE'):
-			name = line[12:16].strip()
-			if name ==  'N':
-				try:
-					ca_check1 = lines[i+1][12:16].strip() == 'CA' and line[22:28].strip()==lines[i+1][22:28].strip()
-					ca_check2 = lines[i+3][12:16].strip() == 'CA' and line[22:28].strip()==lines[i+3][22:28].strip()
-					if ca_check1 or ca_check2:
-						#only add to residue list if there are actual values in curr vars
-						#	and circumvent weird case where first residue has two N's
-						#	for two different conformations
-						if not first_run and isAA(curr_name) and (curr_chainID, curr_position) not in res:
-							info.append(Residue(curr_name, curr_position, curr_chainID, curr_atoms))
-							res.add((curr_chainID, curr_position))
+			res_name = 'MET' if line[17:20] == 'MSE' else line[17:20]
+			if not isAA(res_name): continue
 
-						first_run = False
-						curr_found_atoms.add(name)
-						x = float(line[30:38].strip())
-						y = float(line[38:46].strip())
-						z = float(line[46:54].strip())			
-						curr_position = line[22:28].strip()
-						curr_chainID = line[21:22].strip()
-						curr_atoms = [Atom(name, x, y, z, atom_count)]
-						atom_count += 1
-
-						continue
-
-				except IndexError:
-					continue	
-		
-			if name == 'CA':
-				try:
-					curr_position = line[22:28].strip()
-					curr_chainID = line[21:22].strip()
-					curr_name = 'MET' if line[17:20] == 'MSE' else line[17:20]
-					
-				except:
-					continue
-
+			try:
+				position = line[22:28].strip()
+				chain = line[21:22].strip()
+				atom_name = line[12:16].strip()
 				x = float(line[30:38].strip())
 				y = float(line[38:46].strip())
-				z = float(line[46:54].strip())
-				name = 'CA'
-				curr_atoms.append(Atom(name, x, y, z, atom_count))
+				z = float(line[46:54].strip())			
+			except IndexError:
+				continue
+
+			if curr_position == position and chain == curr_chainID and curr_res_name == res_name:
+				if atom_name in curr_found_atoms: continue
+				curr_atoms.append(Atom(atom_name, x, y, z, atom_count))
+				curr_found_atoms.add(atom_name)
 				atom_count += 1
-
-				if isAA(curr_name):
-					curr_possible_atoms = get_sidechain_atoms(AA2char(curr_name))
-				curr_found_atoms = {'CA'}
-
-			else:
-				try:
-					pos = line[22:28].strip()
-					chain = line[21:22].strip()
-				except: continue
-
-				if chain != curr_chainID or pos != curr_position: continue
 				
-				if name not in curr_found_atoms or name in curr_found_atoms:# and name in curr_possible_atoms:
-					curr_found_atoms.add(name)
-					x = float(line[30:38].strip())
-					y = float(line[38:46].strip())
-					z = float(line[46:54].strip())
-					curr_atoms.append(Atom(name, x, y, z, atom_count))
-					atom_count += 1
+			else:
+				if not first_run and 'CA' in curr_found_atoms: #and has N,CA:
+					info.append(Residue(curr_res_name, curr_position, curr_chainID, curr_atoms))
+					res.add((curr_chainID, curr_position))
+				first_run = False
 
-	if isAA(curr_name):
-		info.append(Residue(curr_name, curr_position, curr_chainID, curr_atoms))
+				curr_position = position
+				curr_chainID = chain
+				curr_res_name = res_name
+				curr_atoms = [Atom(atom_name, x, y, z, atom_count)]
+				curr_found_atoms = {atom_name}
+				atom_count += 1
+				
+				#if isAA(curr_name):
+				#	curr_possible_atoms = get_sidechain_atoms(AA2char(curr_name))
+
+	info.append(Residue(curr_res_name, curr_position, curr_chainID, curr_atoms))
 	
 	return info
 

@@ -80,7 +80,14 @@ def get_lib_dist_matrix(pdb, ips):
 	matrix = [[None]*(N-i-1) for i in xrange(N)]
 
 	for (i,j) in ips:
-		matrix[i][j-i-1] = pdb[i].distancesTo(pdb[j])	
+		try:
+			matrix[i][j-i-1] = pdb[i].distancesTo(pdb[j])
+		except IndexError:
+			print 'Invalid indices'
+			print i,j
+			print len(matrix), len(matrix[0])
+			print len(pdb)
+			return None
 	return matrix
 
 
@@ -133,6 +140,9 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_
 			ip_path = os.path.join(in_ip_dir, os.path.split(lib_pdb_path)[1].split('.')[0] + '.ip')
 			lib_ips = [(int(pair[0]),int(pair[1])) for pair in filelines2deeplist(ip_path) if pair != []]
 			lib_distance_matrix = get_lib_dist_matrix(lib_pdb, lib_ips)
+			if not lib_distance_matrix:
+				print lib_pdb_path
+				continue
 		else:
 			with open(lib_pdb_path, 'r') as infile:
 				(lib_pdb,lib_ips,lib_distance_matrix) = pickle.load(infile)
