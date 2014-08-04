@@ -156,11 +156,11 @@ def main(argv):
 		pdb_orig = options['--in_pdb_orig']
 		pdb_renum = options['--in_pdb_renum']
 		res = pdb_orig[:-4]+'.res' if options['--out_res'] is None else options['--out_res']
-		position_pairs = options['--position_pairs']
+		position_pairs = options['--position_pairs'] if options['--position_pairs'] else 'B'
 
 
 		if verbose: print "Creating .res file using: " + pdb_orig + " and " + pdb_renum
-		create_res(pdb_orig, pdb_renum, res, positions)
+		create_res(pdb_orig, pdb_renum, res, position_pairs)
 		if verbose: print "Done. .res file: " + res
 
 	elif options['preprocess']:
