@@ -1,3 +1,5 @@
+import pstats
+import cProfile
 import sys
 import ast
 from docopt import docopt
@@ -298,4 +300,7 @@ def main(argv):
 		print 'Done. Printed to ' + out
 	
 if __name__ == "__main__":
-	main(sys.argv[1:])
+        timing_path = '/home/skoppula/Dropbox/testing/new/1ycr/timing_analysis'
+	cProfile.run('main(sys.argv[1:])', timing_path)
+        
+
