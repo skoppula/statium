@@ -210,7 +210,7 @@ def write_output(use_indices, probs, out):
 		f.write(s + '\n')
 		for l, (i,j) in enumerate(use_indices):
 			s = str(i) + '-' + str(j)
-			s2 = '\t'.join([probs[l][aa] for aa in AAs])
+			s2 = '\t'.join([str(probs[l][aa]) for aa in AAs])
 			f.write(s + '\t' + s2 + '\n')
 
 def read_output(in_path):

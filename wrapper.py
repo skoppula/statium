@@ -300,7 +300,7 @@ def main(argv):
 		print 'Done. Printed to ' + out
 	
 if __name__ == "__main__":
-        timing_path = '/home/skoppula/Dropbox/testing/new/1ycr/timing_analysis'
+        timing_path = 'timing_analysis.txt'
 	cProfile.run('main(sys.argv[1:])', timing_path)
         
 
