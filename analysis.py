@@ -97,7 +97,7 @@ def statium(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dis
 	tic = timeit.default_timer()
 	sidechain(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dists, counts, verbose)
 	toc = timeit.default_timer()
-	if verbose: print 'Done in ' + str((tic-toc)/60) + 'minutes! Output in: ' + out
+	if verbose: print 'Done in ' + str((toc-tic)/60) + ' minutes! Output in: ' + out
 
 
 def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_dist_cutoffs, print_counts, verbose):
