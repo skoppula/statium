@@ -140,7 +140,7 @@ class Atom:
 		return math.sqrt((self.x-atom.x)**2+(self.y-atom.y)**2+(self.z-atom.z)**2)
 	
 	def __hash__(self):
-		return hash((self.name, self.x, self.y, self.z))
+		return hash((self.x, self.y, self.z))
 
 	def __eq__(self, other):
 		return (self.name, self.x, self.y, self.z) == (other.name, other.x, other.y, other.z)
@@ -192,6 +192,7 @@ class Residue:
 
 	#Returns dictionary of pairs of atoms mapped to each pair's distance
 
+	#NOT THIS THIS THIS NOT THIS
 	def filteredDistancesTo(self, other, cutoff):
 		out = dict()
 		isIP = False
@@ -203,6 +204,20 @@ class Residue:
 				out[(atom_two, atom_one)] = dist
 
 		return out if isIP else None
+
+	def fastFilteredDistancesTo(self, other, cutoff):
+		dists = list()
+		pairs = list()
+		isIP = False
+		for atom_one in self.atoms:
+			for atom_two in other.atoms:
+				dist = atom_one.distanceTo(atom_two)
+				if dist < cutoff: isIP = True
+				dists.append(dist)
+				pairs.append((atom_one, atom_two))
+
+		return [pairs, dists] if isIP else None
+
 
 	def distancesTo(self, other):
 		out = dict()
@@ -278,12 +293,7 @@ class Residue:
 			return True
 		
 		
-#NEW VERSION:
-#	   Outputs list of Residues()
-#OLD VERSION:
-#	   Creates a list with information for each residue:
-#	   e.g for each residue: [[1, ''], '16', [['CA', 'CB', 'OG1', 'CG2'], [[21.142, -19.229, 4.185], [21.957, -18.596, 5.322], [23.023, 17.818, 4.773], [22.547, -19.67, 6.206]]]]
-def get_pdb_info(pdb_path):
+def get_pdb_info(pdb_path, filter_sidechains = False):
 
 	info = list()
 	res = set()
@@ -317,10 +327,10 @@ def get_pdb_info(pdb_path):
 				continue
 
 			if curr_position == position and chain == curr_chainID and curr_res_name == res_name:
-				if atom_name in curr_found_atoms: continue
-				curr_atoms.append(Atom(atom_name, x, y, z, atom_count))
-				curr_found_atoms.add(atom_name)
-				atom_count += 1
+				if atom_name not in curr_found_atoms and (not filter_sidechains or (atom_name in curr_possible_atoms)):
+					curr_atoms.append(Atom(atom_name, x, y, z, atom_count))
+					curr_found_atoms.add(atom_name)
+					atom_count += 1
 				
 			else:
 				if not first_run and 'CA' in curr_found_atoms: #and has N,CA:
@@ -335,11 +345,12 @@ def get_pdb_info(pdb_path):
 				curr_found_atoms = {atom_name}
 				atom_count += 1
 				
-				#if isAA(curr_name):
-				#	curr_possible_atoms = get_sidechain_atoms(AA2char(curr_name))
+				if isAA(curr_res_name):
+					curr_possible_atoms = get_sidechain_atoms(AA2char(curr_res_name))
 
 	info.append(Residue(curr_res_name, curr_position, curr_chainID, curr_atoms))
 	
+	print 'atom_count', atom_count
 	return info
 
 def print_pdb(residues, path):

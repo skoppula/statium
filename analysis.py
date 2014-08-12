@@ -54,7 +54,7 @@ def preprocess(in_dir, out_dir, ip_dist_cutoff, restart, verbose):
 		with open(out_path,'w') as outfile:
 			pickle.dump((lib_pdb,lib_ips,lib_distance_matrix), outfile)
 
-def get_dist_matrix_and_IPs_template(pdb, residues, cutoff):
+def get_dist_matrix_and_IPs_peptide(pdb, residues, cutoff):
 	N = len(pdb)
 	distance_matrix = [[None]*(N-i-1) for i in xrange(N)]
 	ips = set()
@@ -68,11 +68,15 @@ def get_dist_matrix_and_IPs_template(pdb, residues, cutoff):
 			print i,
 			sys.stdout.flush()
 		for j in xrange(i+1, N):
-			if ((i in residues) ^ (j in residues)):
-				result = pdb[i].filteredDistancesTo(pdb[j], cutoff)
-				if result is not None:
+                        if not ((i in residues) ^ (j in residues)): continue
+			result = pdb[i].filteredDistancesTo(pdb[j], cutoff)
+			distance_matrix[i][j-i-1] = result
+			if result is not None:
+		        	if i in residues:
+					ips.add((j,i))
+                                else:
 					ips.add((i,j))
-					distance_matrix[i][j-i-1] = result
+
 	return (distance_matrix, ips)
 
 def get_lib_dist_matrix(pdb, ips):
@@ -104,14 +108,15 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_
 	
 	if verbose: print 'Extracting residue position from ' + in_res + '...'
 	res_lines = filelines2list(in_res)
-	residues = [int(line.strip()) for line in res_lines]
+	residues = [int(line.strip())-1 for line in res_lines]
 	
 	if verbose: print 'Extracting information from ' + in_pdb + '...'
 	pdbI = get_pdb_info(in_pdb)
 	pdbSize = len(pdbI)	
 
 	if verbose: print 'Computing inter-atomic distances and finding interacting pairs...\n'
-	(distance_matrix, use_indices) = get_dist_matrix_and_IPs_template(pdbI, residues, ip_dist_cutoff)
+	(distance_matrix, use_indices) = get_dist_matrix_and_IPs_peptide(pdbI, residues, ip_dist_cutoff)
+        if verbose: print use_indices
 	num_ips = len(use_indices)
 	
 	if verbose: print 'Storing distance information for each interacting pair...'
