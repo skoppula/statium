@@ -69,7 +69,7 @@ def get_dist_matrix_and_IPs_peptide(pdb, residues, cutoff):
 			sys.stdout.flush()
 		for j in xrange(i+1, N):
                         if not ((i in residues) ^ (j in residues)): continue
-			result = pdb[i].filteredDistancesTo(pdb[j], cutoff)
+			result = pdb[i].fastFilteredDistancesTo(pdb[j], cutoff)
 			distance_matrix[i][j-i-1] = result
 			if result is not None:
 		        	if i in residues:
