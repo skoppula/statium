@@ -228,6 +228,18 @@ class Residue:
 				out[(atom_two, atom_one)] = dist
 		return out
 
+	def fastDistancesTo(self, other):
+		dists = list()
+		pairs = list()
+		for atom_one in self.atoms:
+			for atom_two in other.atoms:
+				dist = atom_one.distanceTo(atom_two)
+				dists.append(dist)
+				pairs.append((atom_one, atom_two))
+
+		return [pairs, dists]
+
+
 	def __hash__(self):
 		return hash(self.string_name + self.chainID + str(self.atom_dict['CA'].coordinates))
 
@@ -291,9 +303,21 @@ class Residue:
 			self.stubIntact = True
 			print '\tCorrected residue %s by adding CB' % self.position
 			return True
+        
+        def strip_backbone(self):
+            def is_backbone(self, atom):
+                if atom.name == 'N' or atom.name == 'CA':
+                    del self.atom_dict[atom.name]
+                    self.atom_names.remove(atom.name)
+                    return False
+                else:
+                    return True
+
+            self.atoms = filter(is_backbone, self.atoms)
+
 		
 		
-def get_pdb_info(pdb_path, filter_sidechains = False):
+def get_pdb_info(pdb_path, filter_sidechains = False, include_backbone = True):
 
 	info = list()
 	res = set()
@@ -327,13 +351,15 @@ def get_pdb_info(pdb_path, filter_sidechains = False):
 				continue
 
 			if curr_position == position and chain == curr_chainID and curr_res_name == res_name:
-				if atom_name not in curr_found_atoms and (not filter_sidechains or (atom_name in curr_possible_atoms)):
-					curr_atoms.append(Atom(atom_name, x, y, z, atom_count))
-					curr_found_atoms.add(atom_name)
-					atom_count += 1
+				if atom_name not in curr_found_atoms:
+					if not filter_sidechains or (atom_name in curr_possible_atoms):
+						if include_backbone or (atom_name != 'N' and atom_name != 'C'):
+							curr_atoms.append(Atom(atom_name, x, y, z, atom_count))
+							curr_found_atoms.add(atom_name)
+							atom_count += 1
 				
 			else:
-				if not first_run and 'CA' in curr_found_atoms: #and has N,CA:
+				if not first_run and 'CA' in curr_found_atoms:
 					info.append(Residue(curr_res_name, curr_position, curr_chainID, curr_atoms))
 					res.add((curr_chainID, curr_position))
 				first_run = False

@@ -124,7 +124,7 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_
 	for (p1,p2) in use_indices:
 		if pdbI[p2].string_name == 'GLY':
 			pdbI[p2].correct()
-			distance_matrix[p1][p2-p1-1] = pdbI[p1].distancesTo(pdbI[p2])
+			distance_matrix[p1][p2-p1-1] = pdbI[p1].fastDistancesTo(pdbI[p2])
 		if pdbI[p2].stubIntact:
 			p2_base_chain = [pdbI[p2].atom_dict['CA'], pdbI[p2].atom_dict['CB']]
 			distances[(p1,p2)] = filter_sc_dists(pdbI[p1].atoms, p2_base_chain, distance_matrix[p1][p2-p1-1], 'forward') 
@@ -284,20 +284,28 @@ def get_distance_matrix_ip(pdb, ips):
 			print i,j,N
 			
 	return distance_matrix
+	
+	
+def filter_sc_dists(pos1_list, pos2_list, distance_matrix, forward):
+  
+	pairs = list()
+	dists = list()
 
-	
-#OLD VERSION: select_sidechain_distances
-#New version: returns a dictionary, subset of the dictionary at
-#		location in distances matrix defined by an interacting pair (R1, R2)
-#	 	a subset defined by (R1's atoms,CA or CB):distance
-def filter_sc_dists(atomsA, atomsB, interatomic_distances, direction):
-	out = dict()
-	if direction == 'forward':
-		pairs = list(itertools.product(atomsA, atomsB))
+	if forward:
+		for atomi in pos1_list:
+			for atomj in pos2_list:
+					idx = distance_matrix[0].index((atomi, atomj))
+					pairs.append((atomi, atomj))
+					dists.append(distance_matrix[1][idx])
 	else:
-		pairs = list(itertools.product(atomsB, atomsA))
-	return {pair: interatomic_distances[pair] for pair in pairs}
-	
+		for atomj in pos2_list:
+			for atomi in pos1_list:
+					idx = distance_matrix[0].index((atomi, atomj))
+					pairs.append((atomj, atomi))
+					dists.append(distance_matrix[1][idx])
+
+	return [pairs, dists]
+
 
 def check_cutoff(residue_pairs, cutoff):
 	return any([dist < cutoff for dist in residue_pairs.values()])
