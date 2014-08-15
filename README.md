@@ -63,7 +63,7 @@ If you fail to include a --position_pairs argument, the function will assume you
 The `-r` (restart) flag rewrite the pickle files previously created in the output directory. Not including it skips preprocessing PDB's whose pickle is already in the output directory. <br>
 
 <b>`run_statium`</b>:<br>
-<i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --pdb_lib) [--ip_lib --out --ip_dist_cutoff --matching_res_dist_cutoffs --counts]`<br>
+<i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --pdb_lib) [--ip_lib --out --ip_dist_cutoff --matching_res_dist_cutoffs --backbone --filter --counts]`<br>
 
 <i>Example One</i> `python wrapper.py run_statium --in_pdb=testing/1mhp_AHL_new.pdb --in_res=testing/1mhp_AHL.res --pdb_lib=data/culled_90/ --ip_lib=data/ip_90_wGLY/` <br>
 <i>Example Two</i> `python wrapper.py run_statium --in_pdb=testing/1mhp_AHL_new.pdb --in_res=testing/1mhp_AHL.res --pdb_lib=data/processed_culled_90/` <br>
@@ -71,6 +71,8 @@ The `-r` (restart) flag rewrite the pickle files previously created in the outpu
 <i>Specifics</i>: Takes in a renumbered PDB file (see `renumber`), the directory of the library PDBs (`--pdb_lib`) and IPs (`--ip_lib`) -or- a preprocessed protein library containing each PDB's *.pickle file from `preprocess` (`--pdb_lib`).
 
 Optional parameters include: --out_dir (the directory where STATIUM outputs its results; default value is value of --in_pdb without the .pdb extension), --counts (whether to print out STATIUM's intermediate analysis outputs; note that this takes no argument; simply including the flag issues printing!), --ip_dist_cutoff (the threshold distance in Angstroms between two atoms, below which the atom's residues are deemed 'interacting'; default is 6.0), and --matching_res_dist_cutoff (a dictionary with all twenty amino acids [in single character representation] each mapped to a cutoff below which a interacting residue pair cannot be deemed 'matching' to a library protein interacting pair. Example of using this parameter [containing the default, recommended dictionary values if you leave this parameter out]: --matching_res_dist_cutoff={'A':2, 'C':6, 'D':6, 'E':6, 'F':6, 'G':2, 'H':6, 'I':6, 'K':6, 'L':6, 'M':6, 'N':6, 'P':6, 'Q':6, 'R':6, 'S':6, 'T':6, 'V':6, 'W':6, 'Y':6, 'X':0}.
+
+`--backbone` includes the N-C(alpha)-C backbone in inter-atomic distances, and `--filter` only considers a subset of each residue's sidechain atoms (see `get_sidechain_atoms` function in `util.py`). 
 
 The function creates a file with twenty probabilities (one for each possible amino acid) per interacting pair, describing how likely it is for that identity would exist at that position on the sidechain, given the main chain's amino acid identity at the position.<br>
 
