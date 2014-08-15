@@ -191,53 +191,99 @@ class Residue:
 		self.stubIntact = True if 'CA' in self.atom_names and 'CB' in self.atom_names else False
 
 	#Returns dictionary of pairs of atoms mapped to each pair's distance
+	#DO NOT USE THIS. NOT THIS.
+	def filteredDistancesTo(self, other, cutoff, output_dict=True):
+                isIP = False
 
-	#NOT THIS THIS THIS NOT THIS
-	def filteredDistancesTo(self, other, cutoff):
-		out = dict()
-		isIP = False
-		for atom_one in self.atoms:
-			for atom_two in other.atoms:
-				dist = atom_one.distanceTo(atom_two)
-				if dist < cutoff: isIP = True
-				out[(atom_one, atom_two)] = dist
-				out[(atom_two, atom_one)] = dist
+                if output_dict:
+                    out = dict()
+                    for atom_one in self.atoms:
+                            for atom_two in other.atoms:
+                                    dist = atom_one.distanceTo(atom_two)
+                                    if dist < cutoff: isIP = True
+                                    out[(atom_one, atom_two)] = dist
+                                    out[(atom_two, atom_one)] = dist
 
-		return out if isIP else None
+                    return out if isIP else None
 
-	def fastFilteredDistancesTo(self, other, cutoff):
-		dists = list()
-		pairs = list()
-		isIP = False
-		for atom_one in self.atoms:
-			for atom_two in other.atoms:
-				dist = atom_one.distanceTo(atom_two)
-				if dist < cutoff: isIP = True
-				dists.append(dist)
-				pairs.append((atom_one, atom_two))
+                else:
+                    dists = list()
+                    pairs = list()
+                    for atom_one in self.atoms:
+                            for atom_two in other.atoms:
+                                    dist = atom_one.distanceTo(atom_two)
+                                    if dist < cutoff: isIP = True
+                                    dists.append(dist)
+                                    pairs.append((atom_one, atom_two))
 
-		return [pairs, dists] if isIP else None
+                    return [pairs, dists] if isIP else None
 
+	def fastFilteredDistancesTo(self, other, cutoff, output_dict=True):
+                isIP = False
 
-	def distancesTo(self, other):
-		out = dict()
-		for atom_one in self.atoms:
-			for atom_two in other.atoms:
-				dist = atom_one.distanceTo(atom_two)
-				out[(atom_one, atom_two)] = dist
-				out[(atom_two, atom_one)] = dist
-		return out
+                if output_dict:
+		    out = dict()
 
-	def fastDistancesTo(self, other):
-		dists = list()
-		pairs = list()
-		for atom_one in self.atoms:
-			for atom_two in other.atoms:
-				dist = atom_one.distanceTo(atom_two)
-				dists.append(dist)
-				pairs.append((atom_one, atom_two))
+                    for atom_one in self.atoms:
+                            for atom_two in other.atoms:
+                                    dist = atom_one.distanceTo(atom_two)
+                                    if dist < cutoff: isIP = True
+	         		    out[(atom_one.name, atom_two.name)] = dist
+		    return out if isIP else None
 
-		return [pairs, dists]
+                else:
+		    dists = list()
+		    pairs = list()
+
+                    for atom_one in self.atoms:
+                            for atom_two in other.atoms:
+                                    dist = atom_one.distanceTo(atom_two)
+                                    if dist < cutoff: isIP = True
+				    dists.append(dist)
+				    pairs.append((atom_one.name, atom_two.name))
+
+		    return [pairs, dists] if isIP else None
+
+	def distancesTo(self, other, output_dict=True):
+                if output_dict:
+                    out = dict()
+                    for atom_one in self.atoms:
+                            for atom_two in other.atoms:
+                                    dist = atom_one.distanceTo(atom_two)
+                                    out[(atom_one, atom_two)] = dist
+                                    out[(atom_two, atom_one)] = dist
+                    return out
+
+                else:
+                    dists = list()
+                    pairs = list()
+                    for atom_one in self.atoms:
+                            for atom_two in other.atoms:
+                                    dist = atom_one.distanceTo(atom_two)
+                                    dists.append(dist)
+                                    pairs.append((atom_one, atom_two))
+
+                    return [pairs, dists]
+
+	def fastDistancesTo(self, other, output_dict=True):
+                if output_dict:
+                    out = dict()
+                    for atom_one in self.atoms:
+                            for atom_two in other.atoms:
+                                    dist = atom_one.distanceTo(atom_two)
+                                    out[(atom_one.name, atom_two.name)] = dist
+                    return out
+
+                else:
+                    dists = list()
+                    pairs = list()
+                    for atom_one in self.atoms:
+                            for atom_two in other.atoms:
+                                    dist = atom_one.distanceTo(atom_two)
+                                    dists.append(dist)
+                                    pairs.append((atom_one.name, atom_two.name))
+
+                    return [pairs, dists]
 
 
 	def __hash__(self):
@@ -252,6 +298,10 @@ class Residue:
 
 #	def __repr__(self):
 #		return self.string_name + '[' + str(self.position) + ']'
+
+        def isStubIntact(self):
+		self.stubIntact = True if 'CA' in self.atom_names and 'CB' in self.atom_names else False
+                return self.stubIntact
 
 	def correct(self):
 		from scipy.optimize import fsolve
@@ -300,13 +350,14 @@ class Residue:
 			atom = Atom('CB', p2x+x_vec[0], p2y+x_vec[1], p2z+x_vec[2], 0)
 			self.atom_dict['CB'] = atom
 			self.atoms.append(atom)
+                        self.atom_names.append('CB')
 			self.stubIntact = True
 			print '\tCorrected residue %s by adding CB' % self.position
 			return True
         
         def strip_backbone(self):
-            def is_backbone(self, atom):
-                if atom.name == 'N' or atom.name == 'CA':
+            def is_backbone(atom):
+                if atom.name == 'N' or atom.name == 'C':
                     del self.atom_dict[atom.name]
                     self.atom_names.remove(atom.name)
                     return False

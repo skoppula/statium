@@ -184,7 +184,7 @@ def main(argv):
 		out = options['--out'] if options['--out'] is not None else res[:-4] + '.out'
 		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 6.0
 		
-		default = {'A':2, 'C':6, 'D':6, 'E':6, 'F':6, 'G':2, 'H':6, 'I':6, 'K':6, 'L':6, 'M':6, 'N':6, 'P':6, 'Q':6, 'R':6, 'S':6, 'T':6, 'V':6, 'W':6, 'Y':6, 'X':0}
+ 		default = {'A':0.2, 'C':0.4, 'D':0.4, 'E':0.4, 'F':0.4, 'G':0.2, 'H':0.4, 'I':0.4, 'K':0.4, 'L':0.4, 'M':0.4, 'N':0.4, 'P':0.4, 'Q':0.4, 'R':0.4, 'S':0.4, 'T':0.4, 'V':0.4, 'W':0.4, 'Y':0.4}
 		match_dist = ast.literal_eval(options['--matching_res_dist_cutoffs']) if options['--matching_res_dist_cutoffs'] else default
 		count = options['--counts']
 		

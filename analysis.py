@@ -61,23 +61,18 @@ def get_dist_matrix_and_IPs_peptide(pdb, residues, cutoff):
 	first = True
 	print '\tOut of %d residues finished:' % N
 	for i in xrange(N):
-		if i % 5 == 0:
-			if first:
-				sys.stdout.write('\t')
-				first = False
-			print i,
-			sys.stdout.flush()
 		for j in xrange(i+1, N):
-                        if not ((i in residues) ^ (j in residues)): continue
-			result = pdb[i].fastFilteredDistancesTo(pdb[j], cutoff)
-			distance_matrix[i][j-i-1] = result
-			if result is not None:
-		        	if i in residues:
-					ips.add((j,i))
-                                else:
-					ips.add((i,j))
+			if (i in residues) ^ (j in residues):
+				result = pdb[i].fastFilteredDistancesTo(pdb[j], cutoff)
+				distance_matrix[i][j-i-1] = result
+				if result is not None:
+					if i in residues:
+						ips.add((j,i))
+					else:
+						ips.add((i,j))
 
 	return (distance_matrix, ips)
+
 
 def get_lib_dist_matrix(pdb, ips):
 	N = len(pdb)
@@ -85,7 +80,7 @@ def get_lib_dist_matrix(pdb, ips):
 
 	for (i,j) in ips:
 		try:
-			matrix[i][j-i-1] = pdb[i].distancesTo(pdb[j])
+			matrix[i][j-i-1] = pdb[i].fastDistancesTo(pdb[j])
 		except IndexError:
 			print 'Invalid indices'
 			print i,j
@@ -93,7 +88,6 @@ def get_lib_dist_matrix(pdb, ips):
 			print len(pdb)
 			return None
 	return matrix
-
 
 def statium(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dists, counts, verbose):
 	
@@ -112,6 +106,10 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_
 	
 	if verbose: print 'Extracting information from ' + in_pdb + '...'
 	pdbI = get_pdb_info(in_pdb)
+	for res in pdbI:
+		if res.string_name == 'GLY':
+			res.correct()
+		res.strip_backbone()
 	pdbSize = len(pdbI)	
 
 	if verbose: print 'Computing inter-atomic distances and finding interacting pairs...\n'
@@ -122,24 +120,21 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_
 	if verbose: print 'Storing distance information for each interacting pair...'
 	distances = dict() 
 	for (p1,p2) in use_indices:
-		if pdbI[p2].string_name == 'GLY':
-			pdbI[p2].correct()
-			distance_matrix[p1][p2-p1-1] = pdbI[p1].fastDistancesTo(pdbI[p2])
-		if pdbI[p2].stubIntact:
-			p2_base_chain = [pdbI[p2].atom_dict['CA'], pdbI[p2].atom_dict['CB']]
-			distances[(p1,p2)] = filter_sc_dists(pdbI[p1].atoms, p2_base_chain, distance_matrix[p1][p2-p1-1], 'forward') 
-		else:
-			print 'Position %d does not have a valid stub' % p2
-			sys.exit(1)
+			if pdbI[p2].stubIntact:
+					p2_base_chain = ['CA','CB']
+					distances[(p1,p2)] = filter_sc_dists(pdbI[p1].atom_names, p2_base_chain, distance_matrix[p1][p2-p1-1], 'forward') 
+			else:
+					print 'Position %d does not have a valid stub' % p2
+					sys.exit(1)
 
 	#stores total number of each residue identity across IP
-	totals = [0 for i in range(20)] 
+	totals = [0 for i in xrange(20)] 
 	#stores total number of 'matching sidechain'
-	counts = [[0 for j in range(20)] for i in range(num_ips)]  
+	counts = [[0 for j in xrange(20)] for i in xrange(num_ips)]  
 	
 	lib_pdb_paths = [os.path.join(in_pdb_dir, pdb) for pdb in os.listdir(in_pdb_dir)]
 	for (i, lib_pdb_path) in enumerate(lib_pdb_paths):	
-		if verbose: print 'Processing ' + lib_pdb_path + ' (' + str(i) + ' out of ' + str(len(lib_pdb_paths)) + ')'
+		if verbose: print 'Processing ' + lib_pdb_path + ' (' + str(i) + ' of ' + str(len(lib_pdb_paths)) + ')'
 		if in_ip_dir:
 			lib_pdb = get_pdb_info(lib_pdb_path)
 			ip_path = os.path.join(in_ip_dir, os.path.split(lib_pdb_path)[1].split('.')[0] + '.ip')
@@ -153,7 +148,7 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_
 				(lib_pdb,lib_ips,lib_distance_matrix) = pickle.load(infile)
 
 		for (lib_pos1, lib_pos2) in lib_ips:
-			if lib_pos2 - lib_pos1 <= 4: continue
+			if abs(lib_pos2 - lib_pos1) <= 4: continue
 			
 			(lib_AA1, lib_AA2) = (lib_pdb[lib_pos1].int_name, lib_pdb[lib_pos2].int_name)
 			if lib_AA1 < 0 or lib_AA2 < 0 or lib_AA1 > 19 or lib_AA2 > 19: continue
@@ -162,19 +157,23 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_
 			totals[lib_AA2] += 1
 			
 			for (j, (pos1, pos2)) in enumerate(use_indices):
-				d = distances[(pos1,pos2)]
-				if d is None: continue
+				hit_stub_1 += 1
 				AA1 = pdbI[pos1].int_name 
-				if lib_pdb[lib_pos2].stubIntact and lib_AA1==AA1:
-					p2_base_chain = [lib_pdb[lib_pos2].atom_dict['CA'], lib_pdb[lib_pos2].atom_dict['CB']] 
-					lib_dist = filter_sc_dists(lib_pdb[lib_pos1].atoms, p2_base_chain, lib_distance_matrix[lib_pos1][lib_pos2-lib_pos1-1], "forward")
+				hit_stub_2 += 1
+                                if lib_pdb[lib_pos2].stubIntact:
+                                    if lib_AA1==AA1:
+					p2_base_chain = ['CA', 'CB'] 
+                                        lib_dist = filter_sc_dists(lib_pdb[lib_pos1].atom_names, p2_base_chain, lib_distance_matrix[lib_pos1][lib_pos2-lib_pos1-1], True)
 					if matching_sidechain_pair(distances[(pos1,pos2)], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
+                                                forward += 1
 						counts[j][lib_AA2] += 1
 						
-				if lib_pdb[lib_pos1].stubIntact and lib_AA2==AA1:
-					p1_base_chain = [lib_pdb[lib_pos1].atom_dict['CA'], lib_pdb[lib_pos1].atom_dict['CB']] 
-					lib_dist = filter_sc_dists(p1_base_chain, lib_pdb[lib_pos2].atoms, lib_distance_matrix[lib_pos1][lib_pos2-lib_pos1-1], "backward") 
+                                if lib_pdb[lib_pos1].stubIntact:
+                                    if lib_AA2==AA1:
+					p1_base_chain = ['CA', 'CB'] 
+					lib_dist = filter_sc_dists(p1_base_chain, lib_pdb[lib_pos2].atom_names, lib_distance_matrix[lib_pos1][lib_pos2-lib_pos1-1], False) 
 					if matching_sidechain_pair(distances[(pos1,pos2)], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
+                                                backward += 1
 						counts[j][lib_AA1] += 1
 	
 	if(verbose): print('Finished processing library .pdb files.')
@@ -187,12 +186,12 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_
 			os.mkdir(counts_dir)
 
 		total_counts_file = open(os.path.join(counts_dir, 'lib_ip_residue_totals.txt'), 'w')
-		for i in range(20): total_counts_file.write(AAint2char(i) + '\t' + str(totals[i]) + '\n')
+		for i in xrange(20): total_counts_file.write(AAint2char(i) + '\t' + str(totals[i]) + '\n')
 		total_counts_file.close()
 
 		for (i, pair) in enumerate(use_indices):
 			counts_file = open(os.path.join(counts_dir, str(pair[0] + 1) + '_' + str(pair[1] + 1) + '_counts.txt'), 'w')
-			for j in range(20): counts_file.write(AAint2char(j) + '\t' + str(counts[i][j]) + '\n')
+			for j in xrange(20): counts_file.write(AAint2char(j) + '\t' + str(counts[i][j]) + '\n')
 			counts_file.close()
 	
 	if verbose: print("Computing probabilities from counts...")
@@ -209,7 +208,7 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_
 
 
 def write_output(use_indices, probs, out):
-	AAs = [AAint2char(i) for i in range(20)]
+	AAs = [AAint2char(i) for i in xrange(20)]
 	with open(out, 'w') as f:
 		s = 'IPs\t' + '\t'.join(AAs)
 		f.write(s + '\n')
@@ -220,7 +219,7 @@ def write_output(use_indices, probs, out):
 
 def read_output(in_path):
 	lines = filelines2deeplist(in_path, skipComments=True, skipEmptyLines=True)
-	AAs = [AAint2char(i) for i in range(20)]
+	AAs = [AAint2char(i) for i in xrange(20)]
 	probs = OrderedDict()
 	for ip_line in lines[1:]:
 		ip = tuple(ip_line[0].split('-'))
@@ -247,33 +246,35 @@ def determine_probs(use_indices, totals, counts):
 			probs = dict()
 			#probability of each residue occuring at *that* IP (i.e. / by total res's at the IP)
 			AA_probs = [(x/total if x != 0 else 1/total) for x in counts[i]]
-			for j in range(20):
+			for j in xrange(20):
 				e = -1.0 * math.log(AA_probs[j] / lib_total_probs[j])
 				probs[AAint2char(j)] = e
 			out.append(probs)
 	return out
 
-	
+#Assumes fast & distances stored as dict (atom1_name, atom2_name): distance val
 def matching_sidechain_pair(dists1, dists2, cutoff):
+  
+    sd = 0.0
+    count = 0.0
 
-	sd = 0.0
-	count = 0
+    for pair1, dist1 in dists1.iteritems():
+        for pair2, dist2 in dists2.iteritems():
+            if pair1 == pair2:
+	        sd += ((dist1 - dist2) ** 2)
+	        count += 1.0
 
-	for atom_pair1 in dists1:
-		for atom_pair2 in dists2:
-			if atom_pair1[0].sameName(atom_pair2[0]) and atom_pair1[1].sameName(atom_pair2[1]):
-				sd += (dists1[atom_pair1]-dists2[atom_pair2])**2
-				count += 1
+    if math.sqrt(sd / count) < cutoff: return True
+    else: return False
 
-	return math.sqrt(sd / count) < cutoff
-
+	
 
 #returns a more sparse distance matrix, filled on at IP positions
 #	uses the library pdb_info
 def get_distance_matrix_ip(pdb, ips):
 	
 	N = len(pdb)
-	distance_matrix = [[None]*N for j in range(N)]
+	distance_matrix = [[None]*N for j in xrange(N)]
 	
 	for (i,j) in ips:
 		try:
@@ -285,30 +286,42 @@ def get_distance_matrix_ip(pdb, ips):
 			
 	return distance_matrix
 	
-	
-def filter_sc_dists(pos1_list, pos2_list, distance_matrix, forward):
+
+#If fast, assumes pos1_list is atom_names (not atom objects), and pair_dists is indexed the same way
+def filter_sc_dists(pos1_list, pos2_list, pair_dists, forward, output_dict=True, fast=True):
   
-	pairs = list()
-	dists = list()
+	if output_dict:
+			out = dict()	
+			if forward:
+				for atomi in pos1_list:
+					for atomj in pos2_list:
+							out[(atomi, atomj)] = pair_dists[(atomi, atomj)]
+			else:
+				for atomj in pos2_list:
+					for atomi in pos1_list:
+							out[(atomj, atomi)] = pair_dists[(atomi, atomj)]
 
-	if forward:
-		for atomi in pos1_list:
-			for atomj in pos2_list:
-					idx = distance_matrix[0].index((atomi, atomj))
-					pairs.append((atomi, atomj))
-					dists.append(distance_matrix[1][idx])
+			return out
+
 	else:
-		for atomj in pos2_list:
-			for atomi in pos1_list:
-					idx = distance_matrix[0].index((atomi, atomj))
-					pairs.append((atomj, atomi))
-					dists.append(distance_matrix[1][idx])
+			pairs = list()
+			dists = list()
 
-	return [pairs, dists]
+			if forward:
+				for atomi in pos1_list:
+					for atomj in pos2_list:
+							idx = distance_matrix[0].index((atomi, atomj))
+							pairs.append((atomi, atomj))
+							dists.append(distance_matrix[1][idx])
+			else:
+				for atomj in pos2_list:
+					for atomi in pos1_list:
+							idx = distance_matrix[0].index((atomi, atomj))
+							pairs.append((atomj, atomi))
+							dists.append(distance_matrix[1][idx])
 
+			return [pairs, dists]
 
-def check_cutoff(residue_pairs, cutoff):
-	return any([dist < cutoff for dist in residue_pairs.values()])
 
 
 def generate_random_distribution (in_res, in_probs_dir, num_seqs=1000):
@@ -317,7 +330,7 @@ def generate_random_distribution (in_res, in_probs_dir, num_seqs=1000):
 
 	print 'Calculating distribution of energies for %d random sequences...', num_seqs
 	energies = list()
-	for i in range(num_seqs):
+	for i in xrange(num_seqs):
 		if i % 100 is 0:
 			print i,
 			sys.stdout.flush()
@@ -394,8 +407,8 @@ def calc_top_seqs(in_res_path, in_probs, num_sequences):
 		max_num_balls += 1
 		total += nCr((max_num_balls+num_urns-1), (max_num_balls))
 	
-	for num_balls in range(max_num_balls+1)[1:]:
-		combo_elements = range(num_balls+num_urns-1)
+	for num_balls in xrange(max_num_balls+1)[1:]:
+		combo_elements = xrange(num_balls+num_urns-1)
 		combos = list(itertools.combinations(combo_elements, (num_urns-1)))
 				
 		for combo in combos:
