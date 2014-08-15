@@ -46,7 +46,7 @@ def main(argv):
 				wrapper.py renumber (--in_pdb=A) [--out_pdb=B --chains=C --SRN=1 --SAN=1] [--noverbose]
 				wrapper.py create_res (--in_pdb_orig=A --in_pdb_renum=B) [--out_res=C --position_pairs=D] [--noverbose]
 				wrapper.py preprocess (--in_dir=A) [--out_dir=B --ip_dist_cutoff=C] [--noverbose] [-r]
-				wrapper.py run_statium (--in_res=A --in_pdb=B --pdb_lib=C) [--ip_lib=D --out=E --ip_dist_cutoff=F --matching_res_dist_cutoffs=G --counts] [--noverbose]
+				wrapper.py run_statium (--in_res=A --in_pdb=B --pdb_lib=C) [--ip_lib=D --out=E --ip_dist_cutoff=F --matching_res_dist_cutoffs=G --backbone --filter --counts] [--noverbose]
 				wrapper.py [-f] energy (--in_res=A | --in_pdb=B) (--in_probs=C --in_seqs=D) [--out=E] [-z | --zscore] [--histogram=E] [--noverbose]
 				wrapper.py random (--seq_length=A --num_seqs=B) [--out=C] [--noverbose]
 				wrapper.py get_orig_seq (--in_res=A --in_pdb_orig=B --in_pdb_renum=C) [--noverbose]
@@ -186,10 +186,12 @@ def main(argv):
 		
  		default = {'A':0.2, 'C':0.4, 'D':0.4, 'E':0.4, 'F':0.4, 'G':0.2, 'H':0.4, 'I':0.4, 'K':0.4, 'L':0.4, 'M':0.4, 'N':0.4, 'P':0.4, 'Q':0.4, 'R':0.4, 'S':0.4, 'T':0.4, 'V':0.4, 'W':0.4, 'Y':0.4}
 		match_dist = ast.literal_eval(options['--matching_res_dist_cutoffs']) if options['--matching_res_dist_cutoffs'] else default
+		backbone = options['--backbone']
+		filter_sidechain = options['--filter']
 		count = options['--counts']
 		
 		if verbose: print "\nRunning STATIUM with: " + pdb + " " + res + " " + pdb_lib + ' and IP lib: ' + str(ip_lib)
-		statium(res, pdb, pdb_lib, ip_lib, out, ip_dist, match_dist, count, verbose)
+		statium(res, pdb, pdb_lib, ip_lib, out, ip_dist, match_dist, backbone, filter_sidechain, count, verbose)
 		if verbose: print "Done. STATIUM probabilities in output directory: " + out_dir
 
 	elif options['energy']:

@@ -89,27 +89,29 @@ def get_lib_dist_matrix(pdb, ips):
 			return None
 	return matrix
 
-def statium(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dists, counts, verbose):
+def statium(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dists, backbone, filter_sidechain, counts, verbose):
 	
 	if verbose: print 'Starting STATUM analysis...' 
 	tic = timeit.default_timer()
-	sidechain(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dists, counts, verbose)
+	sidechain(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dists, backbone, filter_sidechain, counts, verbose)
 	toc = timeit.default_timer()
 	if verbose: print 'Done in ' + str((toc-tic)/60) + ' minutes! Output in: ' + out
 
 
-def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_dist_cutoffs, print_counts, verbose):
+def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_dist_cutoffs, backbone, filter_sidechain, print_counts, verbose):
 	
 	if verbose: print 'Extracting residue position from ' + in_res + '...'
 	res_lines = filelines2list(in_res)
 	residues = [int(line.strip())-1 for line in res_lines]
 	
 	if verbose: print 'Extracting information from ' + in_pdb + '...'
-	pdbI = get_pdb_info(in_pdb)
+        if filter_sidechain: pdbI = get_pdb_info(in_pdb, filter_sidechains = True)
+        else: pdbI = get_pdb_info(in_pdb)
 	for res in pdbI:
 		if res.string_name == 'GLY':
 			res.correct()
-		res.strip_backbone()
+                if not backbone:
+		    res.strip_backbone()
 	pdbSize = len(pdbI)	
 
 	if verbose: print 'Computing inter-atomic distances and finding interacting pairs...\n'
