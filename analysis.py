@@ -116,15 +116,12 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_
 			totals[lib_AA2] += 1
 			
 			for (j, (pos1, pos2)) in enumerate(use_indices):
-				hit_stub_1 += 1
 				AA1 = pdbI[pos1].int_name 
-				hit_stub_2 += 1
                                 if lib_pdb[lib_pos2].stubIntact:
                                     if lib_AA1==AA1:
 					p2_base_chain = ['CA', 'CB'] 
                                         lib_dist = filter_sc_dists(lib_pdb[lib_pos1].atom_names, p2_base_chain, lib_distance_matrix[lib_pos1][lib_pos2-lib_pos1-1], True)
 					if matching_sidechain_pair(distances[(pos1,pos2)], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
-                                                forward += 1
 						counts[j][lib_AA2] += 1
 						
                                 if lib_pdb[lib_pos1].stubIntact:
@@ -132,7 +129,6 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_
 					p1_base_chain = ['CA', 'CB'] 
 					lib_dist = filter_sc_dists(p1_base_chain, lib_pdb[lib_pos2].atom_names, lib_distance_matrix[lib_pos1][lib_pos2-lib_pos1-1], False) 
 					if matching_sidechain_pair(distances[(pos1,pos2)], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
-                                                backward += 1
 						counts[j][lib_AA1] += 1
 	
 	if(verbose): print('Finished processing library .pdb files.')
