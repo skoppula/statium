@@ -10,50 +10,6 @@ from util import *
 from collections import OrderedDict
 
 
-def get_dist_matrix_and_IPs(pdb, cutoff):
-	N = len(pdb)
-	distance_matrix = [[None]*(N-i-1) for i in xrange(N)]
-	lib_ips = set()
-	first = True
-	print '\tOut of %d residues finished:' % N
-	for i in xrange(N):
-		if i % 5 == 0:
-			if first:
-				sys.stdout.write('\t')
-				first = False
-			print i,
-			sys.stdout.flush()
-		for j in xrange(i+1, N):
-			result = pdb[i].filteredDistancesTo(pdb[j], cutoff)
-			if result is not None:
-				lib_ips.add((i,j))
-				distance_matrix[i][j-i-1] = result
-	return (distance_matrix, lib_ips)
-
-
-def preprocess(in_dir, out_dir, ip_dist_cutoff, restart, verbose):
-	lib_pdbs = [os.path.join(in_dir, pdb) for pdb in os.listdir(in_dir)]
-
-	for (i, lib_pdb_path) in enumerate(lib_pdbs):
-
-		out_path = os.path.join(out_dir, os.path.split(lib_pdb_path)[1].split('.')[0] + '.pickle') 
-                if os.path.exists(out_path) and not restart:
-                        if(verbose): print 'Skipping ' + out_path + '. Already in directory.'
-                        continue
- 
-		if verbose: print "\nProcessing library .pdb: " + lib_pdb_path + "\t (" + str(i) + " out of " + str(len(lib_pdbs)) + ")"
-		lib_pdb = get_pdb_info(lib_pdb_path)	
-		
-		if verbose: print '\tComputing inter-atomic distances and finding interacting pairs...'
-		(lib_distance_matrix, lib_ips) = get_dist_matrix_and_IPs(lib_pdb, ip_dist_cutoff)
-
-		if verbose: print '\tPreparing directory folders...'
-		if not os.path.exists(out_dir): os.makedirs(out_dir)
-
-		if verbose: print '\tPrinting PICKLE file...'
-		with open(out_path,'w') as outfile:
-			pickle.dump((lib_pdb,lib_ips,lib_distance_matrix), outfile)
-
 def get_dist_matrix_and_IPs_peptide(pdb, residues, cutoff):
 	N = len(pdb)
 	distance_matrix = [[None]*(N-i-1) for i in xrange(N)]
@@ -88,6 +44,7 @@ def get_lib_dist_matrix(pdb, ips):
 			print len(pdb)
 			return None
 	return matrix
+
 
 def statium(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dists, backbone, filter_sidechain, counts, verbose):
 	
