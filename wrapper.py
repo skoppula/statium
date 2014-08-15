@@ -137,7 +137,7 @@ def main(argv):
 		if verbose: print "Creating .res file using: " + in_pdb + " and " + renum_pdb
 		create_res(in_pdb, renum_pdb, res, positions)
 		if verbose: print "Running STATIUM with: " + renum_pdb + " " + res + " " + pdb_lib + ' and IP lib: ' + ip_lib
-		statium(res, renum_pdb, pdb_lib, ip_lib, out_dir, ip_dist, default_match_dist, False, verbose)
+		statium(res, renum_pdb, pdb_lib, ip_lib, out_dir, ip_dist, default_match_dist, False, False, False, verbose)
 		if verbose: print 'Done'
 
 
