@@ -10,42 +10,6 @@ from util import *
 from collections import OrderedDict
 
 
-def get_dist_matrix_and_IPs_peptide(pdb, residues, cutoff):
-	N = len(pdb)
-	distance_matrix = [[None]*(N-i-1) for i in xrange(N)]
-	ips = set()
-	first = True
-	print '\tOut of %d residues finished:' % N
-	for i in xrange(N):
-		for j in xrange(i+1, N):
-			if (i in residues) ^ (j in residues):
-				result = pdb[i].fastFilteredDistancesTo(pdb[j], cutoff)
-				distance_matrix[i][j-i-1] = result
-				if result is not None:
-					if i in residues:
-						ips.add((j,i))
-					else:
-						ips.add((i,j))
-
-	return (distance_matrix, ips)
-
-
-def get_lib_dist_matrix(pdb, ips):
-	N = len(pdb)
-	matrix = [[None]*(N-i-1) for i in xrange(N)]
-
-	for (i,j) in ips:
-		try:
-			matrix[i][j-i-1] = pdb[i].fastDistancesTo(pdb[j])
-		except IndexError:
-			print 'Invalid indices'
-			print i,j
-			print len(matrix), len(matrix[0])
-			print len(pdb)
-			return None
-	return matrix
-
-
 def statium(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dists, backbone, filter_sidechain, counts, verbose):
 	
 	if verbose: print 'Starting STATUM analysis...' 
@@ -161,6 +125,41 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_
 	write_output(use_indices, probs, out)	
 	if(verbose): print("Finished calculating probabilities. Written to: " + out + '_probs')
 
+
+def get_dist_matrix_and_IPs_peptide(pdb, residues, cutoff):
+	N = len(pdb)
+	distance_matrix = [[None]*(N-i-1) for i in xrange(N)]
+	ips = set()
+	first = True
+	print '\tOut of %d residues finished:' % N
+	for i in xrange(N):
+		for j in xrange(i+1, N):
+			if (i in residues) ^ (j in residues):
+				result = pdb[i].fastFilteredDistancesTo(pdb[j], cutoff)
+				distance_matrix[i][j-i-1] = result
+				if result is not None:
+					if i in residues:
+						ips.add((j,i))
+					else:
+						ips.add((i,j))
+
+	return (distance_matrix, ips)
+
+
+def get_lib_dist_matrix(pdb, ips):
+	N = len(pdb)
+	matrix = [[None]*(N-i-1) for i in xrange(N)]
+
+	for (i,j) in ips:
+		try:
+			matrix[i][j-i-1] = pdb[i].fastDistancesTo(pdb[j])
+		except IndexError:
+			print 'Invalid indices'
+			print i,j
+			print len(matrix), len(matrix[0])
+			print len(pdb)
+			return None
+	return matrix
 
 def write_output(use_indices, probs, out):
 	AAs = [AAint2char(i) for i in xrange(20)]
