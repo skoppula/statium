@@ -9,7 +9,6 @@ import pickle
 from util import *
 from collections import OrderedDict
 
-
 def statium(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dists, backbone, filter_sidechain, counts, verbose):
 	
 	if verbose: print 'Starting STATUM analysis...' 
@@ -19,14 +18,14 @@ def statium(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dis
 	if verbose: print 'Done in ' + str((toc-tic)/60) + ' minutes! Output in: ' + out
 
 
-def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_dist_cutoffs, backbone, filter_sidechain, print_counts, verbose):
+def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_dist_cutoffs, backbone, filter_sidechains, print_counts, verbose):
 	
 	if verbose: print 'Extracting residue position from ' + in_res + '...'
 	res_lines = filelines2list(in_res)
 	residues = [int(line.strip())-1 for line in res_lines]
 	
 	if verbose: print 'Extracting information from ' + in_pdb + '...'
-        if filter_sidechain: pdbI = get_pdb_info(in_pdb, filter_sidechains = True)
+        if filter_sidechains: pdbI = get_pdb_info(in_pdb, filter_sidechains = True)
         else: pdbI = get_pdb_info(in_pdb)
 	for res in pdbI:
 		if res.string_name == 'GLY':
@@ -37,7 +36,7 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_
 
 	if verbose: print 'Computing inter-atomic distances and finding interacting pairs...\n'
 	(distance_matrix, use_indices) = get_dist_matrix_and_IPs_peptide(pdbI, residues, ip_dist_cutoff)
-        if verbose: print use_indices
+	if verbose: print use_indices
 	num_ips = len(use_indices)
 	
 	if verbose: print 'Storing distance information for each interacting pair...'
@@ -56,7 +55,7 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_
 	counts = [[0 for j in xrange(20)] for i in xrange(num_ips)]  
 	
 	lib_pdb_paths = [os.path.join(in_pdb_dir, pdb) for pdb in os.listdir(in_pdb_dir)]
-	for (i, lib_pdb_path) in enumerate(lib_pdb_paths):	
+	for i, lib_pdb_path in enumerate(lib_pdb_paths):	
 		if verbose: print 'Processing ' + lib_pdb_path + ' (' + str(i) + ' of ' + str(len(lib_pdb_paths)) + ')'
 		if in_ip_dir:
 			lib_pdb = get_pdb_info(lib_pdb_path)

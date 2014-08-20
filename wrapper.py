@@ -6,6 +6,7 @@ from docopt import docopt
 from reformat import renumber
 from reformat import create_res
 from reformat import get_orig_seq
+from preprocess import preprocess
 from analysis import statium
 from analysis import calc_seq_energy
 from analysis import generate_random_distribution
@@ -16,36 +17,13 @@ from util import list2file
 from util import filelines2list
 from verify import roc
 from verify import print_merged
-
-def parse_position_pairs(in_str):
-	if not in_str:
-		positions = {'B'}
-	else:
-		raw = in_str.split(',')
-		positions = set()
-
-		list_iter = iter(raw)
-		for i, term in enumerate(list_iter):
-			parts = term.split('-')
-			if len(parts) == 1:
-				positions.add(term)
-				chain = term[0]
-			elif len(parts) == 2:
-				chain = parts[0][0]
-				num = parts[0][1:]
-				num2 = parts[1]
-				positions.add((chain, num, num2))	
-			else:
-				sys.exit('Invalid position pairs')	
-	return positions
-
 def main(argv):
 	
-	helpdoc =   	"""usage: wrapper.py quickrun (--in_pdb=A --position_pairs=B --pdb_lib=C --ip_lib=D) [--out=E] [--noverbose]
+	helpdoc =   	"""usage: wrapper.py quickrun (--in_pdb=A --position_pairs=B --lib=C) [--out=D] [--noverbose]
 				wrapper.py renumber (--in_pdb=A) [--out_pdb=B --chains=C --SRN=1 --SAN=1] [--noverbose]
 				wrapper.py create_res (--in_pdb_orig=A --in_pdb_renum=B) [--out_res=C --position_pairs=D] [--noverbose]
-				wrapper.py preprocess (--in_dir=A) [--out_dir=B --ip_dist_cutoff=C] [--noverbose] [-r]
-				wrapper.py run_statium (--in_res=A --in_pdb=B --pdb_lib=C) [--ip_lib=D --out=E --ip_dist_cutoff=F --matching_res_dist_cutoffs=G --backbone --filter --counts] [--noverbose]
+				wrapper.py preprocess (--in_pdb=A) [--out_dir=B --ip_dist_cutoff=C --backbone --filter] [--noverbose]
+				wrapper.py run_statium (--in_res=A --in_pdb=B --lib=C) [--out=D --ip_dist_cutoff=E --matching_res_dist_cutoffs=G --backbone --filter --counts] [--noverbose]
 				wrapper.py [-f] energy (--in_res=A | --in_pdb=B) (--in_probs=C --in_seqs=D) [--out=E] [-z | --zscore] [--histogram=E] [--noverbose]
 				wrapper.py random (--seq_length=A --num_seqs=B) [--out=C] [--noverbose]
 				wrapper.py get_orig_seq (--in_res=A --in_pdb_orig=B --in_pdb_renum=C) [--noverbose]
@@ -57,9 +35,8 @@ def main(argv):
 
 				--in_pdb=A	Input PDB file path
 				--position_pairs=B	Positions to include in the binding sequence
-				--pdb_lib=C	Input directory of library PDB files
-				--ip_lib=D	Input directory of library IP files
-				--out=E	Output directory
+				--lib=C	Input directory of library files
+				--out=D	Output directory
 
 				--in_pdb=A	Input PDB file path
 				--out_pdb=B	Output PDB file path
@@ -72,14 +49,13 @@ def main(argv):
 				--out_res=C	Output RES file path
 				--position_pairs=D	Positions to include in the binding sequence
 
-				--in_dir=A	Directory containing library PDBs
+				--in_pdb=A	Directory containing library PDBs
 				--out_dir=B	Output directory for JSON objects
 				--ip_dist_cutoff=C	Threshold for interacting pair designation
 
 				--in_res=A	Input .res file path
 				--in_pdb=B	Input renumbered PDB path
-				--pdb_lib=C	Input directory of library PDB files
-				--ip_lib=D	Input directory of library IP files
+				--lib=C	Input directory of library PDB files
 				--out=E		Output directory
 				--ip_dist_cutoff=F	Threshold for interacting pair designation
 				--matching_res_dist_cutoffs=G	Thresholds for matching IP designation
@@ -123,8 +99,7 @@ def main(argv):
 		renum_pdb = stem + '_renumbered.pdb'
 		res = stem + '.res'
 
-		pdb_lib = options['--pdb_lib']
-		ip_lib = options['--ip_lib']
+		lib = options['--lib']
 		out_dir = options['--out'] if options['--out'] is not None else stem
 
 		positions = parse_position_pairs(options['--position_pairs'])
@@ -137,7 +112,7 @@ def main(argv):
 		if verbose: print "Creating .res file using: " + in_pdb + " and " + renum_pdb
 		create_res(in_pdb, renum_pdb, res, positions)
 		if verbose: print "Running STATIUM with: " + renum_pdb + " " + res + " " + pdb_lib + ' and IP lib: ' + ip_lib
-		statium(res, renum_pdb, pdb_lib, ip_lib, out_dir, ip_dist, default_match_dist, False, False, False, verbose)
+		statium(res, renum_pdb, lib, out_dir, ip_dist, default_match_dist, False, False, False, verbose)
 		if verbose: print 'Done'
 
 
@@ -168,10 +143,11 @@ def main(argv):
 		in_dir = options['--in_dir']
 		out_dir = options['--out_dir'] if options['--out_dir'] else in_dir + '_JSON_preprocessed'
 		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 5.0
-		restart = options['-r']
+		backbone = options['--backbone']
+		filter_sidechains = options['--filter']
 
 		if verbose: print 'Preprocessing library: %s' % in_dir
-		preprocess(in_dir, out_dir, ip_dist, restart, verbose)
+		preprocess(in_dir, out_dir, ip_dist, backbone, filter_sidechains, verbose)
 		if verbose: print 'Done: %s' % out_dir
 
 	
@@ -299,7 +275,31 @@ def main(argv):
 		out = options['--out'] if options['--out'] is not None else 'merged.txt'
 		print_merged(scores, true, out)
 		print 'Done. Printed to ' + out
-	
+
+
+def parse_position_pairs(in_str):
+	if not in_str:
+		positions = {'B'}
+	else:
+		raw = in_str.split(',')
+		positions = set()
+
+		list_iter = iter(raw)
+		for i, term in enumerate(list_iter):
+			parts = term.split('-')
+			if len(parts) == 1:
+				positions.add(term)
+				chain = term[0]
+			elif len(parts) == 2:
+				chain = parts[0][0]
+				num = parts[0][1:]
+				num2 = parts[1]
+				positions.add((chain, num, num2))	
+			else:
+				sys.exit('Invalid position pairs')	
+	return positions
+
+
 if __name__ == "__main__":
         timing_path = 'timing_analysis.txt'
 	cProfile.run('main(sys.argv[1:])', timing_path)
