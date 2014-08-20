@@ -117,11 +117,11 @@ def AAint2char(a):
 	
 def get_sidechain_atoms(res):
 	
-	sidechain_mappings = {'A':{'CB'}, 'C':{'CB', 'SG'}, 'D':{'CB', 'OD1', 'OD2'}, 'E':{'CB', 'OE1', 'OE2'}, 'F':{'CB', 'CE1', 'CE2', 'CZ'}, 'G':{'CA'},  
-	'H':{'CB', 'CE1', 'NE2'}, 'I':{'CB', 'CG1', 'CG2', 'CD1'}, 'K':{'CB', 'NZ'}, 'L':{'CB', 'CD1', 'CD2'}, 'M':{'CB', 'CE'}, 
-	'N':{'CB', 'OD1', 'ND2'}, 'P':{'CB', 'CG', 'CD'}, 'Q':{'CB', 'OE1', 'NE2'}, 'R':{'CB', 'NE', 'CZ'}, 'S':{'CB', 'OG'}, 
-	'T':{'CB', 'OG1', 'CG2'}, 'V':{'CB', 'CG1', 'CG2'}, 'W':{'CB', 'CD1', 'CD2', 'NE1', 'CZ2', 'CZ3', 'CH2'}, 
-	'Y':{'CB', 'CD1', 'CD2', 'CE1', 'CE2', 'CZ', 'OH'}}
+	sidechain_mappings = {'A':{'CA', 'CB'}, 'C':{'CA', 'CB', 'SG'}, 'D':{'CA', 'CB', 'OD1', 'OD2'}, 'E':{'CA', 'CB', 'OE1', 'OE2'}, 'F':{'CA', 'CB', 'CE1', 'CE2', 'CZ'}, 'G':{'CA', 'CA'},  
+	'H':{'CA', 'CB', 'CE1', 'NE2'}, 'I':{'CA', 'CB', 'CG1', 'CG2', 'CD1'}, 'K':{'CA', 'CB', 'NZ'}, 'L':{'CA', 'CB', 'CD1', 'CD2'}, 'M':{'CA', 'CB', 'CE'}, 
+	'N':{'CA', 'CB', 'OD1', 'ND2'}, 'P':{'CA', 'CB', 'CG', 'CD'}, 'Q':{'CA', 'CB', 'OE1', 'NE2'}, 'R':{'CA', 'CB', 'NE', 'CZ'}, 'S':{'CA', 'CB', 'OG'}, 
+	'T':{'CA', 'CB', 'OG1', 'CG2'}, 'V':{'CA', 'CB', 'CG1', 'CG2'}, 'W':{'CA', 'CB', 'CD1', 'CD2', 'NE1', 'CZ2', 'CZ3', 'CH2'}, 
+	'Y':{'CA', 'CB', 'CD1', 'CD2', 'CE1', 'CE2', 'CZ', 'OH'}}
 	
 	return sidechain_mappings[res]
 
@@ -402,6 +402,8 @@ def get_pdb_info(pdb_path, filter_sidechains = False, include_backbone = True):
 				continue
 
 			if curr_position == position and chain == curr_chainID and curr_res_name == res_name:
+				#print [atom.name for atom in curr_atoms]
+				#print curr_found_atoms
 				if atom_name not in curr_found_atoms:
 					if not filter_sidechains or (atom_name in curr_possible_atoms):
 						if include_backbone or (atom_name != 'N' and atom_name != 'C'):
@@ -427,7 +429,6 @@ def get_pdb_info(pdb_path, filter_sidechains = False, include_backbone = True):
 
 	info.append(Residue(curr_res_name, curr_position, curr_chainID, curr_atoms))
 	
-	print 'atom_count', atom_count
 	return info
 
 def print_pdb(residues, path):

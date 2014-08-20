@@ -22,7 +22,7 @@ def main(argv):
 	helpdoc =   	"""usage: wrapper.py quickrun (--in_pdb=A --position_pairs=B --lib=C) [--out=D] [--noverbose]
 				wrapper.py renumber (--in_pdb=A) [--out_pdb=B --chains=C --SRN=1 --SAN=1] [--noverbose]
 				wrapper.py create_res (--in_pdb_orig=A --in_pdb_renum=B) [--out_res=C --position_pairs=D] [--noverbose]
-				wrapper.py preprocess (--in_pdb=A) [--out_dir=B --ip_dist_cutoff=C --backbone --filter] [--noverbose]
+				wrapper.py preprocess (--in_dir=A) [--out_dir=B --ip_dist_cutoff=C --backbone --filter --correct] [--noverbose]
 				wrapper.py run_statium (--in_res=A --in_pdb=B --lib=C) [--out=D --ip_dist_cutoff=E --matching_res_dist_cutoffs=G --backbone --filter --counts] [--noverbose]
 				wrapper.py [-f] energy (--in_res=A | --in_pdb=B) (--in_probs=C --in_seqs=D) [--out=E] [-z | --zscore] [--histogram=E] [--noverbose]
 				wrapper.py random (--seq_length=A --num_seqs=B) [--out=C] [--noverbose]
@@ -49,7 +49,7 @@ def main(argv):
 				--out_res=C	Output RES file path
 				--position_pairs=D	Positions to include in the binding sequence
 
-				--in_pdb=A	Directory containing library PDBs
+				--in_dir=A	Directory containing library PDBs
 				--out_dir=B	Output directory for JSON objects
 				--ip_dist_cutoff=C	Threshold for interacting pair designation
 
@@ -141,13 +141,14 @@ def main(argv):
 
 	elif options['preprocess']:
 		in_dir = options['--in_dir']
-		out_dir = options['--out_dir'] if options['--out_dir'] else in_dir + '_JSON_preprocessed'
-		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 5.0
+		out_dir = options['--out_dir'] if options['--out_dir'] else in_dir + '_preprocessed'
+		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 6.0
 		backbone = options['--backbone']
 		filter_sidechains = options['--filter']
+		correct = options['--correct']
 
 		if verbose: print 'Preprocessing library: %s' % in_dir
-		preprocess(in_dir, out_dir, ip_dist, backbone, filter_sidechains, verbose)
+		preprocess(in_dir, out_dir, ip_dist, backbone, filter_sidechains, correct, verbose)
 		if verbose: print 'Done: %s' % out_dir
 
 	
