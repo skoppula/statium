@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
 	if (arg_name == "-distances") {
 	    for(int j = i + 5; j < argc; j++) {
 	        float tmpf = atof(argv[j]);
-		template_d.push_back(tmpf);
+			template_d.push_back(tmpf);
 	    }
 	    input = argv[i + 1];
 	    output = argv[i + 2];
@@ -36,14 +36,14 @@ int main(int argc, char* argv[]) {
     float ip_probs [20] = {0.064, 0.018, 0.038, 0.043, 0.065, 0.052, 0.025, 0.084, 0.04, 0.127, 0.024, 0.033, 0.038, 0.029, 0.052, 0.044, 0.05, 0.095, 0.025, 0.055};
     float lib_dists [rsize];
     float threshold_counts [10];
-    float thresholds [10];
+    float thresholds [10]; //What?
     float* rmsd_list = new float[fsize];
     int* aa_list = new int[fsize];
     float incr = 0.1;
     for(int i = 0; i < 10; i++) {
-	threshold_counts[i] = 0;
-	thresholds[i] = incr;
-	incr += 0.1;
+		threshold_counts[i] = 0;
+		thresholds[i] = incr;
+		incr += 0.1;
     }
     cout << "Reading distances for " << input << "..." << endl;
     ifstream file;
@@ -52,32 +52,32 @@ int main(int argc, char* argv[]) {
     int count = -1;
     int aa;
     float dist;
-    while (0==0)
-    {
-	if (file.eof()) break;
+    while (0==0) {
+		if (file.eof()) break;
 
-	if (count % 100000 == 0) cout << count << endl;
-	count++;
-	for(int i = 0; i < rsize; i++) {
-	    file >> dist;
-	    lib_dists[i] = dist;
-	}
+		if (count % 100000 == 0) cout << count << endl;
+		count++;
+		for(int i = 0; i < rsize; i++) {
+	    	file >> dist;
+	    	lib_dists[i] = dist;
+		}
 	
-	file >> aa;
-	float rmsd = 0.0;
-	for(int i = 0; i < rsize; i++) {
-	    rmsd = rmsd + ((lib_dists[i] - template_d[i]) * (lib_dists[i] - template_d[i]));
-	}
-	float libN = rsize - 1;
-	rmsd = sqrt(rmsd / libN);
+		file >> aa;
+		float rmsd = 0.0;
+		for(int i = 0; i < rsize; i++) {
+	    	rmsd = rmsd + ((lib_dists[i] - template_d[i]) * (lib_dists[i] - template_d[i]));
+		}
+		float libN = rsize - 1;
+		rmsd = sqrt(rmsd / libN);
 	
-	float idxf = rmsd * 10.0;
-	if (idxf > 10.0) idxf = 10.0;
-	int idx = idxf;
+		float idxf = rmsd * 10.0;
+		if (idxf > 10.0) idxf = 10.0;
+		int idx = idxf;
         if (rmsd < thresholds[idx]) threshold_counts[idx] += 1;
-	rmsd_list[count] = rmsd;
-	aa_list[count] = aa;	
+		rmsd_list[count] = rmsd;
+		aa_list[count] = aa;	
     }
+
     file.close();
     cout << "Calculating threshold for " << input << "..." << endl;
     int running_count = 0;
