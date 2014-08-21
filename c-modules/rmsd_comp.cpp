@@ -15,8 +15,8 @@ int main(int argc, char* argv[]) {
     vector<float> template_d;
     char* input;
     char* output;
-    int rsize;
-    int fsize;
+    int rsize; //number of template distances
+    int fsize; //number of interacting pairs in library in file
     for(int i = 0; i < argc; i++) {
 	arg_name = argv[i];
 	if (arg_name == "-distances") {
@@ -24,8 +24,8 @@ int main(int argc, char* argv[]) {
 	        float tmpf = atof(argv[j]);
 			template_d.push_back(tmpf);
 	    }
-	    input = argv[i + 1];
-	    output = argv[i + 2];
+	    input = argv[i + 1]; //file A.dists
+	    output = argv[i + 2]; //output energy file
 	    rsize = atoi(argv[i + 3]);
 	    fsize = atoi(argv[i + 4]);
 	}

@@ -21,29 +21,38 @@ std::vector<double> convertStringVectortoDoubleVector(const std::vector<std::str
 	return doubleVector;
 }
 
-std::string query_distance(const char* libfile, const char* pairs, const char* values) {
+//Ignore threshold_adjust and pair_check for now
+std::string query_distance(const char* libfile, const char* pairs, const char* values, bool pair_check=false, bool threshold_adjust=true) {
 	
 	//Splitting template distance values into vector
-	std::string dist_str(values);
-	std::vector<std::string> dist_split_str; 
+	string dist_str(values);
+	vector<string> dist_split_str; 
 	boost::split(dist_split_str, dist_str, boost::algorithm::is_any_of(","));	
-	std::vector<double> dists = convertStringVectortoDoubleVector(dist_split_str);
+	vector<double> dists = convertStringVectortoDoubleVector(dist_split_str);
 	//Printing out distance values
-	std::copy(dists.begin(), dists.end(), std::ostream_iterator<double>(std::cout, " "));	
+	copy(dists.begin(), dists.end(), std::ostream_iterator<double>(cout, " "));	
 
-	std::string line;
+	char AAs[] = {'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y'};
+	float ip_probs[] = {0.064, 0.018, 0.038, 0.043, 0.065, 0.052, 0.025, 0.084, 0.04, 0.127, 0.024, 0.033, 0.038, 0.029, 0.052, 0.044, 0.05, 0.095, 0.025, 0.055};
+
+	float threshold_counts = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	float thresholds = {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9}
+
+	int num_dists = dists.size()
+
+	string line;
 	ifstream infile;
 	infile.open(libfile);	
 	while(!infile.eof()) {
 		getline(infile, line);
-		std::vector<std::string> split1; 
+		vector<std::string> split1; 
 		boost::split(split1, line, boost::algorithm::is_any_of(";"));
 		if(split1.size() > 1) {
-			std::string lib_dists_str(split1.at(1));
-			std::vector<std::string> split2; 
+			string lib_dists_str(split1.at(1));
+			vector<std::string> split2; 
 			boost::split(split2, lib_dists_str, boost::algorithm::is_any_of(","));
-			std::vector<double> lib_dists = convertStringVectortoDoubleVector(split2);
-			std::copy(lib_dists.begin(), lib_dists.end(), std::ostream_iterator<double>(std::cout, " "));	
+			vector<double> lib_dists = convertStringVectortoDoubleVector(split2);
+			copy(lib_dists.begin(), lib_dists.end(), std::ostream_iterator<double>(cout, " "));	
 		}
 		cout << "\n";
 	}

@@ -16,7 +16,11 @@ def get_dist_matrix_and_IPs_lib(pdb, cutoff):
 		    ips.add((i,j))
 
 	return (distance_matrix, ips)
-
+#AA at end
+#remove []
+#round
+#ensure order is same
+#too many ips?
 def preprocess(in_dir, out_dir, ip_dist_cutoff, backbone=False, filter_sidechains=False, correct=False, verbose=True):
     pdb_paths = os.listdir(in_dir)
     num_paths = str(len(pdb_paths))
