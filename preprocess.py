@@ -17,7 +17,7 @@ def get_dist_matrix_and_IPs_lib(pdb, cutoff):
 
 	return (distance_matrix, ips)
 
-def _preprocess(in_dir, out_dir, ip_dist_cutoff, backbone=False, filter_sidechains=False, correct=False, verbose=True):
+def preprocess(in_dir, out_dir, ip_dist_cutoff, backbone=False, filter_sidechains=False, correct=False, verbose=True):
     pdb_paths = os.listdir(in_dir)
     num_paths = str(len(pdb_paths))
 
@@ -63,10 +63,4 @@ def _preprocess(in_dir, out_dir, ip_dist_cutoff, backbone=False, filter_sidechai
     for i in range(20):
         aa = AAint2char(i)
         files[i].close()
-
-
-def preprocess(in_dir, out_dir, ip_dist_cutoff, backbone=False, filter_sidechains=False, correct=False, verbose=True):
-    print in_dir
-    import cProfile
-    cProfile.runctx('_preprocess(in_dir, out_dir, ip_dist_cutoff, backbone, filter_sidechains, correct, verbose)', globals(), locals())
 

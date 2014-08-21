@@ -1,4 +1,5 @@
 import os
+import ast
 import sys
 import math
 import heapq
@@ -8,30 +9,65 @@ import itertools
 import pickle
 from util import *
 from collections import OrderedDict
+import statium_cpp
 
 def statium(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dists, backbone, filter_sidechain, counts, verbose):
 	
 	if verbose: print 'Starting STATUM analysis...' 
 	tic = timeit.default_timer()
-	sidechain(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dists, backbone, filter_sidechain, counts, verbose)
+	sidechain_cpp(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dists, backbone, filter_sidechain, counts, verbose)
 	toc = timeit.default_timer()
 	if verbose: print 'Done in ' + str((toc-tic)/60) + ' minutes! Output in: ' + out
 
 
-def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_dist_cutoffs, backbone, filter_sidechains, print_counts, verbose):
-	
+def sidechain_cpp(in_res, in_pdb, in_dir, out, ip_dist_cutoff, match_dist_cutoffs, backbone, filter_sidechains, print_counts, verbose):
 	if verbose: print 'Extracting residue position from ' + in_res + '...'
 	res_lines = filelines2list(in_res)
 	residues = [int(line.strip())-1 for line in res_lines]
 	
 	if verbose: print 'Extracting information from ' + in_pdb + '...'
-        if filter_sidechains: pdbI = get_pdb_info(in_pdb, filter_sidechains = True)
-        else: pdbI = get_pdb_info(in_pdb)
+	if filter_sidechains: pdbI = get_pdb_info(in_pdb, filter_sidechains = True)
+	else: pdbI = get_pdb_info(in_pdb)
 	for res in pdbI:
 		if res.string_name == 'GLY':
 			res.correct()
-                if not backbone:
-		    res.strip_backbone()
+			if not backbone:
+				res.strip_backbone()
+	pdbSize = len(pdbI)	
+
+	if verbose: print 'Computing inter-atomic distances and finding interacting pairs...\n'
+	(distance_matrix, use_indices) = get_dist_matrix_and_IPs_peptide(pdbI, residues, ip_dist_cutoff)
+	if verbose: print use_indices
+	num_ips = len(use_indices)
+
+	energies = {key:0 for key in residues}
+	for (i, (pos1, pos2)) in enumerate(use_indices):
+		aa = pdbI[pos1].char_name
+		dists = filter_sc_dists(pdbI[pos1].atom_names, ['CA', 'CB'], distance_matrix[pos1][pos2-pos1-1], 'forward')
+		lib_file = os.path.join(in_dir, aa + '.dists')
+		result = statium_cpp.query_distance(lib_file, str(dists.keys()), str(dists.values()))
+		list_result = ast.literal_eval(result)
+		for j in range(20): energies[pos2][j] += list_result[j]
+
+	with open(out, 'w') as f:
+		f.write('\t\t' + '\t'.join([AAint2char(i) for i in range(20)]))
+		for res, energies in energies.iteritems():
+			f.write(res + '\t' + '\t'.join(energies))
+	
+	
+def sidechain_python(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_dist_cutoffs, backbone, filter_sidechains, print_counts, verbose):
+	if verbose: print 'Extracting residue position from ' + in_res + '...'
+	res_lines = filelines2list(in_res)
+	residues = [int(line.strip())-1 for line in res_lines]
+	
+	if verbose: print 'Extracting information from ' + in_pdb + '...'
+	if filter_sidechains: pdbI = get_pdb_info(in_pdb, filter_sidechains = True)
+	else: pdbI = get_pdb_info(in_pdb)
+	for res in pdbI:
+		if res.string_name == 'GLY':
+			res.correct()
+			if not backbone:
+				res.strip_backbone()
 	pdbSize = len(pdbI)	
 
 	if verbose: print 'Computing inter-atomic distances and finding interacting pairs...\n'
@@ -57,17 +93,13 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_
 	lib_pdb_paths = [os.path.join(in_pdb_dir, pdb) for pdb in os.listdir(in_pdb_dir)]
 	for i, lib_pdb_path in enumerate(lib_pdb_paths):	
 		if verbose: print 'Processing ' + lib_pdb_path + ' (' + str(i) + ' of ' + str(len(lib_pdb_paths)) + ')'
-		if in_ip_dir:
-			lib_pdb = get_pdb_info(lib_pdb_path)
-			ip_path = os.path.join(in_ip_dir, os.path.split(lib_pdb_path)[1].split('.')[0] + '.ip')
-			lib_ips = [(int(pair[0]),int(pair[1])) for pair in filelines2deeplist(ip_path) if pair != []]
-			lib_distance_matrix = get_lib_dist_matrix(lib_pdb, lib_ips)
-			if not lib_distance_matrix:
+		lib_pdb = get_pdb_info(lib_pdb_path)
+		ip_path = os.path.join(in_ip_dir, os.path.split(lib_pdb_path)[1].split('.')[0] + '.ip')
+		lib_ips = [(int(pair[0]),int(pair[1])) for pair in filelines2deeplist(ip_path) if pair != []]
+		lib_distance_matrix = get_lib_dist_matrix(lib_pdb, lib_ips)
+		if not lib_distance_matrix:
 				print lib_pdb_path
 				continue
-		else:
-			with open(lib_pdb_path, 'r') as infile:
-				(lib_pdb,lib_ips,lib_distance_matrix) = pickle.load(infile)
 
 		for (lib_pos1, lib_pos2) in lib_ips:
 			if abs(lib_pos2 - lib_pos1) <= 4: continue
@@ -80,19 +112,19 @@ def sidechain(in_res, in_pdb, in_pdb_dir, in_ip_dir, out, ip_dist_cutoff, match_
 			
 			for (j, (pos1, pos2)) in enumerate(use_indices):
 				AA1 = pdbI[pos1].int_name 
-                                if lib_pdb[lib_pos2].stubIntact:
-                                    if lib_AA1==AA1:
-					p2_base_chain = ['CA', 'CB'] 
-                                        lib_dist = filter_sc_dists(lib_pdb[lib_pos1].atom_names, p2_base_chain, lib_distance_matrix[lib_pos1][lib_pos2-lib_pos1-1], True)
-					if matching_sidechain_pair(distances[(pos1,pos2)], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
-						counts[j][lib_AA2] += 1
+				if lib_pdb[lib_pos2].stubIntact:
+					if lib_AA1==AA1:
+						p2_base_chain = ['CA', 'CB'] 
+						lib_dist = filter_sc_dists(lib_pdb[lib_pos1].atom_names, p2_base_chain, lib_distance_matrix[lib_pos1][lib_pos2-lib_pos1-1], True)
+						if matching_sidechain_pair(distances[(pos1,pos2)], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
+							counts[j][lib_AA2] += 1
 						
-                                if lib_pdb[lib_pos1].stubIntact:
-                                    if lib_AA2==AA1:
-					p1_base_chain = ['CA', 'CB'] 
-					lib_dist = filter_sc_dists(p1_base_chain, lib_pdb[lib_pos2].atom_names, lib_distance_matrix[lib_pos1][lib_pos2-lib_pos1-1], False) 
-					if matching_sidechain_pair(distances[(pos1,pos2)], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
-						counts[j][lib_AA1] += 1
+				if lib_pdb[lib_pos1].stubIntact:
+					if lib_AA2==AA1:
+						p1_base_chain = ['CA', 'CB'] 
+						lib_dist = filter_sc_dists(p1_base_chain, lib_pdb[lib_pos2].atom_names, lib_distance_matrix[lib_pos1][lib_pos2-lib_pos1-1], False) 
+						if matching_sidechain_pair(distances[(pos1,pos2)], lib_dist, match_dist_cutoffs[pdbI[pos1].char_name]):
+							counts[j][lib_AA1] += 1
 	
 	if(verbose): print('Finished processing library .pdb files.')
 
@@ -185,7 +217,9 @@ def read_output(in_path):
 	return probs
 
 def determine_probs(use_indices, totals, counts):
-	
+	'''Converts library counts to energies
+	Takes in interacting pairs, total IP counts (list of length 20), and AA count frequences for each peptide IP
+	Energies are output as list of dicts (key:value as AA character:energy value), one dict per IP'''
 	#total number of residues across all library interacting pairs
 	lib_sum = float(sum(totals))
 
@@ -208,17 +242,17 @@ def determine_probs(use_indices, totals, counts):
 #Assumes fast & distances stored as dict (atom1_name, atom2_name): distance val
 def matching_sidechain_pair(dists1, dists2, cutoff):
   
-    sd = 0.0
-    count = 0.0
+	sd = 0.0
+	count = 0.0
 
-    for pair1, dist1 in dists1.iteritems():
-        for pair2, dist2 in dists2.iteritems():
-            if pair1 == pair2:
-	        sd += ((dist1 - dist2) ** 2)
-	        count += 1.0
+	for pair1, dist1 in dists1.iteritems():
+		for pair2, dist2 in dists2.iteritems():
+			if pair1 == pair2:
+				sd += ((dist1 - dist2) ** 2)
+				count += 1.0
 
-    if math.sqrt(sd / count) < cutoff: return True
-    else: return False
+	if math.sqrt(sd / count) < cutoff: return True
+	else: return False
 
 	
 
@@ -324,7 +358,7 @@ def calc_top_seqs(in_res_path, in_probs, num_sequences):
 	lines = filelines2list(in_res_path)
 	residues = [int(line.strip()) for line in lines]
 	
-   	#loading in probability into all_probs
+	#loading in probability into all_probs
 	prob_files = os.listdir(probs_dir)
 	all_probs = read_output(in_probs)
 	

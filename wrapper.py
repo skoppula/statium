@@ -155,8 +155,7 @@ def main(argv):
 	elif options['run_statium']:
 		res = options['--in_res']
 		pdb = options['--in_pdb']
-		pdb_lib = options['--pdb_lib']
-		ip_lib = options['--ip_lib']
+		lib = options['--lib']
 		out = options['--out'] if options['--out'] is not None else res[:-4] + '.out'
 		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 6.0
 		
@@ -167,7 +166,7 @@ def main(argv):
 		count = options['--counts']
 		
 		if verbose: print "\nRunning STATIUM with: " + pdb + " " + res + " " + pdb_lib + ' and IP lib: ' + str(ip_lib)
-		statium(res, pdb, pdb_lib, ip_lib, out, ip_dist, match_dist, backbone, filter_sidechain, count, verbose)
+		statium(res, pdb, lib, out, ip_dist, match_dist, backbone, filter_sidechain, count, verbose)
 		if verbose: print "Done. STATIUM probabilities in output directory: " + out_dir
 
 	elif options['energy']:
