@@ -16,12 +16,9 @@ def get_dist_matrix_and_IPs_lib(pdb, cutoff):
 		    ips.add((i,j))
 
 	return (distance_matrix, ips)
-#AA at end
-#remove []
-#round
-#ensure order is same
-#too many ips?
-def preprocess(in_dir, out_dir, ip_dist_cutoff, backbone=False, filter_sidechains=False, correct=False, verbose=True):
+
+#no guarentees about filter
+def preprocess(in_dir, out_dir, ip_dist_cutoff, backbone=False, filter_sidechains=True, correct=False, verbose=True):
     pdb_paths = os.listdir(in_dir)
     num_paths = str(len(pdb_paths))
 
@@ -58,12 +55,12 @@ def preprocess(in_dir, out_dir, ip_dist_cutoff, backbone=False, filter_sidechain
             if pdb[p2].stubIntact:
 		p2_base_chain = ['CA', 'CB'] 
                 dists = filter_sc_dists(pdb[p1].atom_names, p2_base_chain, distance_matrix[p1][p2-p1-1], True)
-                files[aa1].write(str(dists.keys()) + ';' + str(dists.values()) + '\n')
+                files[aa1].write(str([round(val, 2) for val in dists.values()])[1:-1] + ';' + str(aa2) + '\n')
 
             if pdb[p1].stubIntact:
 		p1_base_chain = ['CA', 'CB'] 
-		lib_dist = filter_sc_dists(p1_base_chain, pdb[p2].atom_names, distance_matrix[p1][p2-p1-1], False) 
-                files[aa2].write(str(dists.keys()) + ';' + str(dists.values()) + '\n')
+		dists = filter_sc_dists(p1_base_chain, pdb[p2].atom_names, distance_matrix[p1][p2-p1-1], False) 
+                files[aa2].write(str([round(val, 2) for val in dists.values()])[1:-1]+ ';' + str(aa1) + '\n')
     for i in range(20):
         aa = AAint2char(i)
         files[i].close()
