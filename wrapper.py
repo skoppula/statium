@@ -17,13 +17,15 @@ from util import list2file
 from util import filelines2list
 from verify import roc
 from verify import print_merged
+
+
 def main(argv):
 	
 	helpdoc =   	"""usage: wrapper.py quickrun (--in_pdb=A --position_pairs=B --lib=C) [--out=D] [--noverbose]
 				wrapper.py renumber (--in_pdb=A) [--out_pdb=B --chains=C --SRN=1 --SAN=1] [--noverbose]
 				wrapper.py create_res (--in_pdb_orig=A --in_pdb_renum=B) [--out_res=C --position_pairs=D] [--noverbose]
 				wrapper.py preprocess (--in_dir=A) [--out_dir=B --ip_dist_cutoff=C --backbone --nofilter --correct] [--noverbose]
-				wrapper.py run_statium (--in_res=A --in_pdb=B --lib=C) [--out=D --ip_dist_cutoff=E --matching_res_dist_cutoffs=G --backbone --nofilter --counts] [--noverbose]
+				wrapper.py run_statium (--in_res=A --in_pdb=B --lib=C) [--out=D --ip_dist_cutoff=E --optimize_match_counts=G --match_cutoffs=H --backbone --nofilter --counts] [--noverbose]
 				wrapper.py [-f] energy (--in_res=A | --in_pdb=B) (--in_probs=C --in_seqs=D) [--out=E] [-z | --zscore] [--histogram=E] [--noverbose]
 				wrapper.py random (--seq_length=A --num_seqs=B) [--out=C] [--noverbose]
 				wrapper.py get_orig_seq (--in_res=A --in_pdb_orig=B --in_pdb_renum=C) [--noverbose]
@@ -58,7 +60,8 @@ def main(argv):
 				--lib=C	Input directory of library PDB files
 				--out=E		Output directory
 				--ip_dist_cutoff=F	Threshold for interacting pair designation
-				--matching_res_dist_cutoffs=G	Thresholds for matching IP designation
+				--optimize_match_counts=G	Number of counts to meet for a minimum matching IP designation RMSD threshold
+				--match_cutoffs=H	Thresholds for matching IP designation
 
 				--in_res=A	Input .res file path
 				--in_pdb=B	Input .pdb file path
@@ -112,7 +115,7 @@ def main(argv):
 		if verbose: print "Creating .res file using: " + in_pdb + " and " + renum_pdb
 		create_res(in_pdb, renum_pdb, res, positions)
 		if verbose: print "Running STATIUM with: " + renum_pdb + " " + res + " " + pdb_lib + ' and IP lib: ' + ip_lib
-		statium(res, renum_pdb, lib, out_dir, ip_dist, default_match_dist, False, False, False, verbose)
+		statium(res, renum_pdb, lib, out_dir, ip_dist, 100, default_match_dist, False, True, False, verbose)
 		if verbose: print 'Done'
 
 
@@ -158,6 +161,7 @@ def main(argv):
 		lib = options['--lib']
 		out = options['--out'] if options['--out'] is not None else res[:-4] + '.out'
 		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 6.0
+		matching_counts = int(options['--optimize_match_counts']) if options['--optimize_match_counts'] is not None else -1
 		
  		default = {'A':0.2, 'C':0.4, 'D':0.4, 'E':0.4, 'F':0.4, 'G':0.2, 'H':0.4, 'I':0.4, 'K':0.4, 'L':0.4, 'M':0.4, 'N':0.4, 'P':0.4, 'Q':0.4, 'R':0.4, 'S':0.4, 'T':0.4, 'V':0.4, 'W':0.4, 'Y':0.4}
 		match_dist = ast.literal_eval(options['--matching_res_dist_cutoffs']) if options['--matching_res_dist_cutoffs'] else default
@@ -166,7 +170,7 @@ def main(argv):
 		count = options['--counts']
 		
 		if verbose: print "\nRunning STATIUM with: " + pdb + " " + res + " " + pdb_lib + ' and IP lib: ' + str(ip_lib)
-		statium(res, pdb, lib, out, ip_dist, match_dist, backbone, filter_sidechain, count, verbose)
+		statium(res, pdb, lib, out, ip_dist, matching_counts, match_dist, backbone, filter_sidechain, count, verbose)
 		if verbose: print "Done. STATIUM probabilities in output directory: " + out_dir
 
 	elif options['energy']:
@@ -299,9 +303,13 @@ def parse_position_pairs(in_str):
 				sys.exit('Invalid position pairs')	
 	return positions
 
+timing_analysis = False
 
 if __name__ == "__main__":
+    if timing_analysis:
         timing_path = 'timing_analysis.txt'
 	cProfile.run('main(sys.argv[1:])', timing_path)
+    else:
+        main(sys.argv[1:])
         
 

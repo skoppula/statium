@@ -59,7 +59,9 @@ void print_array (double arg[], int length) {
 }
 
 //Ignore threshold_adjust and pair_check for now
-string query_distance(const char* libfile, const char* values, bool threshold_adjust=true, float threshold=0.4) {
+string query_distance(const char* libfile, const char* values, int threshold_adjust_counts=100, float threshold=0.4) {
+
+	bool threshold_adjust = threshold_adjust_counts == -1 ? false:true;
 	
 	//Splitting template distance values into vector
 	string dist_str(values);
@@ -97,7 +99,7 @@ string query_distance(const char* libfile, const char* values, bool threshold_ad
 			rmsds.push_back(rmsd);
 
 			if (threshold_adjust) {
-				if (thresholds.size() < 100) {
+				if (thresholds.size() < threshold_adjust_counts) {
 					thresholds.push_back(rmsd);
 					push_heap(thresholds.begin(), thresholds.end());
 

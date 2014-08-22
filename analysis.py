@@ -11,16 +11,16 @@ from util import *
 from collections import OrderedDict
 import statium_cpp
 
-def statium(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dists, backbone, filter_sidechain, counts, verbose):
+def statium(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, optimize_match, match_cutoffs, backbone, filter_sidechain, counts, verbose):
 	
 	if verbose: print 'Starting STATUM analysis...' 
 	tic = timeit.default_timer()
-	sidechain_cpp(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, match_cutoff_dists, backbone, filter_sidechain, counts, verbose)
+	sidechain_cpp(in_res, in_pdb, in_dir, in_ip, out, ip_cutoff_dist, optimize_match, match_cutoffs, backbone, filter_sidechain, counts, verbose)
 	toc = timeit.default_timer()
 	if verbose: print 'Done in ' + str((toc-tic)/60) + ' minutes! Output in: ' + out
 
 
-def sidechain_cpp(in_res, in_pdb, in_dir, out, ip_dist_cutoff, match_dist_cutoffs, backbone, filter_sidechains, print_counts, verbose):
+def sidechain_cpp(in_res, in_pdb, in_dir, out, ip_dist_cutoff, optimize_match, match_cutoffs, backbone, filter_sidechains, print_counts, verbose):
 	if verbose: print 'Extracting residue position from ' + in_res + '...'
 	res_lines = filelines2list(in_res)
 	residues = [int(line.strip())-1 for line in res_lines]
@@ -45,8 +45,8 @@ def sidechain_cpp(in_res, in_pdb, in_dir, out, ip_dist_cutoff, match_dist_cutoff
 		aa = pdbI[pos1].char_name
 		dists = filter_sc_dists(pdbI[pos1].atom_names, ['CA', 'CB'], distance_matrix[pos1][pos2-pos1-1], 'forward')
 		lib_file = os.path.join(in_dir, aa + '.dists')
-		result = statium_cpp.query_distance(lib_file, str(dists.keys()), str(dists.values()))
-		list_result = ast.literal_eval(result)
+		result = statium_cpp.query_distance(lib_file, str(dists.values()[1:-1], optimize_match, match_cutoffs[aa]))
+		list_result = ast.literal_eval('[' + result + ']')
 		for j in range(20): energies[pos2][j] += list_result[j]
 
 	with open(out, 'w') as f:

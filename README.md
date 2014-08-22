@@ -1,5 +1,5 @@
 <b>STATIUM: smart scoring. promising proteins.</b><br>
-STATIUM is an ongoing project at the Keating Lab to quantitatively understand how amino acid sequences interact. This repository contains a user-friendly implementation of the structure-based statistical-potential STATIUM algorithm that scores how well two or more proteins bind at their interacting positions. Specifically, STATIUM scores how well a certain sequence would bind to another main protein structure (e.g. variable residue positions of a ligand binding to a receptor). There are three main parts of analysis with STATIUM: <br>
+STATIUM is an ongoing project at the Keating Lab to quantitatively understand favorable protein-protein interactions. This repository contains a user-friendly implementation of the structure-based statistical-potential STATIUM algorithm that scores how well two or more proteins bind at their interacting positions. Specifically, STATIUM scores how well a certain sequence would bind to another main protein structure (e.g. variable residue positions of a ligand binding to a receptor). There are three main parts of analysis with STATIUM: <br>
 
 1. <b> Potentials calculations </b>. STATIUM first calculates energy potentials for each position in your binding sequence. `quickrun` is the simplest command that does this. If you'd like more advanced control over your arguments, use the advanced commands with more parameters (`renumber`, `create_res`, `run_statium`) <br>
 
@@ -16,7 +16,7 @@ If you are on a 'nix machine with `git` installed obtaining STATIUM and all its 
 ***
 <b>Quickstart!</b><br>
 If you, for example, wanted to score sequences for chain B of some protein described in 1YCR.pdb, you could run:<br>
-1. `python wrapper.py quickrun --in_pdb=1YCR.pdb --position_pairs=B` to calculate potentials<br>
+1. `python wrapper.py quickrun --in_pdb=1YCR.pdb --position_pairs=B --lib=data/` to calculate potentials<br>
 2. `python wrapper.py energy --in_pdb=1YCR.pdb --probs_dir=1YCR --in_seqs=AMLTGTMMXX<br>` to score a sequence<br>
 
 ***
@@ -24,11 +24,11 @@ If you, for example, wanted to score sequences for chain B of some protein descr
 <b>`quickrun`</b>:<br>
 <i>Template</i> `python wrapper.py quickrun (--in_pdb --position_pairs --lib) [--out]`<br>
 
-<i>Example</i> `python wrapper.py quickrun --in_pdb=1mph_HLA.pdb --position_pairs=H31-56,L --pdb_lib=culled_90 --ip_lib=ip_90_wGLY --out_dir=testing/1mph_HLA.out` <br>
+<i>Example</i> `python wrapper.py quickrun --in_pdb=1mph_HLA.pdb --position_pairs=H31-56,L --lib=dists/ --out_dir=testing/1mph_HLA.out` <br>
 
 Generates residue potentials required for sequence scoring. `--in_pdb` identifies the structure whose sequence you want to analyze. The --position_pairs argument specifies which set of positions to be included as binder/ligand sequences in the STATIUM analysis. The argument is a set of comma seperated terms which represent continuous sequence of residues to be included in the ligand sequence (inclusive). If you want the entirety of a chain, simply put the name of chain in the list (e.g. --position_pairs=H). In the first example above, residues on the L chain, position 1-20, and a residue on the H chain, position 33 will be included in the output residues file.
 
-`--lib` indicate the directories for the interacting pair library. Files containing these residue potentials are placed into `--out_dir` argument. Note that this is the same as running `renumber`, `create_res`, and `run_statium` with appropriate parameters.<br>
+`--lib` should recieve the directory with the 20 library files with inter-atomic distances, one for each amino acid (provided in the `data` folder or output from `preprocess`). The files containing output residue potentials are placed into the `--out_dir` argument. Note that this is the same as running `renumber`, `create_res`, and `run_statium` with appropriate (default) parameters.<br>
 
 <i>Dependencies</i>: `fsolve` from `scipy.optimize` if there are glycine residues in any of the interacting pair positions
 ***
@@ -54,16 +54,29 @@ The --position_pairs argument specifies which the set of positions to be include
 
 If you fail to include a --position_pairs argument, the function will assume you mean to create a *.res file with the entirety of chain <i>B</i>.<br>
 
-<b>`run_statium`</b>:<br>
-<i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --pdb_lib --ip_lib)  [--out --ip_dist_cutoff --matching_res_dist_cutoffs --backbone --filter --counts]`<br>
+<b>`preprocess`</b>:<br>
+<i>Template</i> `python wrapper.py preprocess (--in_dir) [--out_dir --ip_dist_cutoff --correct]`<br>
 
-<i>Example</i> `python wrapper.py run_statium --in_pdb=testing/1mhp_AHL_new.pdb --in_res=testing/1mhp_AHL.res --pdb_lib=data/culled_90/ --ip_lib=data/ip_90_wGLY/` <br>
+<i>Example</i> `python wrapper.py create_res --in_pdb_orig=testing/1mph_AHL_orig.pdb --in_pdb_renum=testing/1mph_AHL_renum.pdb --out_res=testing/1mph_AHL.res --position_pairs=L1-20,H33`<br>
+
+<i>Specifics</i>: Takes a directory containing PDB files and processes the directory to create a inter-atomic distance library suitable for the `quickrun` or `run_statium` function.
+
+Note that currently, STATIUM defaults to not including the backbone N and C2 atoms, and only considers all of each residue's sidechain atoms instead of the subset of key atoms defined in the `get_sidechain_atoms` function in `util.py` (you may use the untested parameters `--backbone` and `--nofilter` to include backbone atoms, and not filter any atoms, respectively).
+
+<b>`run_statium`</b>:<br>
+<i>Template</i> `python wrapper.py run_statium (--in_pdb --in_res --lib)  [--out --ip_dist_cutoff --matching_res_dist_cutoffs --counts]`<br>
+
+<i>Example</i> `python wrapper.py run_statium --in_pdb=testing/1mhp_AHL_new.pdb --in_res=testing/1mhp_AHL.res --lib=data/` <br>
 
 <i>Specifics</i>: Takes in a renumbered PDB file (see `renumber`), the directory of the library PDBs (`--pdb_lib`) and IPs (`--ip_lib`).
 
-Optional parameters include: --out_dir (the directory where STATIUM outputs its results; default value is value of --in_pdb without the .pdb extension), --counts (whether to print out STATIUM's intermediate analysis outputs; note that this takes no argument; simply including the flag issues printing!), --ip_dist_cutoff (the threshold distance in Angstroms between two atoms, below which the atom's residues are deemed 'interacting'; default is 6.0), and --matching_res_dist_cutoff (a dictionary with all twenty amino acids [in single character representation] each mapped to a cutoff below which a interacting residue pair cannot be deemed 'matching' to a library protein interacting pair. Example of using this parameter [containing the default, recommended dictionary values if you leave this parameter out]: --matching_res_dist_cutoff={'A':2, 'C':6, 'D':6, 'E':6, 'F':6, 'G':2, 'H':6, 'I':6, 'K':6, 'L':6, 'M':6, 'N':6, 'P':6, 'Q':6, 'R':6, 'S':6, 'T':6, 'V':6, 'W':6, 'Y':6, 'X':0}.
+Optional parameters include: `--out_dir` (the directory where STATIUM outputs its results; default value is value of `--in_pdb` without the .pdb extension), `--counts` (whether to print out STATIUM's intermediate analysis outputs; note that this takes no argument; simply including the flag issues printing!), `--ip_dist_cutoff` (the threshold distance in Angstroms between two atoms, below which the atom's residues are deemed 'interacting'; default is 6.0).
 
-`--backbone` includes the N-C(alpha)-C backbone in inter-atomic distances, and `--filter` only considers a subset of each residue's sidechain atoms (see `get_sidechain_atoms` function in `util.py`). 
+`--optimize_match_res_cutoff` is a parameter that defaults to 100 and allows us to vary the threshold by which we deem a RMSD between the `--in_pdb` and library protein as 'matching'. STATIUM finds the minimum RMSD threshold that results in the parameter specified number of matches. Alternatively, you leave the aforementioned parameter out and specify `--matching_res_dist_cutoff` (a dictionary with all twenty amino acids [in single character representation] each mapped to a constant RMSD threshold). Example [the default]: `--matching_res_dist_cutoff={'A':0.2, 'C':0.4, 'D':0.4, 'E':0.4, 'F':0.4, 'G':0.2, 'H':0.4, 'I':0.4, 'K':0.4, 'L':0.4, 'M':0.4, 'N':0.4, 'P':0.4, 'Q':0.4, 'R':0.4, 'S':0.4, 'T':0.4, 'V':0.4, 'W':0.4, 'Y':0.4}`
+
+`--lib` should recieve the directory with the 20 library files with inter-atomic distances, one for each amino acid (provided in the `data` folder or output from `preprocess`). The files containing output residue potentials are placed into the `--out_dir` argument. Note that this is the same as running `renumber`, `create_res`, and `run_statium` with appropriate parameters.<br>
+
+Note that currently, STATIUM defaults to not including the backbone N and C2 atoms, and only considers all of each residue's sidechain atoms instead of the subset of key atoms defined in the `get_sidechain_atoms` function in `util.py` (you may use the untested parameters `--backbone` and `--nofilter` to include backbone atoms, and not filter any atoms, respectively).
 
 The function creates a file with twenty probabilities (one for each possible amino acid) per interacting pair, describing how likely it is for that identity would exist at that position on the sidechain, given the main chain's amino acid identity at the position.<br>
 
