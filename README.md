@@ -71,11 +71,13 @@ The function creates a file with twenty probabilities (one for each possible ami
 ***
 <b>2. Sequence scoring</b>: <i>Quick commands</i><br>
 <b>`energy`</b>:<br>
-<i>Template</i> `python wrapper.py energy (--in_res | --in_pdb) (--in_probs) [-f] (--in_seqs) [--out] [-z | --zscores] [--histogram]`<br>
+<i>Template</i> `python wrapper.py energy (--in_res | --in_pdb) (--in_probs) [-f] (--in_seqs) [--out --short_intrapep --long_intrapep] [-z | --zscores] [--histogram]`<br>
 <i>Example One</i> `python wrapper.py --in_res=testing/1mhp_AHL.res --in_probs=testing/1mhp_AHL.probs --in_seqs=AAAGGGM,LLAA -z --histogram='hist.jpg'`<br>
 <i>Example Two</i> `python wrapper.py --in_res=testing/1mhp_AHL.res --in_probs=testing/1mhp_AHL.probs -f --in_seqs=testing/seqs.txt`<br>
 
 <i>Specifics</i>: Calculates STATIUM's binding score for a given sequence of amino acids in the positions listed in the input *.res file (see `create_res` or `quick_run`)*. The `--in_probs` input is the STATIUM probabilities directory computed in `run_statium`. The presence of `-f` indicates that `--in_seqs` is a file (else just [possibly a set of] sequences, corresponding to the chains/position-pairs used to create the *.res file). For example, you might have a --in_seqs=AAA,L if your `--position_pairs` argument in `create_res` was 10-12,13 (note that an in_seqs without a comma is also acceptable: e.g. AAAL). A file would contain similarly formatted argument, one sequence (set) on each line.
+
+`--short_intrapep` and `--long_intrapep` are arguments to weight the scores from these computations, relative to a weight of '1' for peptide-receptor scores.
 
 `--out` specifies an output file. If this is option is left out, results will be printed to the console. The presence of the z-score flags finds the z-scores of the input sequences' energy on a distribution of random sequences. The presence of the `--histogram=X` saves a histogram of the random distribution of scores generated for use in z-score calculations.
 
