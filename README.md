@@ -22,13 +22,13 @@ If you, for example, wanted to score sequences for chain B of some protein descr
 ***
 <b>1. Potentials calculation</b>: <i>Quick commands</i><br>
 <b>`quickrun`</b>:<br>
-<i>Template</i> `python wrapper.py quickrun (--in_pdb --position_pairs --pdb_lib --ip_lib) [--out]`<br>
+<i>Template</i> `python wrapper.py quickrun (--in_pdb --position_pairs --lib) [--out]`<br>
 
 <i>Example</i> `python wrapper.py quickrun --in_pdb=1mph_HLA.pdb --position_pairs=H31-56,L --pdb_lib=culled_90 --ip_lib=ip_90_wGLY --out_dir=testing/1mph_HLA.out` <br>
 
 Generates residue potentials required for sequence scoring. `--in_pdb` identifies the structure whose sequence you want to analyze. The --position_pairs argument specifies which set of positions to be included as binder/ligand sequences in the STATIUM analysis. The argument is a set of comma seperated terms which represent continuous sequence of residues to be included in the ligand sequence (inclusive). If you want the entirety of a chain, simply put the name of chain in the list (e.g. --position_pairs=H). In the first example above, residues on the L chain, position 1-20, and a residue on the H chain, position 33 will be included in the output residues file.
 
-`--pdb_lib` and `--ip_lib` indicate the directories for the input PDB and interacting pair library, respectively. Files containing these residue potentials are placed into `--out_dir` argument. Note that this is the same as running `renumber`, `create_res`, and `run_statium` with appropriate parameters.<br>
+`--lib` indicate the directories for the interacting pair library. Files containing these residue potentials are placed into `--out_dir` argument. Note that this is the same as running `renumber`, `create_res`, and `run_statium` with appropriate parameters.<br>
 
 <i>Dependencies</i>: `fsolve` from `scipy.optimize` if there are glycine residues in any of the interacting pair positions
 ***
@@ -71,11 +71,13 @@ The function creates a file with twenty probabilities (one for each possible ami
 ***
 <b>2. Sequence scoring</b>: <i>Quick commands</i><br>
 <b>`energy`</b>:<br>
-<i>Template</i> `python wrapper.py energy (--in_res | --in_pdb) (--in_probs) [-f] (--in_seqs) [--out] [-z | --zscores] [--histogram]`<br>
+<i>Template</i> `python wrapper.py energy (--in_res | --in_pdb) (--in_probs) [-f] (--in_seqs) [--out --short_intrapep --long_intrapep] [-z | --zscores] [--histogram]`<br>
 <i>Example One</i> `python wrapper.py --in_res=testing/1mhp_AHL.res --in_probs=testing/1mhp_AHL.probs --in_seqs=AAAGGGM,LLAA -z --histogram='hist.jpg'`<br>
 <i>Example Two</i> `python wrapper.py --in_res=testing/1mhp_AHL.res --in_probs=testing/1mhp_AHL.probs -f --in_seqs=testing/seqs.txt`<br>
 
 <i>Specifics</i>: Calculates STATIUM's binding score for a given sequence of amino acids in the positions listed in the input *.res file (see `create_res` or `quick_run`)*. The `--in_probs` input is the STATIUM probabilities directory computed in `run_statium`. The presence of `-f` indicates that `--in_seqs` is a file (else just [possibly a set of] sequences, corresponding to the chains/position-pairs used to create the *.res file). For example, you might have a --in_seqs=AAA,L if your `--position_pairs` argument in `create_res` was 10-12,13 (note that an in_seqs without a comma is also acceptable: e.g. AAAL). A file would contain similarly formatted argument, one sequence (set) on each line.
+
+`--short_intrapep` and `--long_intrapep` are arguments to weight the scores from these computations, relative to a weight of '1' for peptide-receptor scores.
 
 `--out` specifies an output file. If this is option is left out, results will be printed to the console. The presence of the z-score flags finds the z-scores of the input sequences' energy on a distribution of random sequences. The presence of the `--histogram=X` saves a histogram of the random distribution of scores generated for use in z-score calculations.
 
