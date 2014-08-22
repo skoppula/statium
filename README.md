@@ -22,13 +22,13 @@ If you, for example, wanted to score sequences for chain B of some protein descr
 ***
 <b>1. Potentials calculation</b>: <i>Quick commands</i><br>
 <b>`quickrun`</b>:<br>
-<i>Template</i> `python wrapper.py quickrun (--in_pdb --position_pairs --pdb_lib --ip_lib) [--out]`<br>
+<i>Template</i> `python wrapper.py quickrun (--in_pdb --position_pairs --lib) [--out]`<br>
 
 <i>Example</i> `python wrapper.py quickrun --in_pdb=1mph_HLA.pdb --position_pairs=H31-56,L --pdb_lib=culled_90 --ip_lib=ip_90_wGLY --out_dir=testing/1mph_HLA.out` <br>
 
 Generates residue potentials required for sequence scoring. `--in_pdb` identifies the structure whose sequence you want to analyze. The --position_pairs argument specifies which set of positions to be included as binder/ligand sequences in the STATIUM analysis. The argument is a set of comma seperated terms which represent continuous sequence of residues to be included in the ligand sequence (inclusive). If you want the entirety of a chain, simply put the name of chain in the list (e.g. --position_pairs=H). In the first example above, residues on the L chain, position 1-20, and a residue on the H chain, position 33 will be included in the output residues file.
 
-`--pdb_lib` and `--ip_lib` indicate the directories for the input PDB and interacting pair library, respectively. Files containing these residue potentials are placed into `--out_dir` argument. Note that this is the same as running `renumber`, `create_res`, and `run_statium` with appropriate parameters.<br>
+`--lib` indicate the directories for the interacting pair library. Files containing these residue potentials are placed into `--out_dir` argument. Note that this is the same as running `renumber`, `create_res`, and `run_statium` with appropriate parameters.<br>
 
 <i>Dependencies</i>: `fsolve` from `scipy.optimize` if there are glycine residues in any of the interacting pair positions
 ***
