@@ -114,14 +114,27 @@ def AAint2char(a):
 	AA = bidict.bidict({'0':'A', '1':'C', '2':'D', '3':'E', '4':'F', '5':'G', '7':'I', '8':'K', '9':'L', '10':'M', '11':'N', '12':'P', '13':'Q', '14':'R', '15':'S', '16':'T', '17':'V', '18':'W', '19':'Y', '20':'X', '6':'H'})
 	return AA[str(a)]
 
-	
 def get_sidechain_atoms(res):
 	
-	sidechain_mappings = {'A':{'CA', 'CB'}, 'C':{'CA', 'CB', 'SG'}, 'D':{'CA', 'CB', 'OD1', 'OD2'}, 'E':{'CA', 'CB', 'OE1', 'OE2'}, 'F':{'CA', 'CB', 'CE1', 'CE2', 'CZ'}, 'G':{'CA', 'CA'},  
-	'H':{'CA', 'CB', 'CE1', 'NE2'}, 'I':{'CA', 'CB', 'CG1', 'CG2', 'CD1'}, 'K':{'CA', 'CB', 'NZ'}, 'L':{'CA', 'CB', 'CD1', 'CD2'}, 'M':{'CA', 'CB', 'CE'}, 
-	'N':{'CA', 'CB', 'OD1', 'ND2'}, 'P':{'CA', 'CB', 'CG', 'CD'}, 'Q':{'CA', 'CB', 'OE1', 'NE2'}, 'R':{'CA', 'CB', 'NE', 'CZ'}, 'S':{'CA', 'CB', 'OG'}, 
-	'T':{'CA', 'CB', 'OG1', 'CG2'}, 'V':{'CA', 'CB', 'CG1', 'CG2'}, 'W':{'CA', 'CB', 'CD1', 'CD2', 'NE1', 'CZ2', 'CZ3', 'CH2'}, 
-	'Y':{'CA', 'CB', 'CD1', 'CD2', 'CE1', 'CE2', 'CZ', 'OH'}}
+	sidechain_mappings = {'A':{'CA', 'CB'}, 'C':{'CA', 'CB', 'SG'},
+							'D':{'CA', 'CB', 'CG', 'OD1', 'OD2'},
+							'E':{'CA', 'CB', 'CG', 'CD', 'OE1', 'OE2'},
+							'F':{'CA', 'CB', 'CG', 'CD1', 'CD2', 'CE1', 'CE2', 'CZ'},
+							'G':{'CA', 'CB'},  
+							'H':{'CA', 'CB', 'CG', 'ND1', 'CD2', 'CE1', 'NE2'},
+							'I':{'CA', 'CB', 'CG1', 'CG2', 'CD1'},
+							'K':{'CA', 'CB', 'CD', 'CG', 'CE', 'NZ'},
+							'L':{'CA', 'CB', 'CG', 'CD1', 'CD2'},
+							'M':{'CA', 'CB', 'CG', 'SD', 'CE'}, 
+							'N':{'CA', 'CB', 'CG', 'OD1', 'ND2'},
+							'P':{'CA', 'CB', 'CG', 'CD'},
+							'Q':{'CA', 'CB', 'CG', 'CD', 'OE1', 'NE2'},
+							'R':{'CA', 'CB', 'CD', 'CG', 'NE', 'CZ', 'NH1', 'NH2'},
+							'S':{'CA', 'CB', 'OG'}, 
+							'T':{'CA', 'CB', 'OG1', 'CG2'},
+							'V':{'CA', 'CB', 'CG1', 'CG2'},
+							'W':{'CA', 'CB', 'CG', 'CD1', 'CD2', 'CE2', 'NE1', 'CZ2', 'CE3', 'CZ3', 'CH2'}, 
+							'Y':{'CA', 'CB', 'CG', 'CD1', 'CD2', 'CE1', 'CE2', 'CZ', 'OH'}}
 	
 	return sidechain_mappings[res]
 
@@ -187,6 +200,7 @@ class Residue:
 		for a in atoms:
 			self.atom_names.append(a.name)
 			self.atom_dict[a.name] = a	
+                self.atom_names.sort()
 
 		self.stubIntact = True if 'CA' in self.atom_names and 'CB' in self.atom_names else False
 

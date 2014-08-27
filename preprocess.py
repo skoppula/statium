@@ -10,6 +10,7 @@ def get_dist_matrix_and_IPs_lib(pdb, cutoff):
 	first = True
 	for i in xrange(N):
 	    for j in xrange(i+1, N):
+                if j-i <= 4: continue
 	        result = pdb[i].fastFilteredDistancesTo(pdb[j], cutoff)
 	        distance_matrix[i][j-i-1] = result
 		if result is not None:
