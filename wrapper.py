@@ -6,7 +6,9 @@ from docopt import docopt
 from reformat import renumber
 from reformat import create_res
 from reformat import get_orig_seq
-from preprocess import preprocess
+from preprocess import preprocess_long_full
+from preprocess import preprocess_short_cacb
+from preprocess import preprocess_short_full
 from analysis import statium
 from analysis import calc_seq_energy
 from analysis import generate_random_distribution
@@ -21,12 +23,12 @@ from verify import print_merged
 
 def main(argv):
 	
-	helpdoc =   	"""usage: wrapper.py quickrun (--in_pdb=A --position_pairs=B --lib=C) [--out=D] [--noverbose]
+	helpdoc =		"""usage: wrapper.py quickrun (--in_pdb=A --position_pairs=B --lib=C) [--out=D] [--noverbose]
 				wrapper.py renumber (--in_pdb=A) [--out_pdb=B --chains=C --SRN=1 --SAN=1] [--noverbose]
 				wrapper.py create_res (--in_pdb_orig=A --in_pdb_renum=B) [--out_res=C --position_pairs=D] [--noverbose]
-				wrapper.py preprocess (--in_dir=A) [--out_dir=B --ip_dist_cutoff=C --backbone --nofilter --correct] [--noverbose]
+				wrapper.py preprocess (--in_dir=A) [--type=B --out_dir=C --ip_dist_cutoff=D --backbone --nofilter --correct] [--noverbose]
 				wrapper.py run_statium (--in_res=A --in_pdb=B --lib=C) [--out=D --ip_dist_cutoff=E --optimize_match_counts=G --match_cutoffs=H --backbone --nofilter --counts] [--noverbose]
-				wrapper.py [-f] energy (--in_res=A | --in_pdb=B) (--in_probs=C --in_seqs=D) [--out=E] [-z | --zscore] [--histogram=E] [--noverbose]
+				wrapper.py [-f] energy (--in_res=A | --in_pdb=B) (--in_probs=C --in_seqs=D) [--out=E --weights=F] [-z | --zscore] [--histogram=E] [--noverbose]
 				wrapper.py random (--seq_length=A --num_seqs=B) [--out=C] [--noverbose]
 				wrapper.py get_orig_seq (--in_res=A --in_pdb_orig=B --in_pdb_renum=C) [--noverbose]
 				wrapper.py calc_top_seqs (--in_res=A --in_probs=B --N=C) [--out=D] [--noverbose]
@@ -53,7 +55,11 @@ def main(argv):
 
 				--in_dir=A	Directory containing library PDBs
 				--out_dir=B	Output directory for JSON objects
-				--ip_dist_cutoff=C	Threshold for interacting pair designation
+				--type=C	Which type of library to create
+				--ip_dist_cutoff=D	Distance threshold by which to determine two residues interacting
+				--backbone	Includes backbone NCC atoms
+				--nofilter	Do not filter atoms to only include fundamental sidechain atoms
+				--correct	Add pseudo-C-beta's to glycines
 
 				--in_res=A	Input .res file path
 				--in_pdb=B	Input renumbered PDB path
@@ -101,7 +107,7 @@ def main(argv):
 		stem = in_pdb[:-4]
 		renum_pdb = stem + '_renumbered.pdb'
 		res = stem + '.res'
- 		default_match_dist = {'A':0.2, 'C':0.4, 'D':0.4, 'E':0.4, 'F':0.4, 'G':0.2, 'H':0.4, 'I':0.4, 'K':0.4, 'L':0.4, 'M':0.4, 'N':0.4, 'P':0.4, 'Q':0.4, 'R':0.4, 'S':0.4, 'T':0.4, 'V':0.4, 'W':0.4, 'Y':0.4}
+		default_match_dist = {'A':0.2, 'C':0.4, 'D':0.4, 'E':0.4, 'F':0.4, 'G':0.2, 'H':0.4, 'I':0.4, 'K':0.4, 'L':0.4, 'M':0.4, 'N':0.4, 'P':0.4, 'Q':0.4, 'R':0.4, 'S':0.4, 'T':0.4, 'V':0.4, 'W':0.4, 'Y':0.4}
 
 		lib = options['--lib']
 		out_dir = options['--out'] if options['--out'] is not None else stem
@@ -149,9 +155,9 @@ def main(argv):
 		backbone = options['--backbone']
 		filter_sidechains = not options['--nofilter']
 		correct = options['--correct']
+		preprocess_type = options['--type'] if options['--type'] else 'all'
 
-		if verbose: print 'Preprocessing library: %s' % in_dir
-		preprocess(in_dir, out_dir, ip_dist, backbone, filter_sidechains, correct, verbose)
+		preprocess(in_dir, out_dir, preprocess_type, ip_dist, backbone, filter_sidechains, correct, verbose)
 		if verbose: print 'Done: %s' % out_dir
 
 	
@@ -163,7 +169,7 @@ def main(argv):
 		ip_dist = float(options['--ip_dist_cutoff']) if options['--ip_dist_cutoff'] is not None else 6.0
 		matching_counts = int(options['--optimize_match_counts']) if options['--optimize_match_counts'] is not None else -1
 		
- 		default = {'A':0.2, 'C':0.4, 'D':0.4, 'E':0.4, 'F':0.4, 'G':0.2, 'H':0.4, 'I':0.4, 'K':0.4, 'L':0.4, 'M':0.4, 'N':0.4, 'P':0.4, 'Q':0.4, 'R':0.4, 'S':0.4, 'T':0.4, 'V':0.4, 'W':0.4, 'Y':0.4}
+		default = {'A':0.2, 'C':0.4, 'D':0.4, 'E':0.4, 'F':0.4, 'G':0.2, 'H':0.4, 'I':0.4, 'K':0.4, 'L':0.4, 'M':0.4, 'N':0.4, 'P':0.4, 'Q':0.4, 'R':0.4, 'S':0.4, 'T':0.4, 'V':0.4, 'W':0.4, 'Y':0.4}
 		match_dist = ast.literal_eval(options['--matching_res_dist_cutoffs']) if options['--matching_res_dist_cutoffs'] else default
 		backbone = options['--backbone']
 		filter_sidechain = not options['--nofilter']
@@ -306,10 +312,10 @@ def parse_position_pairs(in_str):
 timing_analysis = False
 
 if __name__ == "__main__":
-    if timing_analysis:
-        timing_path = 'timing_analysis.txt'
-	cProfile.run('main(sys.argv[1:])', timing_path)
-    else:
-        main(sys.argv[1:])
-        
+	if timing_analysis:
+		timing_path = 'timing_analysis.txt'
+		cProfile.run('main(sys.argv[1:])', timing_path)
+	else:
+		main(sys.argv[1:])
+		
 
