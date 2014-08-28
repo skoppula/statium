@@ -6,9 +6,7 @@ from docopt import docopt
 from reformat import renumber
 from reformat import create_res
 from reformat import get_orig_seq
-from preprocess import preprocess_long_full
-from preprocess import preprocess_short_cacb
-from preprocess import preprocess_short_full
+from preprocess import preprocess
 from analysis import statium
 from analysis import calc_seq_energy
 from analysis import generate_random_distribution

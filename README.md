@@ -55,11 +55,13 @@ The --position_pairs argument specifies which the set of positions to be include
 If you fail to include a --position_pairs argument, the function will assume you mean to create a *.res file with the entirety of chain <i>B</i>.<br>
 
 <b>`preprocess`</b>:<br>
-<i>Template</i> `python wrapper.py preprocess (--in_dir) [--out_dir --ip_dist_cutoff --correct]`<br>
+<i>Template</i> `python wrapper.py preprocess (--in_dir) [--out_dir --preprocess_type --ip_dist_cutoff --correct]`<br>
 
 <i>Example</i> `python wrapper.py create_res --in_pdb_orig=testing/1mph_AHL_orig.pdb --in_pdb_renum=testing/1mph_AHL_renum.pdb --out_res=testing/1mph_AHL.res --position_pairs=L1-20,H33`<br>
 
 <i>Specifics</i>: Takes a directory containing PDB files and processes the directory to create a inter-atomic distance library suitable for the `quickrun` or `run_statium` function.
+
+`preprocess_type` can be one of five values, depending on what type of library you want to create (one for each term in STATIUM): `long_fixed_variable`, `short_fixed_variable`, `long_variable_variable`, `short_variable_variable` and `all`. Long in the name denotes modeling long-range interactions. Short denotes short-range interactions, between fixed and/or variable residues.
 
 Note that currently, STATIUM defaults to not including the backbone N and C2 atoms, and only considers all of each residue's sidechain atoms instead of the subset of key atoms defined in the `get_sidechain_atoms` function in `util.py` (you may use the untested parameters `--backbone` and `--nofilter` to include backbone atoms, and not filter any atoms, respectively).
 
