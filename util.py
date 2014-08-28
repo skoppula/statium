@@ -261,10 +261,19 @@ class Residue:
 	def fastDistancesTo(self, other, cutoff, output_dict=True):
 				out = dict()
 
-				for i, atom_one in enumerate(self.atoms):
+				for atom_one in self.atoms:
 					for atom_two in other.atoms:
 							dist = atom_one.distanceTo(atom_two)
 							out[(atom_one.name, atom_two.name)] = dist
+				return out
+
+	def fastDistancesToCACBOnly(self, other, cutoff, output_dict=True):
+				out = dict()
+
+				for atom_one in [self.atom_dict['CA'], self.atom_dict['CB']]:
+					for atom_two in [self.atom_dict['CA'], self.atom_dict['CB']]:
+						dist = atom_one.distanceTo(atom_two)
+						out[(atom_one.name, atom_two.name)] = dist
 				return out
 
 	def distancesTo(self, other, output_dict=True):
